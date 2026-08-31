@@ -156,3 +156,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Restricted gallery file access to canonical event-image identifiers before constructing a filesystem path, rejecting traversal and alternate path encodings.
 - Replaced API responses that exposed exception text with stable client-safe error messages and added regression tests for both controls.
+
+## 2026-09-01 — Correct ROI drawing dimensions
+
+- Corrected the ROI editor to use the camera dimensions provided by the monitor status API instead of a nonexistent frame object.
+- Prevented a plain click from saving a one-pixel rectangle.

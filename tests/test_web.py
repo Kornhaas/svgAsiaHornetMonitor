@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from werkzeug.security import generate_password_hash
 
 from hornet_monitor.web import create_app
@@ -108,6 +110,8 @@ def test_roi_settings_and_training_pages_are_available():
     assert b'id="outer-box"' in roi_page.data
     assert b'id="trigger-box"' in roi_page.data
     assert b"Draw image ROI" in roi_page.data
+    roi_script = Path(app.static_folder) / "roi.js"
+    assert "width: status.frame_width" in roi_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)

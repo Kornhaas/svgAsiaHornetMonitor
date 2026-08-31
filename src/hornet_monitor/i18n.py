@@ -59,6 +59,8 @@ GERMAN = {
     ),
     "Draw image ROI": "Bild-ROI zeichnen",
     "Draw trigger ROI": "Auslöse-ROI zeichnen",
+    "Drag to draw a rectangle.": "Ziehe, um ein Rechteck zu zeichnen.",
+    "Camera dimensions are unavailable.": "Kameraabmessungen sind nicht verfügbar.",
     "Camera device": "Kameragerät",
     "Width": "Breite",
     "Height": "Höhe",

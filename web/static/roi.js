@@ -87,9 +87,20 @@ canvas.addEventListener("pointermove", (event) => {
 canvas.addEventListener("pointerup", async (event) => {
   if (!drawing) return;
   const form = mode === "outer" ? outerForm : triggerForm;
+  const box = mode === "outer" ? outerBox : triggerBox;
   const roi = roiFromPointer(event);
+  const bounds = stream.getBoundingClientRect();
+  const distance = Math.hypot(
+    event.clientX - bounds.left - drawing.x,
+    event.clientY - bounds.top - drawing.y,
+  );
   drawing = null;
   canvas.releasePointerCapture(event.pointerId);
+  if (distance < 8) {
+    show(box, values(form));
+    message.textContent = "Drag to draw a rectangle.";
+    return;
+  }
   await save(form, mode === "outer" ? roi : { trigger: roi });
 });
 
@@ -107,7 +118,11 @@ triggerForm.addEventListener("submit", async (event) => {
 async function init() {
   const response = await fetch("/status");
   const status = await response.json();
-  frame = status.frame || frame;
+  frame = status.frame || { width: status.frame_width, height: status.frame_height };
+  if (!Number.isFinite(frame.width) || !Number.isFinite(frame.height) || frame.width < 1 || frame.height < 1) {
+    message.textContent = "Camera dimensions are unavailable.";
+    return;
+  }
   fill(outerForm, status.roi);
   fill(triggerForm, status.trigger_roi || status.roi);
   show(outerBox, status.roi);
