@@ -141,3 +141,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Made both the outer image ROI and the inner trigger ROI visible on the ROI settings camera preview.
 - Added an explicit drawing-mode control: yellow edits the saved image area and blue edits the delayed trigger area; drawing saves the matching rectangle directly while retaining numeric precision fields.
+
+## 2026-08-31 — Manual YOLO export
+
+- Added an explicit, browser-operated versioned YOLO dataset export on the model and training page.
+- The UI reports the resulting local directory and box count; exporting does not start the training worker.

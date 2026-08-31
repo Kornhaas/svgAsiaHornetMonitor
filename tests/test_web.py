@@ -139,3 +139,19 @@ def test_camera_and_training_controls_forward_safe_payloads():
     )
     assert saved_camera[0]["device"] == "/dev/video0"
     assert client.post("/api/training/start").get_json()["state"] == "waiting"
+
+
+def test_dataset_export_endpoint_returns_the_versioned_export():
+    exported = {"version": "20260831_220000", "boxes": 2, "directory": "data/datasets/test"}
+    exporter = type(
+        "Exporter",
+        (),
+        {"summary": lambda self: {"boxes": 2}, "export": lambda self: exported},
+    )()
+    training = type("Training", (), {"exporter": exporter})()
+    app = create_app(camera=None, status=lambda: {}, training_manager=training)
+
+    response = app.test_client().post("/api/dataset/export")
+
+    assert response.status_code == 201
+    assert response.get_json() == {"dataset": exported}

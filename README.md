@@ -105,7 +105,7 @@ The ROI page displays and edits two rectangles directly on the live image: the y
 
 ## Training and notifications
 
-Reviewed animal boxes can be exported automatically into deterministic YOLO train/validation/test splits. When night mode starts and the configured number of labelled boxes is reached, the local bounded training worker starts; it is stopped at the configured morning deadline. The **Model & training** page can also start a run manually.
+On **Model & training**, **Export YOLO dataset** creates a versioned local dataset from the reviewed animal boxes, with deterministic train/validation/test splits and a `dataset.yaml` file. Exporting is safe to repeat and never starts a training job. When night mode starts and the configured number of labelled boxes is reached, the local bounded training worker starts; it is stopped at the configured morning deadline. The page can also start a run manually.
 
 Reopening an already reviewed gallery image loads its saved boxes into the editable list. Remove incorrect entries, add replacements, then save the complete list; this atomically replaces that image's annotations.
 

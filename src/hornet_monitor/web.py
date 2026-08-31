@@ -261,6 +261,20 @@ def create_app(
     def dataset_status():
         return jsonify({} if training_manager is None else training_manager.exporter.summary())
 
+    @app.post("/api/dataset/export")
+    @require_login
+    def export_dataset():
+        if training_manager is None:
+            return jsonify(error="Dataset export is unavailable."), 503
+        summary = training_manager.exporter.summary()
+        if not summary["boxes"]:
+            return jsonify(error="At least one labelled animal box is required."), 400
+        try:
+            dataset = training_manager.exporter.export()
+        except (OSError, ValueError) as error:
+            return jsonify(error=f"Dataset export failed: {error}"), 500
+        return jsonify(dataset=dataset), 201
+
     @app.get("/event-image/<path:image_id>")
     @require_login
     def event_image(image_id):

@@ -59,6 +59,15 @@ GERMAN = {
     "Save and restart": "Speichern und neu starten",
     "Training status": "Trainingsstatus",
     "Start training now": "Training jetzt starten",
+    "YOLO dataset export": "YOLO-Datensatzexport",
+    (
+        "Export reviewed animal boxes as a versioned local YOLO dataset with train, "
+        "validation, and test splits. The export does not start training."
+    ): (
+        "Exportiere bewertete Tierboxen als versionierten lokalen YOLO-Datensatz mit "
+        "Trainings-, Validierungs- und Testaufteilung. Der Export startet kein Training."
+    ),
+    "Export YOLO dataset": "YOLO-Datensatz exportieren",
     "Class distribution": "Klassenverteilung",
     "No labelled boxes yet.": "Noch keine markierten Boxen.",
     "Update background image": "Hintergrundbild aktualisieren",
