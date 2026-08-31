@@ -203,6 +203,12 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# Hornet Monitor runtime data and local overrides
+data/events/
+data/captures/
+config/local.yaml
+logs/
+
 # Ruff stuff:
 .ruff_cache/
 

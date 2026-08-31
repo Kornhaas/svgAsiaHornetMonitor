@@ -1,0 +1,28 @@
+camera:
+  device: /dev/video0
+  width: 1280
+  height: 720
+  fps: 30
+  mjpeg: true
+
+motion:
+  # Coordinates are pixels in the configured camera resolution.
+  roi:
+    x: 160
+    y: 90
+    width: 960
+    height: 540
+  min_area: 900
+  threshold: 25
+  blur_size: 21
+  cooldown_seconds: 10
+
+events:
+  directory: data/events
+  burst_frames: 5
+  burst_interval_seconds: 0.25
+
+web:
+  host: 0.0.0.0
+  port: 8000
+  debug: false

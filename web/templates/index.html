@@ -1,0 +1,3 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Asia Hornet Monitor</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body><main><h1>Asia Hornet Monitor</h1><div class="status"><span id="indicator"></span><span id="message">Connecting…</span></div><img class="stream" src="{{ url_for('stream') }}" alt="Live camera stream"><p id="details"></p></main><script src="{{ url_for('static', filename='app.js') }}"></script></body></html>
