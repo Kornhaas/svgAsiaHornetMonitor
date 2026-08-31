@@ -7,6 +7,7 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Introduced one shared Bootstrap base template for all authenticated application pages.
 - Added direct navigation to live monitor, gallery, ROI settings, model training, system status, and camera settings, with the current page marked as active.
 - Kept the login page intentionally separate because it is shown before authentication.
+- Added a prominent System status shortcut next to the monitor status on the start page.
 
 ## 2026-09-01 — Local YOLO training toolkit
 

@@ -15,6 +15,7 @@ def test_index_and_status_are_available():
     assert index.status_code == 200
     assert b"Asia Hornet Monitor" in index.data
     assert b"favicon.svg" in index.data
+    assert b'href="/system"' in index.data
     assert status.get_json() == {"camera_error": None, "motion": False}
 
 
