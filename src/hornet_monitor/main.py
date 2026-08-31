@@ -15,6 +15,7 @@ from werkzeug.security import generate_password_hash
 from .activity import ActivityLog
 from .camera import Camera
 from .events import EventWriter
+from .gallery import Gallery
 from .motion import MotionDetector
 from .updates import UpdateManager
 from .web import create_app
@@ -81,6 +82,7 @@ def main() -> None:
     activity_log = ActivityLog(config["activity"]["file"])
     activity_log.record("monitor_started", "Asia Hornet Monitor started")
     update_manager = UpdateManager(config["updates"], activity_log)
+    gallery = Gallery(config["events"]["directory"], config["annotations"]["file"])
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
     writer.frame_supplier = camera.get_frame
@@ -126,8 +128,24 @@ def main() -> None:
         activity_log.record("roi_updated", "Region of interest updated", details=updated_roi)
         return updated_roi
 
+    def save_annotation(annotation: dict) -> dict:
+        saved = gallery.annotate(annotation)
+        activity_log.record(
+            "annotation_saved",
+            "Image annotation saved",
+            details={"label": saved["label"], "image": saved["image"]},
+        )
+        return saved
+
     app = create_app(
-        camera, status, update_roi, activity_log, config["web"]["auth"], update_manager
+        camera,
+        status,
+        update_roi,
+        activity_log,
+        config["web"]["auth"],
+        update_manager,
+        gallery,
+        save_annotation,
     )
     app.run(
         host=config["web"]["host"],

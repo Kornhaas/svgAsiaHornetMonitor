@@ -12,6 +12,7 @@ It deliberately contains no species classification or machine learning. The firs
 - ROI-only motion detection with a visible live status
 - Visible, drag-adjustable ROI overlay with numeric controls in the browser
 - Persistent activity log in the web UI for motion events and configuration changes
+- Browser image gallery for reviewing events and saving labelled bounding boxes
 - Timestamped event folders with a JPEG burst
 - YAML configuration and modular camera, motion, event, and web components
 
@@ -87,6 +88,10 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
+
+## Image gallery and manual labels
+
+Select **Open image gallery** in the web UI to review recent event images. Select an event, draw a box around the animal, choose a class, and save it. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
 
 For a local machine where `/dev/video0` does not exist, create ignored `config/local.yaml` containing `camera: { device: 0 }`. It is automatically merged over the tracked base configuration at startup.
 

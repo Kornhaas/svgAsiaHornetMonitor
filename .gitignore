@@ -207,6 +207,7 @@ tempCodeRunnerFile.py
 data/events/
 data/captures/
 data/activity.jsonl
+data/annotations.jsonl
 config/local.yaml
 logs/
 

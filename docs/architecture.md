@@ -21,6 +21,8 @@ USB webcam (/dev/video0)
                            │
                            └──────────► ActivityLog ─► data/activity.jsonl ─► Web /activities
 
+Event images ─► Gallery + annotation UI ─► data/annotations.jsonl
+
 config/config.yaml ─► main.py (composition and runtime state) ─► Web /status
                                                           └──► UpdateManager ─► Git + systemd restart
 ```

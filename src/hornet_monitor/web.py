@@ -6,11 +6,30 @@ import time
 from functools import wraps
 
 import cv2
-from flask import Flask, Response, jsonify, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash
 
 
-def create_app(camera, status, update_roi=None, activity_log=None, auth=None, update_manager=None):
+def create_app(
+    camera,
+    status,
+    update_roi=None,
+    activity_log=None,
+    auth=None,
+    update_manager=None,
+    gallery=None,
+    save_annotation=None,
+):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
     if auth.get("enabled") and not all(
@@ -56,6 +75,39 @@ def create_app(camera, status, update_roi=None, activity_log=None, auth=None, up
     @require_login
     def index():
         return render_template("index.html")
+
+    @app.get("/gallery")
+    @require_login
+    def gallery_page():
+        return render_template("gallery.html")
+
+    @app.get("/api/events")
+    @require_login
+    def events():
+        return jsonify([] if gallery is None else gallery.events())
+
+    @app.get("/event-image/<path:image_id>")
+    @require_login
+    def event_image(image_id):
+        if gallery is None:
+            return jsonify(error="Gallery is unavailable."), 503
+        try:
+            return send_file(gallery.image_path(image_id))
+        except (FileNotFoundError, ValueError):
+            return jsonify(error="Image not found."), 404
+
+    @app.post("/api/annotations")
+    @require_login
+    def annotations():
+        if save_annotation is None:
+            return jsonify(error="Annotation storage is unavailable."), 503
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify(error="Expected an annotation JSON object."), 400
+        try:
+            return jsonify(annotation=save_annotation(payload)), 201
+        except (FileNotFoundError, ValueError) as error:
+            return jsonify(error=str(error)), 400
 
     @app.get("/status")
     @require_login

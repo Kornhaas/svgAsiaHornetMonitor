@@ -57,3 +57,12 @@ def test_enabled_auth_protects_monitor_and_accepts_valid_login():
         client.post("/login", data={"username": "hornet", "password": "secret"}).status_code == 302
     )
     assert client.get("/status").status_code == 200
+
+
+def test_gallery_page_and_events_endpoint_are_available():
+    gallery = type("Gallery", (), {"events": lambda self: [{"id": "event"}]})()
+    app = create_app(camera=None, status=lambda: {}, gallery=gallery)
+    client = app.test_client()
+
+    assert client.get("/gallery").status_code == 200
+    assert client.get("/api/events").get_json() == [{"id": "event"}]
