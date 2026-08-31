@@ -72,3 +72,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added a local browser gallery for recent event images.
 - Added bounding-box drawing and class labels for Asian hornet, European hornet, wasp, bee, other, empty, and uncertain.
 - Stored annotations locally in ignored JSONL format for the future training-data export.
+
+## 2026-08-31 — UX foundation
+
+- Adopted Bootstrap 5 for a responsive, consistent dashboard, navigation, cards, forms, and login screen.
+- Documented the UI responsibility and usability rules in the architecture guide.

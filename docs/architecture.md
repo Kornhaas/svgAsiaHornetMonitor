@@ -36,6 +36,10 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 | `events.py` | Event folder naming, cooldown, JPEG burst writing | Camera setup, motion thresholds |
 | `web.py` | HTML, MJPEG response, JSON status endpoint | Direct camera reads or event decisions |
 | `updates.py` | Fast-forward-only update check/install and service restart | Arbitrary command execution or user-supplied paths |
+
+## User-interface guidelines
+
+The browser UI uses Bootstrap 5 for responsive layout and accessible controls, with a small local stylesheet only for camera overlays and project-specific presentation. Keep navigation consistent across the live monitor, gallery, login, future training, and activity views. UI actions must map to an explicit server endpoint and provide a visible success or failure message.
 | `main.py` | Configuration loading and component wiring | Complex image processing or presentation |
 
 ## Runtime behavior
