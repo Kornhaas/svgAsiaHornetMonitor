@@ -63,6 +63,8 @@ def create_app(
             return response
         language = session.get("language", "de")
         page = response.get_data(as_text=True).replace('lang="en"', f'lang="{language}"')
+        for source, target in translations(language).items():
+            page = page.replace(source, target)
         script = (
             f"<script>window.hornetTranslations={translations(language)!r};</script>"
             '<script src="/static/i18n.js"></script>'

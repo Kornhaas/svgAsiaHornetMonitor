@@ -90,7 +90,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert client.get("/settings/roi").status_code == 200
     training_page = client.get("/training")
     assert training_page.status_code == 200
-    assert b"No model yet" in training_page.data
+    assert "Trainingsstatus" in training_page.get_data(as_text=True)
 
 
 def test_event_deletion_endpoint_forwards_the_event_id():
