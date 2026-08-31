@@ -105,7 +105,7 @@ The **ROI settings** page is the only page that can change the motion and event-
 
 Reviewed animal boxes can be exported automatically into deterministic YOLO train/validation/test splits. When night mode starts and the configured number of labelled boxes is reached, the local bounded training worker starts; it is stopped at the configured morning deadline. The **Model & training** page can also start a run manually.
 
-The **Camera settings** page at `/settings/camera` selects a local `/dev/video*` device and stores its resolution/FPS in ignored `config/local.yaml`; saving restarts only the monitor service. The **System status** page configures optional Telegram review notifications. Tokens and chat IDs are likewise written only to `config/local.yaml`, never Git. Telegram sends a rate-limited message for low-confidence predictions or a possible Asian hornet; it does not interrupt capture when offline.
+The **Camera settings** page at `/settings/camera` selects a local `/dev/video*` device and stores its resolution/FPS in ignored `config/local.yaml`; saving restarts only the monitor service. The **System status** page configures optional Telegram review notifications. Tokens and chat IDs are likewise written only to `config/local.yaml`, never Git. Telegram sends a rate-limited event image for low-confidence predictions or a possible Asian hornet; it does not interrupt capture when offline.
 
 ## Background reference and multiple animals
 

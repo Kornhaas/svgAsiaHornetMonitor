@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 import urllib.parse
 import urllib.request
+import uuid
+from pathlib import Path
 
 
 class TelegramNotifier:
@@ -24,10 +26,7 @@ class TelegramNotifier:
             f"Hornet Monitor: {prediction['label']} ({prediction['confidence']:.0%})\n"
             f"{prediction['image']}"
         )
-        request = urllib.request.Request(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data=urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode(),
-        )
+        request = self._request(token, chat_id, text, prediction["image"])
         try:
             with urllib.request.urlopen(request, timeout=10):
                 pass
@@ -41,6 +40,37 @@ class TelegramNotifier:
             if self.activity_log:
                 self.activity_log.record("telegram_failed", str(error), level="error")
             return False
+
+    @staticmethod
+    def _request(token: str, chat_id: str, text: str, image: str) -> urllib.request.Request:
+        image_path = Path(image)
+        if not image_path.is_file():
+            return urllib.request.Request(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                data=urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode(),
+            )
+        boundary = uuid.uuid4().hex
+        payload = [
+            (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="chat_id"'
+                f"\r\n\r\n{chat_id}\r\n"
+            ).encode(),
+            (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="caption"'
+                f"\r\n\r\n{text}\r\n"
+            ).encode(),
+            (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="photo"; '
+                f'filename="{image_path.name}"\r\nContent-Type: image/jpeg\r\n\r\n'
+            ).encode(),
+            image_path.read_bytes(),
+            f"\r\n--{boundary}--\r\n".encode(),
+        ]
+        return urllib.request.Request(
+            f"https://api.telegram.org/bot{token}/sendPhoto",
+            data=b"".join(payload),
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        )
 
     def _needs_review(self, prediction: dict) -> bool:
         return (

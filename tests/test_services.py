@@ -12,6 +12,16 @@ def test_telegram_is_inert_when_disabled():
     assert not notifier.notify({"label": "bee", "confidence": 0.1, "image": "event.jpg"})
 
 
+def test_telegram_builds_photo_request_when_event_image_exists(tmp_path):
+    image = tmp_path / "event.jpg"
+    image.write_bytes(b"jpg")
+
+    request = TelegramNotifier._request("token", "chat", "message", str(image))
+
+    assert request.full_url.endswith("/sendPhoto")
+    assert b"jpg" in request.data
+
+
 def test_predictor_does_nothing_without_a_trained_model(tmp_path):
     predictor = Predictor(str(tmp_path / "models"), str(tmp_path / "predictions.jsonl"))
 
