@@ -12,12 +12,13 @@ import cv2
 
 
 class EventWriter:
-    def __init__(self, settings: dict[str, Any]) -> None:
+    def __init__(self, settings: dict[str, Any], activity_log=None) -> None:
         self.settings = settings
         self.base_directory = Path(settings["directory"])
         self._last_event = 0.0
         self._lock = threading.Lock()
         self.last_event: str | None = None
+        self.activity_log = activity_log
 
     def save_burst(self, frame) -> bool:
         with self._lock:
@@ -32,6 +33,10 @@ class EventWriter:
         folder.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(folder / "frame_000.jpg"), frame)
         self.last_event = str(folder)
+        if self.activity_log:
+            self.activity_log.record(
+                "motion_event", "Motion event saved", details={"path": self.last_event}
+            )
         threading.Thread(target=self._save_remaining, args=(folder,), daemon=True).start()
         return True
 

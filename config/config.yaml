@@ -22,6 +22,9 @@ events:
   burst_frames: 5
   burst_interval_seconds: 0.25
 
+activity:
+  file: data/activity.jsonl
+
 web:
   host: 0.0.0.0
   port: 8000

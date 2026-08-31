@@ -11,6 +11,7 @@ It deliberately contains no species classification or machine learning. The firs
 - Browser live stream at `http://<pi-address>:8000`
 - ROI-only motion detection with a visible live status
 - Visible, drag-adjustable ROI overlay with numeric controls in the browser
+- Persistent activity log in the web UI for motion events and configuration changes
 - Timestamped event folders with a JPEG burst
 - YAML configuration and modular camera, motion, event, and web components
 

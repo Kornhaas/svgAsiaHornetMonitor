@@ -26,3 +26,14 @@ def test_roi_endpoint_validates_and_forwards_updates():
     assert response.status_code == 200
     assert response.get_json()["roi"] == {"height": 40, "width": 30, "x": 10, "y": 20}
     assert saved == [{"x": 10, "y": 20, "width": 30, "height": 40}]
+
+
+def test_activities_endpoint_returns_recent_entries():
+    entries = [{"event": "motion_event", "message": "Motion event saved"}]
+    app = create_app(
+        camera=None,
+        status=lambda: {},
+        activity_log=type("Log", (), {"recent": lambda self: entries})(),
+    )
+
+    assert app.test_client().get("/activities").get_json() == entries

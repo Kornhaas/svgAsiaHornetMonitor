@@ -6,6 +6,7 @@ const streamContainer = document.querySelector('.stream-container');
 const roiBox = document.querySelector('#roi');
 const roiForm = document.querySelector('#roi-form');
 const roiMessage = document.querySelector('#roi-message');
+const activityList = document.querySelector('#activity-list');
 const inputs = Object.fromEntries(['x', 'y', 'width', 'height'].map((key) => [key, document.querySelector(`#roi-${key}`)]));
 let frameSize = { width: 1280, height: 720 };
 let editingRoi = false;
@@ -28,6 +29,21 @@ async function refreshStatus() {
     details.textContent = `Largest moving area: ${state.largest_area}px²${state.last_event ? ` · Latest event: ${state.last_event}` : ''}`;
     if (!editingRoi && !roiForm.contains(document.activeElement)) showRoi(state.roi);
   } catch (_) { message.textContent = 'Status unavailable'; }
+}
+
+async function refreshActivities() {
+  try {
+    const activities = await (await fetch('/activities')).json();
+    activityList.replaceChildren(...activities.map((activity) => {
+      const item = document.createElement('li');
+      const time = document.createElement('span');
+      time.className = 'activity-time';
+      time.textContent = `${new Date(activity.timestamp).toLocaleString()} — `;
+      item.append(time, activity.message);
+      return item;
+    }));
+    if (!activities.length) activityList.textContent = 'No activity recorded yet.';
+  } catch (_) { activityList.textContent = 'Activity log unavailable.'; }
 }
 
 async function saveRoi() {
@@ -60,4 +76,4 @@ streamContainer.addEventListener('pointerdown', (event) => {
   }, { once: true });
 });
 
-refreshStatus(); setInterval(refreshStatus, 1000);
+refreshStatus(); refreshActivities(); setInterval(refreshStatus, 1000); setInterval(refreshActivities, 5000);

@@ -18,6 +18,8 @@ USB webcam (/dev/video0)
                            │ motion event
                            ▼
                     EventWriter ─► data/events/YYYY-MM-DD/...
+                           │
+                           └──────────► ActivityLog ─► data/activity.jsonl ─► Web /activities
 
 config/config.yaml ─► main.py (composition and runtime state) ─► Web /status
 ```

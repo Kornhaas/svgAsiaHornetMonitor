@@ -8,7 +8,7 @@ import cv2
 from flask import Flask, Response, jsonify, render_template, request
 
 
-def create_app(camera, status, update_roi=None):
+def create_app(camera, status, update_roi=None, activity_log=None):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
 
     @app.get("/")
@@ -30,6 +30,10 @@ def create_app(camera, status, update_roi=None):
             return jsonify(roi=update_roi(payload))
         except ValueError as error:
             return jsonify(error=str(error)), 400
+
+    @app.get("/activities")
+    def activities():
+        return jsonify([] if activity_log is None else activity_log.recent())
 
     @app.get("/stream.mjpg")
     def stream():

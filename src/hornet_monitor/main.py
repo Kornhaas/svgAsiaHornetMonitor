@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 
+from .activity import ActivityLog
 from .camera import Camera
 from .events import EventWriter
 from .motion import MotionDetector
@@ -49,8 +50,10 @@ def main() -> None:
         config = merge_config(config, load_config(local_path))
     camera = Camera(config["camera"])
     camera.start()
+    activity_log = ActivityLog(config["activity"]["file"])
+    activity_log.record("monitor_started", "Asia Hornet Monitor started")
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
-    writer = EventWriter(event_settings)
+    writer = EventWriter(event_settings, activity_log)
     writer.frame_supplier = camera.get_frame
     detector = MotionDetector(config["motion"])
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
@@ -91,9 +94,10 @@ def main() -> None:
             roi, config["camera"]["width"], config["camera"]["height"]
         )
         save_local_roi(args.config, updated_roi)
+        activity_log.record("roi_updated", "Region of interest updated", details=updated_roi)
         return updated_roi
 
-    app = create_app(camera, status, update_roi)
+    app = create_app(camera, status, update_roi, activity_log)
     app.run(
         host=config["web"]["host"],
         port=config["web"]["port"],

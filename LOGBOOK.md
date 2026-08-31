@@ -53,3 +53,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added validated runtime ROI updates through the web API; each update resets the motion background model.
 - Persisted the per-device ROI in ignored `config/local.yaml`, so it survives restarts without entering Git.
 - Fixed ROI editing so periodic status polling cannot overwrite an in-progress drag; releasing the mouse now saves the ROI automatically.
+
+## 2026-08-31 — Activity log
+
+- Added a persistent activity feed in the web UI.
+- Motion events, monitor startup, and ROI changes are written to ignored local `data/activity.jsonl` and exposed through `/activities`.
+- The same feed will show the future overnight-training lifecycle, warnings, and outcomes.

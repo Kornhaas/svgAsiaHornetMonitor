@@ -206,6 +206,7 @@ tempCodeRunnerFile.py
 # Hornet Monitor runtime data and local overrides
 data/events/
 data/captures/
+data/activity.jsonl
 config/local.yaml
 logs/
 
