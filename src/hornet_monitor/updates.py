@@ -30,8 +30,8 @@ class UpdateManager:
                 "current": current,
                 "pending": pending,
             }
-        except subprocess.CalledProcessError as error:
-            self._state = {"state": "error", "message": str(error)}
+        except (OSError, ValueError, subprocess.SubprocessError):
+            self._state = {"state": "error", "message": "Update check failed."}
         return dict(self._state)
 
     def install(self) -> dict:
@@ -62,6 +62,6 @@ class UpdateManager:
                     "message": "Update installed; restarting monitor.",
                 }
                 subprocess.Popen(["sudo", "-n", "systemctl", "restart", self.settings["service"]])
-            except subprocess.CalledProcessError as error:
-                self._state = {"state": "error", "message": f"Update failed: {error}"}
+            except (OSError, subprocess.SubprocessError):
+                self._state = {"state": "error", "message": "Update installation failed."}
                 self.activity_log.record("update_failed", self._state["message"], level="error")

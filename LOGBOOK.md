@@ -15,6 +15,11 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Kept local experiment outputs separate from Pi-managed model versions so manual work cannot interrupt capture or activate an unreviewed model.
 - Documented uv-only setup, Pi data transfer, GPU detection, reproducible commands, and the small-dataset limitation.
 
+## 2026-09-01 — Update error handling hardening
+
+- Removed subprocess and unexpected update-manager exception details from browser/API responses and activity entries.
+- Kept internal exception logging on the server and added regression tests for both web update endpoints.
+
 ## 2026-08-31 — V0.1 foundation
 
 Created the initial Raspberry Pi camera-monitoring application.

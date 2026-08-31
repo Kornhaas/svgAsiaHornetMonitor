@@ -218,3 +218,28 @@ def test_prediction_history_and_model_activation_endpoints_are_available():
         "model": {"version": "20260901_210000"}
     }
     assert activated == ["20260901_210000"]
+
+
+def test_update_endpoints_hide_manager_exception_details():
+    class BrokenUpdates:
+        def check(self):
+            raise RuntimeError("/private/repository/config")
+
+        def install(self):
+            raise RuntimeError("token=secret")
+
+    client = create_app(
+        camera=None, status=lambda: {}, update_manager=BrokenUpdates()
+    ).test_client()
+
+    check = client.post("/updates/check")
+    install = client.post("/updates/install")
+
+    assert check.status_code == 503
+    assert check.get_json() == {"error": "Update check is temporarily unavailable."}
+    assert b"/private/repository/config" not in check.data
+    assert install.status_code == 503
+    assert install.get_json() == {"error": "Update installation is temporarily unavailable."}
+    assert b"token=secret" not in install.data
+    app_script = Path(client.application.static_folder) / "app.js"
+    assert "!response.ok || result.error" in app_script.read_text(encoding="utf-8")

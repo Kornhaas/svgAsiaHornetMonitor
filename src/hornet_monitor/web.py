@@ -356,14 +356,24 @@ def create_app(
     @app.post("/updates/check")
     @require_login
     def check_updates():
-        return jsonify({"state": "disabled"} if update_manager is None else update_manager.check())
+        if update_manager is None:
+            return jsonify({"state": "disabled"})
+        try:
+            return jsonify(update_manager.check())
+        except Exception:
+            app.logger.exception("Update check failed")
+            return jsonify(error="Update check is temporarily unavailable."), 503
 
     @app.post("/updates/install")
     @require_login
     def install_updates():
-        return jsonify(
-            {"state": "disabled"} if update_manager is None else update_manager.install()
-        )
+        if update_manager is None:
+            return jsonify({"state": "disabled"})
+        try:
+            return jsonify(update_manager.install())
+        except Exception:
+            app.logger.exception("Update installation request failed")
+            return jsonify(error="Update installation is temporarily unavailable."), 503
 
     @app.get("/stream.mjpg")
     @require_login
