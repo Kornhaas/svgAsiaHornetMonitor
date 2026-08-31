@@ -136,3 +136,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Added ROI brightness measurement with a 20-minute sustained-darkness timer and separate bright/dark thresholds.
 - Night mode pauses motion capture and records start/end transitions; daylight resets the motion background before capture resumes.
+
+## 2026-08-31 — Direct image-region editing
+
+- Made both the outer image ROI and the inner trigger ROI visible on the ROI settings camera preview.
+- Added an explicit drawing-mode control: yellow edits the saved image area and blue edits the delayed trigger area; drawing saves the matching rectangle directly while retaining numeric precision fields.

@@ -42,6 +42,17 @@ GERMAN = {
     "Inner trigger ROI": "Innerer Auslöse-ROI",
     "Save image ROI": "Bild-ROI speichern",
     "Save trigger ROI": "Auslöse-ROI speichern",
+    (
+        "Choose a region below and draw its rectangle directly on the live image. "
+        "The outer yellow area is saved in event images. The inner blue area starts an "
+        "event only after the animal has moved further into the image."
+    ): (
+        "Wähle unten einen Bereich und zeichne sein Rechteck direkt im Livebild. "
+        "Der äußere gelbe Bereich wird in Ereignisbildern gespeichert. Der innere blaue "
+        "Bereich startet ein Ereignis erst, wenn sich das Tier weiter ins Bild bewegt hat."
+    ),
+    "Draw image ROI": "Bild-ROI zeichnen",
+    "Draw trigger ROI": "Auslöse-ROI zeichnen",
     "Camera device": "Kameragerät",
     "Width": "Breite",
     "Height": "Höhe",

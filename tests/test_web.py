@@ -87,7 +87,11 @@ def test_roi_settings_and_training_pages_are_available():
     app = create_app(camera=None, status=lambda: {}, training_status=training)
     client = app.test_client()
 
-    assert client.get("/settings/roi").status_code == 200
+    roi_page = client.get("/settings/roi")
+    assert roi_page.status_code == 200
+    assert b'id="outer-box"' in roi_page.data
+    assert b'id="trigger-box"' in roi_page.data
+    assert b"Draw image ROI" in roi_page.data
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)

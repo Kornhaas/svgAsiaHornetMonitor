@@ -85,7 +85,7 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 
 - `camera.device`, `width`, `height`, and `fps` select the webcam mode.
 - `motion.roi` is a rectangle in camera pixels.
-- In the browser, draw a rectangle on the live image; it is saved automatically when you release the mouse. Alternatively enter `X`, `Y`, `Width`, and `Height`, then select **Save ROI**. The change takes effect immediately and is saved only to ignored `config/local.yaml` on that device.
+- On **ROI settings**, select **Draw image ROI** (yellow) or **Draw trigger ROI** (blue), then draw the respective rectangle directly on the live image. It is saved automatically on release; the `X`, `Y`, `Width`, and `Height` fields remain available for exact adjustment. Changes take effect immediately and are saved only to ignored `config/local.yaml` on that device.
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
@@ -101,7 +101,7 @@ Select **Open image gallery** in the web UI to review recent event images. By de
 
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 
-The ROI page contains two rectangles: the **outer image ROI** is saved with every event, while the **inner trigger ROI** starts motion capture only after an animal reaches it. The inner rectangle must remain fully inside the outer one.
+The ROI page displays and edits two rectangles directly on the live image: the yellow **outer image ROI** is saved with every event, while the blue **inner trigger ROI** starts motion capture only after an animal reaches it. The inner rectangle must remain fully inside the outer one.
 
 ## Training and notifications
 
