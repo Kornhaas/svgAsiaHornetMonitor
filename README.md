@@ -101,6 +101,8 @@ Select **Open image gallery** in the web UI to review recent event images. By de
 
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 
+The ROI page contains two rectangles: the **outer image ROI** is saved with every event, while the **inner trigger ROI** starts motion capture only after an animal reaches it. The inner rectangle must remain fully inside the outer one.
+
 ## Training and notifications
 
 Reviewed animal boxes can be exported automatically into deterministic YOLO train/validation/test splits. When night mode starts and the configured number of labelled boxes is reached, the local bounded training worker starts; it is stopped at the configured morning deadline. The **Model & training** page can also start a run manually.

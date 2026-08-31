@@ -68,6 +68,14 @@ def save_local_roi(config_path: str, roi: dict[str, int]) -> None:
         yaml.safe_dump(local_config, config_file, sort_keys=False)
 
 
+def save_local_trigger_roi(config_path: str, roi: dict[str, int]) -> None:
+    local_path = Path(config_path).parent / "local.yaml"
+    local_config = load_config(local_path) if local_path.exists() else {}
+    local_config.setdefault("motion", {})["trigger_roi"] = roi
+    with open(local_path, "w", encoding="utf-8") as config_file:
+        yaml.safe_dump(local_config, config_file, sort_keys=False)
+
+
 def save_local_camera(config_path: str, settings: dict[str, int | str | bool]) -> None:
     device = settings.get("device")
     if not isinstance(device, (int, str)) or (
@@ -229,6 +237,7 @@ def main() -> None:
                 **state,
                 "camera_error": camera.error,
                 "roi": detector.roi(),
+                "trigger_roi": detector.trigger_roi(),
                 "frame_width": config["camera"]["width"],
                 "frame_height": config["camera"]["height"],
                 "event_crop": config["events"].get("crop_to_roi", True),
@@ -236,6 +245,15 @@ def main() -> None:
             }
 
     def update_roi(roi: dict[str, int]) -> dict[str, int]:
+        if "trigger" in roi:
+            updated_trigger = detector.update_trigger_roi(
+                roi["trigger"], config["camera"]["width"], config["camera"]["height"]
+            )
+            save_local_trigger_roi(args.config, updated_trigger)
+            activity_log.record(
+                "trigger_roi_updated", "Trigger region updated", details=updated_trigger
+            )
+            return updated_trigger
         updated_roi = detector.update_roi(
             roi, config["camera"]["width"], config["camera"]["height"]
         )

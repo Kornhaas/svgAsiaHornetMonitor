@@ -47,6 +47,24 @@ class MotionDetectorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             detector.update_roi({"x": 90, "y": 0, "width": 20, "height": 20}, 100, 100)
 
+    def test_detects_only_inside_inner_trigger_roi(self):
+        settings = {
+            "roi": {"x": 0, "y": 0, "width": 100, "height": 100},
+            "min_area": 50,
+            "threshold": 10,
+            "blur_size": 5,
+        }
+        detector = MotionDetector(settings)
+        detector.update_trigger_roi({"x": 30, "y": 30, "width": 40, "height": 40}, 100, 100)
+        baseline = np.zeros((100, 100, 3), dtype=np.uint8)
+        detector.detect(baseline)
+        outside = baseline.copy()
+        outside[5:20, 5:20] = 255
+        self.assertFalse(detector.detect(outside).detected)
+        inside = baseline.copy()
+        inside[40:60, 40:60] = 255
+        self.assertTrue(detector.detect(inside).detected)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,11 @@ motion:
     y: 90
     width: 960
     height: 540
+  trigger_roi:
+    x: 280
+    y: 170
+    width: 720
+    height: 380
   min_area: 900
   threshold: 25
   blur_size: 21

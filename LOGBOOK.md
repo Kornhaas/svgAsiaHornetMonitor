@@ -127,6 +127,11 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Gallery now reloads saved boxes when revisiting an image, allowing labels and boxes to be corrected as one replacement set.
 
+## 2026-08-31 — Inner trigger and outer image regions
+
+- Added a separate inner motion-trigger ROI inside the outer saved-image ROI.
+- An event now starts only in the inner rectangle while the complete outer area is stored for classification and training context.
+
 ## 2026-08-31 — Image-based night mode
 
 - Added ROI brightness measurement with a 20-minute sustained-darkness timer and separate bright/dark thresholds.
