@@ -5,10 +5,10 @@ from __future__ import annotations
 import time
 
 import cv2
-from flask import Flask, Response, jsonify, render_template
+from flask import Flask, Response, jsonify, render_template, request
 
 
-def create_app(camera, status):
+def create_app(camera, status, update_roi=None):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
 
     @app.get("/")
@@ -18,6 +18,18 @@ def create_app(camera, status):
     @app.get("/status")
     def get_status():
         return jsonify(status())
+
+    @app.put("/roi")
+    def set_roi():
+        if update_roi is None:
+            return jsonify(error="ROI editing is unavailable."), 503
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify(error="Expected an ROI JSON object."), 400
+        try:
+            return jsonify(roi=update_roi(payload))
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
 
     @app.get("/stream.mjpg")
     def stream():

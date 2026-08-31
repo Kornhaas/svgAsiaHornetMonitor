@@ -37,11 +37,11 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 1. `main.py` reads YAML configuration and starts one camera capture thread.
 2. The monitor loop obtains copies of the latest frame and asks `MotionDetector` to inspect only the configured ROI.
 3. A positive decision asks `EventWriter` to save the first JPEG immediately and remaining burst frames asynchronously. Cooldown prevents event floods.
-4. The browser consumes the same latest frame and a read-only status snapshot. It never opens the camera itself.
+4. The browser consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. It may update the ROI through the explicit `/roi` endpoint; `MotionDetector` validates it and resets its background model.
 
 ## Configuration boundary
 
-`config/config.yaml` is the committed baseline. Machine-specific changes belong in ignored `config/local.yaml`, passed explicitly with `--config`. Paths in the standard configuration are relative to the repository root, so the application should be started from that root.
+`config/config.yaml` is the committed baseline. Machine-specific changes belong in ignored `config/local.yaml`, which is automatically merged over the baseline at startup. Paths in the standard configuration are relative to the repository root, so the application should be started from that root.
 
 ## Future classifier boundary
 

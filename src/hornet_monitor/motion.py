@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,8 +19,38 @@ class MotionDetector:
     def __init__(self, settings: dict[str, Any]) -> None:
         self.settings = settings
         self._background = None
+        self._lock = threading.RLock()
+
+    def roi(self) -> dict[str, int]:
+        with self._lock:
+            return dict(self.settings["roi"])
+
+    def update_roi(
+        self, roi: dict[str, int], frame_width: int, frame_height: int
+    ) -> dict[str, int]:
+        required = ("x", "y", "width", "height")
+        if any(key not in roi or not isinstance(roi[key], int) for key in required):
+            raise ValueError("ROI requires integer x, y, width, and height values.")
+        x, y, width, height = (roi[key] for key in required)
+        if (
+            x < 0
+            or y < 0
+            or width < 1
+            or height < 1
+            or x + width > frame_width
+            or y + height > frame_height
+        ):
+            raise ValueError("ROI must be fully inside the camera image.")
+        with self._lock:
+            self.settings["roi"] = dict(roi)
+            self._background = None
+            return self.roi()
 
     def detect(self, frame) -> MotionResult:
+        with self._lock:
+            return self._detect(frame)
+
+    def _detect(self, frame) -> MotionResult:
         roi = self.settings["roi"]
         x, y = max(0, roi["x"]), max(0, roi["y"])
         width = min(roi["width"], frame.shape[1] - x)

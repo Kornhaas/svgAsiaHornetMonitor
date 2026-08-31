@@ -36,6 +36,7 @@ Completion: Add focused tests, run uv lock --check, ruff format/check, pytest, a
 Automated tests cannot verify the USB camera. On the Pi, verify:
 
 - `/dev/video0` exists and the configured resolution/FPS is offered by `v4l2-ctl`.
+- `uv --version` works after opening a new shell; immediately after installation use `export PATH="$HOME/.local/bin:$PATH"`.
 - The browser loads `/`, `/status`, and `/stream.mjpg` from another device on the network.
 - Motion outside the ROI does not create an event.
 - Intended motion creates one date/time event directory with the configured burst count.

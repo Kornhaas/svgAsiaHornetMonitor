@@ -36,3 +36,19 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added pytest and Ruff as development dependencies managed by uv.
 - Added a GitHub Actions workflow to install the lockfile, check formatting, lint, and run tests on pushes and pull requests.
 - Added a web route test and standardized local verification around pytest and Ruff.
+
+## 2026-08-31 — Raspberry Pi OS Trixie setup correction
+
+- Removed `libatlas-base-dev` from the installation command because Trixie does not provide that package and this project does not require it.
+- Added the immediate `PATH` export required after uv's user-local installation, before the shell is restarted.
+- Limited the production Pi installation to runtime dependencies with `uv sync --locked --no-dev`.
+
+## 2026-08-31 — Browser icon
+
+- Added a lightweight, local SVG hornet favicon and linked it from the web interface.
+
+## 2026-08-31 — Interactive region of interest
+
+- Added an ROI rectangle on the live image, adjustable by dragging or through numeric fields.
+- Added validated runtime ROI updates through the web API; each update resets the motion background model.
+- Persisted the per-device ROI in ignored `config/local.yaml`, so it survives restarts without entering Git.

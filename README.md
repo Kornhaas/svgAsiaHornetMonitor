@@ -10,6 +10,7 @@ It deliberately contains no species classification or machine learning. The firs
 - 1280 × 720 MJPEG camera configuration at 30 FPS
 - Browser live stream at `http://<pi-address>:8000`
 - ROI-only motion detection with a visible live status
+- Visible, drag-adjustable ROI overlay with numeric controls in the browser
 - Timestamped event folders with a JPEG burst
 - YAML configuration and modular camera, motion, event, and web components
 
@@ -29,12 +30,15 @@ On Raspberry Pi OS Lite 64-bit:
 
 ```bash
 sudo apt update
-sudo apt install -y curl libatlas-base-dev
+sudo apt install -y curl
 git clone https://github.com/Kornhaas/svgAsiaHornetMonitor.git
 cd svgAsiaHornetMonitor
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv sync --locked
+export PATH="$HOME/.local/bin:$PATH"
+uv sync --locked --no-dev
 ```
+
+`libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. The `export PATH=...` command makes the just-installed uv executable available in the current shell. Open a new terminal later and the installer-managed shell configuration will supply this automatically. `--no-dev` keeps test and lint tools off the production Pi.
 
 Check that the webcam is available and supports the expected MJPEG mode:
 
@@ -58,13 +62,14 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 
 - `camera.device`, `width`, `height`, and `fps` select the webcam mode.
 - `motion.roi` is a rectangle in camera pixels.
+- In the browser, drag a rectangle on the live image or enter `X`, `Y`, `Width`, and `Height`, then select **Save ROI**. The change takes effect immediately and is saved only to ignored `config/local.yaml` on that device.
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
 
-For a local machine where `/dev/video0` does not exist, set `camera.device: 0` in a separate `config/local.yaml` and run with `--config config/local.yaml` after copying the main config.
+For a local machine where `/dev/video0` does not exist, create ignored `config/local.yaml` containing `camera: { device: 0 }`. It is automatically merged over the tracked base configuration at startup.
 
 ## Development
 

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Asian hornet">
+  <rect width="64" height="64" rx="14" fill="#142019"/>
+  <path d="M25 25C14 14 9 19 11 31c5-5 10-3 15 2M39 25C50 14 55 19 53 31c-5-5-10-3-15 2" fill="#b9d7dc" stroke="#edf9fa" stroke-width="2"/>
+  <path d="M27 18h10l4 10-4 24H27l-4-24z" fill="#e5a526" stroke="#191b16" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M25 29h14M26 38h12M27 46h10" stroke="#191b16" stroke-width="4"/>
+  <circle cx="28" cy="16" r="5" fill="#191b16"/><circle cx="36" cy="16" r="5" fill="#191b16"/>
+  <path d="M30 12l-4-6M34 12l4-6M32 52v7" fill="none" stroke="#191b16" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -34,6 +34,19 @@ class MotionDetectorTests(unittest.TestCase):
         changed[70:95, 70:95] = 255
         self.assertFalse(detector.detect(changed).detected)
 
+    def test_roi_update_resets_detector_and_rejects_out_of_bounds_roi(self):
+        settings = {
+            "roi": {"x": 0, "y": 0, "width": 50, "height": 50},
+            "min_area": 100,
+            "threshold": 10,
+            "blur_size": 5,
+        }
+        detector = MotionDetector(settings)
+        detector.update_roi({"x": 20, "y": 20, "width": 60, "height": 60}, 100, 100)
+        self.assertEqual(detector.roi(), {"x": 20, "y": 20, "width": 60, "height": 60})
+        with self.assertRaises(ValueError):
+            detector.update_roi({"x": 90, "y": 0, "width": 20, "height": 20}, 100, 100)
+
 
 if __name__ == "__main__":
     unittest.main()
