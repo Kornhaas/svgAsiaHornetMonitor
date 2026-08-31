@@ -208,6 +208,10 @@ data/events/
 data/captures/
 data/activity.jsonl
 data/annotations.jsonl
+data/predictions.jsonl
+data/datasets/
+data/models/
+data/backups/
 data/background.jpg
 data/background.json
 config/local.yaml

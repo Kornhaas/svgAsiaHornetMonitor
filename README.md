@@ -38,10 +38,10 @@ git clone https://github.com/Kornhaas/svgAsiaHornetMonitor.git
 cd svgAsiaHornetMonitor
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
-uv sync --locked --no-dev
+uv sync --locked --no-dev --extra ml
 ```
 
-`libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. The `export PATH=...` command makes the just-installed uv executable available in the current shell. Open a new terminal later and the installer-managed shell configuration will supply this automatically. `--no-dev` keeps test and lint tools off the production Pi.
+`libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. The ML profile installs YOLO/PyTorch for local training and requires substantial disk space and time on a Pi 4. The `export PATH=...` command makes the just-installed uv executable available in the current shell.
 
 Check that the webcam is available and supports the expected MJPEG mode:
 
@@ -100,6 +100,12 @@ Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.
 Select **Open image gallery** in the web UI to review recent event images. By default it displays only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery opens the next unreviewed event automatically. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
 
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
+
+## Training and notifications
+
+Reviewed animal boxes can be exported automatically into deterministic YOLO train/validation/test splits. When night mode starts and the configured number of labelled boxes is reached, the local bounded training worker starts; it is stopped at the configured morning deadline. The **Model & training** page can also start a run manually.
+
+The **Camera settings** page at `/settings/camera` selects a local `/dev/video*` device and stores its resolution/FPS in ignored `config/local.yaml`; saving restarts only the monitor service. The **System status** page configures optional Telegram review notifications. Tokens and chat IDs are likewise written only to `config/local.yaml`, never Git. Telegram sends a rate-limited message for low-confidence predictions or a possible Asian hornet; it does not interrupt capture when offline.
 
 ## Background reference and multiple animals
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import secrets
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -15,12 +16,17 @@ from werkzeug.security import generate_password_hash
 from .activity import ActivityLog
 from .background import BackgroundReference
 from .camera import Camera
+from .dataset import DatasetExporter
 from .events import EventWriter
 from .frames import crop_to_roi
 from .gallery import Gallery
 from .motion import MotionDetector
 from .night_mode import NightMode
+from .notifier import TelegramNotifier
+from .predictor import Predictor
+from .storage import StorageManager
 from .system_status import snapshot
+from .trainer import TrainingManager
 from .training import TrainingStatus
 from .updates import UpdateManager
 from .web import create_app
@@ -29,6 +35,18 @@ from .web import create_app
 def load_config(path: str) -> dict:
     with open(path, encoding="utf-8") as config_file:
         return yaml.safe_load(config_file)
+
+
+def validate_config(config: dict) -> None:
+    night = config["night_mode"]
+    if not 0 <= night["dark_threshold"] < night["bright_threshold"] <= 255:
+        raise ValueError("Night-mode thresholds must be ordered between 0 and 255.")
+    if config["training"]["stop_hour"] not in range(24) or config["training"][
+        "start_hour"
+    ] not in range(24):
+        raise ValueError("Training hours must be between 0 and 23.")
+    if config["storage"]["minimum_free_gb"] < 0:
+        raise ValueError("Minimum free storage cannot be negative.")
 
 
 def merge_config(base: dict, override: dict) -> dict:
@@ -46,6 +64,32 @@ def save_local_roi(config_path: str, roi: dict[str, int]) -> None:
     local_path = Path(config_path).parent / "local.yaml"
     local_config = load_config(local_path) if local_path.exists() else {}
     local_config.setdefault("motion", {})["roi"] = roi
+    with open(local_path, "w", encoding="utf-8") as config_file:
+        yaml.safe_dump(local_config, config_file, sort_keys=False)
+
+
+def save_local_camera(config_path: str, settings: dict[str, int | str | bool]) -> None:
+    device = settings.get("device")
+    if not isinstance(device, (int, str)) or (
+        isinstance(device, str) and not device.startswith("/dev/video")
+    ):
+        raise ValueError("Camera device must be a numeric index or /dev/video device.")
+    if any(
+        not isinstance(settings.get(key), int) or settings[key] < 1
+        for key in ("width", "height", "fps")
+    ):
+        raise ValueError("Camera width, height, and FPS must be positive integers.")
+    local_path = Path(config_path).parent / "local.yaml"
+    local_config = load_config(local_path) if local_path.exists() else {}
+    local_config["camera"] = settings
+    with open(local_path, "w", encoding="utf-8") as config_file:
+        yaml.safe_dump(local_config, config_file, sort_keys=False)
+
+
+def save_local_section(config_path: str, section: str, values: dict) -> None:
+    local_path = Path(config_path).parent / "local.yaml"
+    local_config = load_config(local_path) if local_path.exists() else {}
+    local_config[section] = values
     with open(local_path, "w", encoding="utf-8") as config_file:
         yaml.safe_dump(local_config, config_file, sort_keys=False)
 
@@ -78,6 +122,7 @@ def main() -> None:
     local_path = Path(args.config).parent / "local.yaml"
     if local_path.exists() and Path(args.config) != local_path:
         config = merge_config(config, load_config(local_path))
+    validate_config(config)
     if args.setup_auth:
         configure_auth(args.config, args.username)
         print("Web access protection configured.")
@@ -88,9 +133,24 @@ def main() -> None:
     activity_log.record("monitor_started", "Asia Hornet Monitor started")
     update_manager = UpdateManager(config["updates"], activity_log)
     gallery = Gallery(config["events"]["directory"], config["annotations"]["file"])
-    training_status = TrainingStatus(config["annotations"]["file"], config["training"])
+    exporter = DatasetExporter(
+        config["events"]["directory"],
+        config["annotations"]["file"],
+        config["training"]["datasets_directory"],
+    )
+    training_manager = TrainingManager(exporter, config["training"], activity_log)
+    training_status = TrainingStatus(
+        config["annotations"]["file"], config["training"], training_manager
+    )
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
+    notifier = TelegramNotifier(config["telegram"], activity_log)
+    predictor = Predictor(
+        config["training"]["models_directory"],
+        config["annotations"]["predictions_file"],
+        notifier,
+        activity_log,
+    )
     detector = MotionDetector(config["motion"])
     night_mode = NightMode(config["night_mode"])
 
@@ -108,6 +168,14 @@ def main() -> None:
         config["background"]["image_file"],
         config["background"]["metadata_file"],
         config["background"]["proposal_minimum_area"],
+    )
+    storage = StorageManager(
+        config["storage"],
+        [
+            config["annotations"]["file"],
+            config["background"]["image_file"],
+            config["training"]["models_directory"],
+        ],
     )
 
     writer.frame_supplier = event_frame
@@ -127,6 +195,7 @@ def main() -> None:
                     "Night mode started; motion capture paused and training window is available.",
                     details=night_mode.status(),
                 )
+                training_manager.start()
             elif transition is False:
                 detector.reset()
                 activity_log.record(
@@ -149,6 +218,7 @@ def main() -> None:
                 )
             if saved:
                 print(f"Motion event saved to {writer.last_event}")
+                predictor.submit(str(Path(writer.last_event) / "frame_000.jpg"))
             time.sleep(0.05)
 
     threading.Thread(target=monitor, name="motion-monitor", daemon=True).start()
@@ -188,6 +258,25 @@ def main() -> None:
             "event_deleted", "Event deleted from gallery", details={"event": event_id}
         )
 
+    def update_camera(settings: dict) -> None:
+        save_local_camera(args.config, settings)
+        activity_log.record(
+            "camera_updated", "Camera settings saved; restarting monitor", details=settings
+        )
+        subprocess.Popen(["sudo", "-n", "systemctl", "restart", config["updates"]["service"]])
+
+    def update_telegram(settings: dict) -> None:
+        required = {"enabled", "bot_token", "chat_id", "confidence_threshold", "cooldown_seconds"}
+        if set(settings) != required or not isinstance(settings["enabled"], bool):
+            raise ValueError("Invalid Telegram settings.")
+        settings["confidence_threshold"] = float(settings["confidence_threshold"])
+        settings["cooldown_seconds"] = int(settings["cooldown_seconds"])
+        if not 0 < settings["confidence_threshold"] <= 1 or settings["cooldown_seconds"] < 1:
+            raise ValueError("Invalid Telegram threshold or cooldown.")
+        save_local_section(args.config, "telegram", settings)
+        activity_log.record("telegram_updated", "Telegram settings saved; restarting monitor")
+        subprocess.Popen(["sudo", "-n", "systemctl", "restart", config["updates"]["service"]])
+
     app = create_app(
         camera,
         status,
@@ -201,7 +290,15 @@ def main() -> None:
         training_status,
         background,
         event_frame,
-        lambda: {**snapshot(config["events"]["directory"]), "night_mode": night_mode.status()},
+        lambda: {
+            **snapshot(config["events"]["directory"]),
+            "night_mode": night_mode.status(),
+            "storage": storage.status(),
+        },
+        training_manager,
+        update_camera,
+        update_telegram,
+        storage,
     )
     app.run(
         host=config["web"]["host"],

@@ -20,6 +20,11 @@ dev = [
 [project.scripts]
 hornet-monitor = "hornet_monitor.main:main"
 
+[project.optional-dependencies]
+ml = [
+    "ultralytics>=8.4.137",
+]
+
 [build-system]
 requires = ["uv_build>=0.12.7,<0.13"]
 build-backend = "uv_build"

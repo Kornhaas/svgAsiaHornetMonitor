@@ -117,6 +117,12 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Added automatic page reload after a browser-initiated service update and MJPEG reconnect handling after an interrupted stream.
 
+## 2026-08-31 — Local training and appliance controls
+
+- Added deterministic YOLO dataset export with train/validation/test splits, a deadline-bounded overnight training process, and asynchronous post-event prediction.
+- Added optional, rate-limited Telegram review notifications with credentials stored only in local configuration.
+- Added camera selection/settings, camera reconnect attempts, local metadata backups, configuration validation, and storage-warning state.
+
 ## 2026-08-31 — Image-based night mode
 
 - Added ROI brightness measurement with a 20-minute sustained-darkness timer and separate bright/dark thresholds.

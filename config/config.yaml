@@ -4,6 +4,7 @@ camera:
   height: 720
   fps: 30
   mjpeg: true
+  reconnect_seconds: 5
 
 motion:
   # Coordinates are pixels in the configured camera resolution.
@@ -29,12 +30,30 @@ activity:
 
 annotations:
   file: data/annotations.jsonl
+  predictions_file: data/predictions.jsonl
 
 training:
   # A future training worker may run only inside this overnight window.
   start_hour: 21
   stop_hour: 6
   minimum_annotations: 50
+  datasets_directory: data/datasets
+  models_directory: data/models
+  model_name: yolo11n.pt
+  epochs: 30
+  image_size: 320
+
+telegram:
+  enabled: false
+  bot_token: ""
+  chat_id: ""
+  confidence_threshold: 0.8
+  cooldown_seconds: 600
+
+storage:
+  directory: data
+  backup_directory: data/backups
+  minimum_free_gb: 10
 
 background:
   image_file: data/background.jpg

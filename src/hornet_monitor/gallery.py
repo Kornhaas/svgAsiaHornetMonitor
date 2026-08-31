@@ -51,6 +51,10 @@ class Gallery:
             raise FileNotFoundError(image_id)
         return candidate
 
+    def annotations_for(self, image_id: str) -> list[dict[str, Any]]:
+        self.image_path(image_id)
+        return [entry for entry in self._annotations() if entry.get("image") == image_id]
+
     def annotate(self, annotation: dict[str, Any]) -> dict[str, Any]:
         if "annotations" in annotation:
             items = annotation["annotations"]

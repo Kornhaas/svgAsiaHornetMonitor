@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from functools import wraps
+from pathlib import Path
 
 import cv2
 from flask import (
@@ -36,6 +37,10 @@ def create_app(
     background=None,
     event_frame=None,
     system_status=None,
+    training_manager=None,
+    update_camera=None,
+    update_telegram=None,
+    storage=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -118,6 +123,51 @@ def create_app(
     def roi_settings():
         return render_template("roi_settings.html")
 
+    @app.get("/settings/camera")
+    @require_login
+    def camera_settings():
+        return render_template("camera_settings.html")
+
+    @app.get("/api/cameras")
+    @require_login
+    def cameras():
+        return jsonify([str(path) for path in Path("/dev").glob("video*")])
+
+    @app.put("/api/camera")
+    @require_login
+    def set_camera():
+        if update_camera is None:
+            return jsonify(error="Camera editing is unavailable."), 503
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify(error="Expected camera settings."), 400
+        try:
+            update_camera(payload)
+            return jsonify(message="Camera saved; monitor is restarting."), 202
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+
+    @app.put("/api/telegram")
+    @require_login
+    def set_telegram():
+        if update_telegram is None:
+            return jsonify(error="Telegram configuration is unavailable."), 503
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify(error="Expected Telegram settings."), 400
+        try:
+            update_telegram(payload)
+            return jsonify(message="Telegram settings saved; monitor is restarting."), 202
+        except (TypeError, ValueError) as error:
+            return jsonify(error=str(error)), 400
+
+    @app.post("/api/backup")
+    @require_login
+    def backup():
+        if storage is None:
+            return jsonify(error="Backup is unavailable."), 503
+        return jsonify(path=storage.backup()), 201
+
     @app.get("/training")
     @require_login
     def training_page():
@@ -135,6 +185,13 @@ def create_app(
             else training_status.overview()
         )
         return render_template("training.html", overview=overview)
+
+    @app.post("/api/training/start")
+    @require_login
+    def start_training():
+        if training_manager is None:
+            return jsonify(error="Training is unavailable."), 503
+        return jsonify(training_manager.start()), 202
 
     @app.get("/system")
     @require_login
@@ -186,6 +243,21 @@ def create_app(
     @require_login
     def events():
         return jsonify([] if gallery is None else gallery.events())
+
+    @app.get("/api/annotations/<path:image_id>")
+    @require_login
+    def image_annotations(image_id):
+        if gallery is None:
+            return jsonify([])
+        try:
+            return jsonify(gallery.annotations_for(image_id))
+        except (FileNotFoundError, ValueError):
+            return jsonify([])
+
+    @app.get("/api/dataset")
+    @require_login
+    def dataset_status():
+        return jsonify({} if training_manager is None else training_manager.exporter.summary())
 
     @app.get("/event-image/<path:image_id>")
     @require_login

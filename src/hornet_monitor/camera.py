@@ -18,8 +18,16 @@ class Camera:
         self._running = False
         self._thread: threading.Thread | None = None
         self.error: str | None = None
+        self._last_open_attempt = 0.0
 
     def start(self) -> None:
+        if not self._open():
+            return
+        self._running = True
+        self._thread = threading.Thread(target=self._read_frames, name="camera", daemon=True)
+        self._thread.start()
+
+    def _open(self) -> bool:
         device = self.settings["device"]
         if isinstance(device, str) and device.isdigit():
             device = int(device)
@@ -31,18 +39,31 @@ class Camera:
             self._capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         if not self._capture.isOpened():
             self.error = f"Camera {device!r} could not be opened."
-            return
-        self._running = True
-        self._thread = threading.Thread(target=self._read_frames, name="camera", daemon=True)
-        self._thread.start()
+            self._capture.release()
+            self._capture = None
+            return False
+        return True
 
     def _read_frames(self) -> None:
-        assert self._capture is not None
         while self._running:
+            if self._capture is None:
+                if time.monotonic() - self._last_open_attempt >= self.settings.get(
+                    "reconnect_seconds", 5
+                ):
+                    self._last_open_attempt = time.monotonic()
+                    self._open()
+                time.sleep(0.2)
+                continue
             ok, frame = self._capture.read()
             if not ok:
                 self.error = "Could not read a frame from the camera."
-                time.sleep(0.1)
+                if time.monotonic() - self._last_open_attempt >= self.settings.get(
+                    "reconnect_seconds", 5
+                ):
+                    self._last_open_attempt = time.monotonic()
+                    self._capture.release()
+                    self._open()
+                time.sleep(0.2)
                 continue
             with self._lock:
                 self._frame = frame

@@ -110,3 +110,28 @@ def test_language_selection_is_stored_in_the_browser_session():
     assert client.post("/language/en").get_json()["language"] == "en"
     assert b'lang="en"' in client.get("/").data
     assert client.post("/language/fr").status_code == 400
+
+
+def test_camera_and_training_controls_forward_safe_payloads():
+    saved_camera, training = (
+        [],
+        type("Training", (), {"start": lambda self: {"state": "waiting"}})(),
+    )
+    app = create_app(
+        camera=None,
+        status=lambda: {},
+        update_camera=lambda settings: saved_camera.append(settings),
+        training_manager=training,
+    )
+    client = app.test_client()
+
+    assert client.get("/settings/camera").status_code == 200
+    assert (
+        client.put(
+            "/api/camera",
+            json={"device": "/dev/video0", "width": 1280, "height": 720, "fps": 30, "mjpeg": True},
+        ).status_code
+        == 202
+    )
+    assert saved_camera[0]["device"] == "/dev/video0"
+    assert client.post("/api/training/start").get_json()["state"] == "waiting"

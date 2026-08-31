@@ -69,6 +69,6 @@ Appliance mode uses `hornet-monitor.service` under systemd. The web UI is passwo
 
 `scripts/setup-pi.sh` is the one-time bootstrap for a new Pi. It is deliberately fixed to the `hornet` user and this repository; it does not accept remote URLs or arbitrary installation paths.
 
-## Future classifier boundary
+## Training and classifier boundary
 
-When classification is requested, add `classifier.py` behind an explicit interface such as `classify(frame) -> ClassificationResult`. Run it only after an event is created, ideally in a bounded worker queue. Do not put inference in the camera thread, MJPEG generator, or motion detector.
+`dataset.py` is the only component that turns confirmed gallery boxes into YOLO data. `trainer.py` owns a separate, deadline-bounded process; `predictor.py` runs only after an event has been saved, in its own thread. `notifier.py` receives only prediction summaries and cannot block camera, motion, event writing, or the web UI. The optional `ml` dependency profile owns Ultralytics/PyTorch; a missing or failed model must degrade to collection-only mode.
