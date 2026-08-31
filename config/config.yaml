@@ -36,6 +36,11 @@ training:
   stop_hour: 6
   minimum_annotations: 50
 
+background:
+  image_file: data/background.jpg
+  metadata_file: data/background.json
+  proposal_minimum_area: 300
+
 web:
   host: 0.0.0.0
   port: 8000

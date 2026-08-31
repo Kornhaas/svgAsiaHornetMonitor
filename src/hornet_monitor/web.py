@@ -31,6 +31,9 @@ def create_app(
     save_annotation=None,
     delete_event=None,
     training_status=None,
+    background=None,
+    event_frame=None,
+    system_status=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -105,6 +108,52 @@ def create_app(
             else training_status.overview()
         )
         return render_template("training.html", overview=overview)
+
+    @app.get("/system")
+    @require_login
+    def system_page():
+        return render_template("system.html")
+
+    @app.get("/api/system-status")
+    @require_login
+    def get_system_status():
+        return jsonify(
+            {
+                "device": {} if system_status is None else system_status(),
+                "background": {"available": False, "updated_at": None}
+                if background is None
+                else background.status(),
+                "update": {"state": "disabled"}
+                if update_manager is None
+                else update_manager._state,
+            }
+        )
+
+    @app.post("/api/background")
+    @require_login
+    def update_background():
+        if background is None or event_frame is None:
+            return jsonify(error="Background capture is unavailable."), 503
+        frame = event_frame()
+        if frame is None:
+            return jsonify(error="Camera frame is unavailable."), 503
+        try:
+            return jsonify(background=background.save(frame)), 201
+        except ValueError as error:
+            return jsonify(error=str(error)), 500
+
+    @app.get("/api/events/<path:image_id>/proposals")
+    @require_login
+    def event_proposals(image_id):
+        if gallery is None or background is None:
+            return jsonify([])
+        try:
+            import cv2
+
+            frame = cv2.imread(str(gallery.image_path(image_id)))
+            return jsonify(background.proposals(frame))
+        except (FileNotFoundError, ValueError):
+            return jsonify([])
 
     @app.get("/api/events")
     @require_login

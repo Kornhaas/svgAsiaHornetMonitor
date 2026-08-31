@@ -101,3 +101,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Moved ROI editing to a dedicated browser page; the live monitor now displays the yellow ROI as read-only.
 - Added a model-and-training status page that reports reviewed images, annotation totals, label distribution, the initial readiness threshold, and the planned 21:00–06:00 window.
 - Kept training explicitly unimplemented: the page cannot misrepresent dataset collection as a trained or running model.
+
+## 2026-08-31 — Multi-animal review and operational status
+
+- Extended gallery storage to accept and replace multiple labelled boxes for one image.
+- Added explicit ROI background capture and OpenCV difference proposals, stored locally and marked uncertain until reviewed.
+- Added a local system-status page for background timestamp, disk space, CPU load, memory load, and the last code-update state.

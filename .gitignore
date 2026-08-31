@@ -208,6 +208,8 @@ data/events/
 data/captures/
 data/activity.jsonl
 data/annotations.jsonl
+data/background.jpg
+data/background.json
 config/local.yaml
 logs/
 

@@ -13,11 +13,13 @@ import yaml
 from werkzeug.security import generate_password_hash
 
 from .activity import ActivityLog
+from .background import BackgroundReference
 from .camera import Camera
 from .events import EventWriter
 from .frames import crop_to_roi
 from .gallery import Gallery
 from .motion import MotionDetector
+from .system_status import snapshot
 from .training import TrainingStatus
 from .updates import UpdateManager
 from .web import create_app
@@ -100,6 +102,12 @@ def main() -> None:
             else frame
         )
 
+    background = BackgroundReference(
+        config["background"]["image_file"],
+        config["background"]["metadata_file"],
+        config["background"]["proposal_minimum_area"],
+    )
+
     writer.frame_supplier = event_frame
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
     state_lock = threading.Lock()
@@ -169,6 +177,9 @@ def main() -> None:
         save_annotation,
         delete_event,
         training_status,
+        background,
+        event_frame,
+        lambda: snapshot(config["events"]["directory"]),
     )
     app.run(
         host=config["web"]["host"],

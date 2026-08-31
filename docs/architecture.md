@@ -25,6 +25,8 @@ Event images ─► Gallery + annotation UI ─► data/annotations.jsonl
                                               │
                                               └──► TrainingStatus ─► Web /training
 
+ROI frame ─► BackgroundReference ─► data/background.jpg ─► OpenCV proposals ─► Gallery review
+
 config/config.yaml ─► main.py (composition and runtime state) ─► Web /status
                                                           └──► UpdateManager ─► Git + systemd restart
 ```
@@ -38,6 +40,8 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 | `frames.py` | Bounds-safe ROI crop for event and training frames | Motion decisions, camera access, file writes |
 | `events.py` | Event folder naming, cooldown, JPEG burst writing | Camera setup, motion thresholds |
 | `training.py` | Read-only annotation counts and planned model status | Training execution, camera processing, HTTP |
+| `background.py` | Explicit reference capture and conservative proposal boxes | Automatic background updates or final classification |
+| `system_status.py` | Dependency-free device-health snapshot | System control or configuration changes |
 | `web.py` | HTML, MJPEG response, JSON status endpoint | Direct camera reads or event decisions |
 | `updates.py` | Fast-forward-only update check/install and service restart | Arbitrary command execution or user-supplied paths |
 
@@ -53,6 +57,7 @@ The browser UI uses Bootstrap 5 for responsive layout and accessible controls, w
 3. A positive decision crops the saved frame to the current ROI when `events.crop_to_roi` is enabled, then asks `EventWriter` to save the first JPEG immediately and remaining ROI-cropped burst frames asynchronously. Cooldown prevents event floods. The live stream is always the original full camera frame.
 4. The live-monitor browser page consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. Only the explicit ROI settings page may update the ROI through `/roi`; `MotionDetector` validates it and resets its background model.
 5. The model-and-training page reads local annotation metadata through `TrainingStatus`. It does not start training, perform inference, or modify the capture pipeline.
+6. The user may explicitly capture a cropped ROI background frame. Gallery proposals use only a difference against this reference and remain `uncertain` until a user confirms their class.
 
 ## Configuration boundary
 

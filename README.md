@@ -98,6 +98,10 @@ Select **Open image gallery** in the web UI to review recent event images. By de
 
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 
+## Background reference and multiple animals
+
+Use the **System status** page at `/system` to capture a background reference while the ROI is empty. The reference is local and excluded from Git. In the gallery, draw and add one box per animal, then save all boxes together. **Suggest objects** compares an event to the reference with OpenCV and adds conservative `uncertain` proposals; always review, correct, or remove them before saving. Update the reference after moving the camera, changing the ROI, or a substantial lighting/background change.
+
 **Delete event** asks for confirmation, then removes the selected event and all of its burst images. This is appropriate for test captures such as a hand in front of the camera and avoids keeping partial event bursts.
 
 For a local machine where `/dev/video0` does not exist, create ignored `config/local.yaml` containing `camera: { device: 0 }`. It is automatically merged over the tracked base configuration at startup.
