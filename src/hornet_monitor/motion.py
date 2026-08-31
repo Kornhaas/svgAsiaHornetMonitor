@@ -50,6 +50,10 @@ class MotionDetector:
         with self._lock:
             return self._detect(frame)
 
+    def reset(self) -> None:
+        with self._lock:
+            self._background = None
+
     def _detect(self, frame) -> MotionResult:
         roi = self.settings["roi"]
         x, y = max(0, roi["x"]), max(0, roi["y"])

@@ -116,3 +116,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-08-31 — Resilient stream after updates
 
 - Added automatic page reload after a browser-initiated service update and MJPEG reconnect handling after an interrupted stream.
+
+## 2026-08-31 — Image-based night mode
+
+- Added ROI brightness measurement with a 20-minute sustained-darkness timer and separate bright/dark thresholds.
+- Night mode pauses motion capture and records start/end transitions; daylight resets the motion background before capture resumes.

@@ -19,6 +19,7 @@ from .events import EventWriter
 from .frames import crop_to_roi
 from .gallery import Gallery
 from .motion import MotionDetector
+from .night_mode import NightMode
 from .system_status import snapshot
 from .training import TrainingStatus
 from .updates import UpdateManager
@@ -91,6 +92,7 @@ def main() -> None:
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
     detector = MotionDetector(config["motion"])
+    night_mode = NightMode(config["night_mode"])
 
     def event_frame(frame=None):
         frame = camera.get_frame() if frame is None else frame
@@ -118,6 +120,25 @@ def main() -> None:
             if frame is None:
                 time.sleep(0.1)
                 continue
+            transition = night_mode.observe(event_frame(frame))
+            if transition is True:
+                activity_log.record(
+                    "night_mode_started",
+                    "Night mode started; motion capture paused and training window is available.",
+                    details=night_mode.status(),
+                )
+            elif transition is False:
+                detector.reset()
+                activity_log.record(
+                    "night_mode_ended",
+                    "Daylight returned; motion capture resumed.",
+                    details=night_mode.status(),
+                )
+            if night_mode.active:
+                with state_lock:
+                    state.update(motion=False, largest_area=0.0)
+                time.sleep(0.2)
+                continue
             result = detector.detect(frame)
             saved = result.detected and writer.save_burst(event_frame(frame))
             with state_lock:
@@ -141,6 +162,7 @@ def main() -> None:
                 "frame_width": config["camera"]["width"],
                 "frame_height": config["camera"]["height"],
                 "event_crop": config["events"].get("crop_to_roi", True),
+                "night_mode": night_mode.status(),
             }
 
     def update_roi(roi: dict[str, int]) -> dict[str, int]:
@@ -156,7 +178,7 @@ def main() -> None:
         activity_log.record(
             "annotation_saved",
             "Image annotation saved",
-            details={"label": saved["label"], "image": saved["image"]},
+            details={"image": saved["image"], "count": len(saved.get("annotations", [saved]))},
         )
         return saved
 
@@ -179,7 +201,7 @@ def main() -> None:
         training_status,
         background,
         event_frame,
-        lambda: snapshot(config["events"]["directory"]),
+        lambda: {**snapshot(config["events"]["directory"]), "night_mode": night_mode.status()},
     )
     app.run(
         host=config["web"]["host"],

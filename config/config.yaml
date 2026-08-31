@@ -41,6 +41,12 @@ background:
   metadata_file: data/background.json
   proposal_minimum_area: 300
 
+night_mode:
+  enabled: true
+  dark_threshold: 45
+  bright_threshold: 65
+  dark_seconds: 1200
+
 web:
   host: 0.0.0.0
   port: 8000

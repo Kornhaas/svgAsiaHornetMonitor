@@ -91,6 +91,7 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
 - `events.crop_to_roi` keeps saved gallery and training images limited to the ROI (enabled by default). The live stream remains full-frame so the ROI can still be adjusted comfortably.
 - `training.minimum_annotations` defines the initial dataset threshold displayed in the UI. `training.start_hour` and `stop_hour` reserve the intended future overnight training window; they do not start training yet.
+- `night_mode` estimates brightness from the saved ROI image. After `dark_seconds` below `dark_threshold`, motion capture pauses; it resumes only after `bright_threshold` is reached, avoiding rapid switching at dusk.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
 
