@@ -107,3 +107,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Extended gallery storage to accept and replace multiple labelled boxes for one image.
 - Added explicit ROI background capture and OpenCV difference proposals, stored locally and marked uncertain until reviewed.
 - Added a local system-status page for background timestamp, disk space, CPU load, memory load, and the last code-update state.
+
+## 2026-08-31 — German and English UI
+
+- Added a local, session-based language selector with German as the default and English as an alternative.
+- Kept the translation catalogue in source control and added no cloud translation dependency.

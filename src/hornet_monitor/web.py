@@ -19,6 +19,8 @@ from flask import (
 )
 from werkzeug.security import check_password_hash
 
+from .i18n import translations
+
 
 def create_app(
     camera,
@@ -45,6 +47,24 @@ def create_app(
         )
     app.secret_key = auth.get("secret_key", "development-only-secret")
 
+    @app.context_processor
+    def inject_i18n():
+        language = session.get("language", "de")
+        return {"language": language, "translations": translations(language)}
+
+    @app.after_request
+    def add_i18n(response):
+        if response.mimetype != "text/html":
+            return response
+        language = session.get("language", "de")
+        page = response.get_data(as_text=True).replace('lang="en"', f'lang="{language}"')
+        script = (
+            f"<script>window.hornetTranslations={translations(language)!r};</script>"
+            '<script src="/static/i18n.js"></script>'
+        )
+        response.set_data(page.replace("</body>", f"{script}</body>"))
+        return response
+
     def require_login(view):
         @wraps(view)
         def wrapped(*args, **kwargs):
@@ -69,6 +89,13 @@ def create_app(
                 return redirect(url_for("index"))
             error = "Invalid username or password."
         return render_template("login.html", error=error)
+
+    @app.post("/language/<language>")
+    def set_language(language):
+        if language not in {"de", "en"}:
+            return jsonify(error="Unsupported language."), 400
+        session["language"] = language
+        return jsonify(language=language, translations=translations(language))
 
     @app.post("/logout")
     @require_login

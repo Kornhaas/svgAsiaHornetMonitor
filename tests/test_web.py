@@ -101,3 +101,12 @@ def test_event_deletion_endpoint_forwards_the_event_id():
 
     assert app.test_client().delete("/api/events/2026-08-31/event").status_code == 204
     assert deleted == ["2026-08-31/event"]
+
+
+def test_language_selection_is_stored_in_the_browser_session():
+    app = create_app(camera=None, status=lambda: {})
+    client = app.test_client()
+
+    assert client.post("/language/en").get_json()["language"] == "en"
+    assert b'lang="en"' in client.get("/").data
+    assert client.post("/language/fr").status_code == 400
