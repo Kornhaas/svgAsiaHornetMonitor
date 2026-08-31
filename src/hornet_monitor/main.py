@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import getpass
+import secrets
 import threading
 import time
 from pathlib import Path
 
 import yaml
+from werkzeug.security import generate_password_hash
 
 from .activity import ActivityLog
 from .camera import Camera
 from .events import EventWriter
 from .motion import MotionDetector
+from .updates import UpdateManager
 from .web import create_app
 
 
@@ -40,18 +44,43 @@ def save_local_roi(config_path: str, roi: dict[str, int]) -> None:
         yaml.safe_dump(local_config, config_file, sort_keys=False)
 
 
+def configure_auth(config_path: str, username: str) -> None:
+    password = getpass.getpass("Password for the web interface: ")
+    if not password:
+        raise ValueError("Password must not be empty.")
+    local_path = Path(config_path).parent / "local.yaml"
+    local_config = load_config(local_path) if local_path.exists() else {}
+    local_config.setdefault("web", {})["auth"] = {
+        "enabled": True,
+        "username": username,
+        "password_hash": generate_password_hash(password),
+        "secret_key": secrets.token_urlsafe(32),
+    }
+    local_config.setdefault("updates", {})["enabled"] = True
+    local_config["updates"]["uv_binary"] = str(Path.home() / ".local/bin/uv")
+    with open(local_path, "w", encoding="utf-8") as config_file:
+        yaml.safe_dump(local_config, config_file, sort_keys=False)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Asia Hornet Monitor")
     parser.add_argument("--config", default="config/config.yaml")
+    parser.add_argument("--setup-auth", action="store_true")
+    parser.add_argument("--username", default="hornet")
     args = parser.parse_args()
     config = load_config(args.config)
     local_path = Path(args.config).parent / "local.yaml"
     if local_path.exists() and Path(args.config) != local_path:
         config = merge_config(config, load_config(local_path))
+    if args.setup_auth:
+        configure_auth(args.config, args.username)
+        print("Web access protection configured.")
+        return
     camera = Camera(config["camera"])
     camera.start()
     activity_log = ActivityLog(config["activity"]["file"])
     activity_log.record("monitor_started", "Asia Hornet Monitor started")
+    update_manager = UpdateManager(config["updates"], activity_log)
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
     writer.frame_supplier = camera.get_frame
@@ -97,7 +126,9 @@ def main() -> None:
         activity_log.record("roi_updated", "Region of interest updated", details=updated_roi)
         return updated_roi
 
-    app = create_app(camera, status, update_roi, activity_log)
+    app = create_app(
+        camera, status, update_roi, activity_log, config["web"]["auth"], update_manager
+    )
     app.run(
         host=config["web"]["host"],
         port=config["web"]["port"],

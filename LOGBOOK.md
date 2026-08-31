@@ -59,3 +59,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added a persistent activity feed in the web UI.
 - Motion events, monitor startup, and ROI changes are written to ignored local `data/activity.jsonl` and exposed through `/activities`.
 - The same feed will show the future overnight-training lifecycle, warnings, and outcomes.
+
+## 2026-08-31 — Browser-only appliance mode
+
+- Added optional password-protected web access with locally stored password hash and session secret.
+- Added an update panel that checks the fixed Git remote and installs fast-forward-only updates before restarting the service.
+- Added a restricted systemd service installer and sudo rule; no arbitrary browser-supplied shell command can be run.

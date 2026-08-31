@@ -1,0 +1,1 @@
+hornet ALL=(root) NOPASSWD: /usr/bin/systemctl restart hornet-monitor.service

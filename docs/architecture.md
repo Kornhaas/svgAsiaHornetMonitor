@@ -22,6 +22,7 @@ USB webcam (/dev/video0)
                            └──────────► ActivityLog ─► data/activity.jsonl ─► Web /activities
 
 config/config.yaml ─► main.py (composition and runtime state) ─► Web /status
+                                                          └──► UpdateManager ─► Git + systemd restart
 ```
 
 ## Component contracts
@@ -32,6 +33,7 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 | `motion.py` | ROI validation and frame-to-motion decision | Saving data, starting threads, web state |
 | `events.py` | Event folder naming, cooldown, JPEG burst writing | Camera setup, motion thresholds |
 | `web.py` | HTML, MJPEG response, JSON status endpoint | Direct camera reads or event decisions |
+| `updates.py` | Fast-forward-only update check/install and service restart | Arbitrary command execution or user-supplied paths |
 | `main.py` | Configuration loading and component wiring | Complex image processing or presentation |
 
 ## Runtime behavior
@@ -44,6 +46,10 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 ## Configuration boundary
 
 `config/config.yaml` is the committed baseline. Machine-specific changes belong in ignored `config/local.yaml`, which is automatically merged over the baseline at startup. Paths in the standard configuration are relative to the repository root, so the application should be started from that root.
+
+## Operations and updates
+
+Appliance mode uses `hornet-monitor.service` under systemd. The web UI is password-protected after `scripts/install-service.sh` has configured ignored local credentials. The updater accepts no user-supplied Git URL, command, path, or service name: it updates only the configured repository by `git pull --ff-only`, runs `uv sync --locked --no-dev`, then restarts only `hornet-monitor.service` through a narrowly scoped sudo rule.
 
 ## Future classifier boundary
 

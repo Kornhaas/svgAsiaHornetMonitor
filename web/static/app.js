@@ -7,6 +7,7 @@ const roiBox = document.querySelector('#roi');
 const roiForm = document.querySelector('#roi-form');
 const roiMessage = document.querySelector('#roi-message');
 const activityList = document.querySelector('#activity-list');
+const updateMessage = document.querySelector('#update-message');
 const inputs = Object.fromEntries(['x', 'y', 'width', 'height'].map((key) => [key, document.querySelector(`#roi-${key}`)]));
 let frameSize = { width: 1280, height: 720 };
 let editingRoi = false;
@@ -45,6 +46,15 @@ async function refreshActivities() {
     if (!activities.length) activityList.textContent = 'No activity recorded yet.';
   } catch (_) { activityList.textContent = 'Activity log unavailable.'; }
 }
+
+async function updateRequest(path) {
+  const response = await fetch(path, { method: 'POST' });
+  const result = await response.json();
+  updateMessage.textContent = result.message || (result.state === 'current' ? `Up to date (${result.current}).` : `${result.pending} update(s) available.`);
+}
+
+document.querySelector('#check-update').addEventListener('click', () => updateRequest('/updates/check'));
+document.querySelector('#install-update').addEventListener('click', () => updateRequest('/updates/install'));
 
 async function saveRoi() {
   const response = await fetch('/roi', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentRoi()) });

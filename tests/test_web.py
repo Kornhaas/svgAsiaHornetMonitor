@@ -1,3 +1,5 @@
+from werkzeug.security import generate_password_hash
+
 from hornet_monitor.web import create_app
 
 
@@ -37,3 +39,21 @@ def test_activities_endpoint_returns_recent_entries():
     )
 
     assert app.test_client().get("/activities").get_json() == entries
+
+
+def test_enabled_auth_protects_monitor_and_accepts_valid_login():
+    auth = {
+        "enabled": True,
+        "username": "hornet",
+        "password_hash": generate_password_hash("secret"),
+        "secret_key": "test-secret",
+    }
+    app = create_app(camera=None, status=lambda: {}, auth=auth)
+    client = app.test_client()
+
+    assert client.get("/").status_code == 302
+    assert client.get("/status").status_code == 401
+    assert (
+        client.post("/login", data={"username": "hornet", "password": "secret"}).status_code == 302
+    )
+    assert client.get("/status").status_code == 200

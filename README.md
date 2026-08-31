@@ -57,6 +57,18 @@ uv run hornet-monitor
 
 Open `http://<raspberry-pi-ip>:8000` from a device on the same network. Stop with `Ctrl+C`.
 
+## Appliance mode: browser-only operation
+
+For normal use without an open terminal, install the provided systemd service once from the project root on the Pi:
+
+```bash
+bash scripts/install-service.sh
+```
+
+The installer asks once for a web password, enables service autostart, and configures the browser update button. After that, sign in at `http://hornet.local:8000` to operate the monitor, check for updates, and install updates. The update action uses fast-forward-only Git pulls, installs the locked runtime dependencies, records the result in the activity log, and restarts the service.
+
+The installer is intentionally limited to `/home/hornet/svgAsiaHornetMonitor` and only grants the `hornet` user permission to restart this one service. Do not expose the monitor directly to the internet.
+
 ## Configuration
 
 Edit [`config/config.yaml`](config/config.yaml) before deployment:
