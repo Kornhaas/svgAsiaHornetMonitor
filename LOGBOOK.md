@@ -78,6 +78,12 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Adopted Bootstrap 5 for a responsive, consistent dashboard, navigation, cards, forms, and login screen.
 - Documented the UI responsibility and usability rules in the architecture guide.
 
+## 2026-08-31 — Fast gallery review
+
+- Added reviewed status and an unreviewed-only gallery filter.
+- Saving an annotation advances to the next unreviewed event.
+- Added confirmed whole-event deletion for unusable test captures, including their annotations.
+
 ## 2026-08-31 — Quality and security automation
 
 - Extended CI with Python 3.11/3.13 checks, lockfile verification, branch coverage, and uv dependency audit.

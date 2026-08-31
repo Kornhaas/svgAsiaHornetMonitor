@@ -91,7 +91,9 @@ Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.
 
 ## Image gallery and manual labels
 
-Select **Open image gallery** in the web UI to review recent event images. Select an event, draw a box around the animal, choose a class, and save it. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
+Select **Open image gallery** in the web UI to review recent event images. By default it displays only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery opens the next unreviewed event automatically. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
+
+**Delete event** asks for confirmation, then removes the selected event and all of its burst images. This is appropriate for test captures such as a hand in front of the camera and avoids keeping partial event bursts.
 
 For a local machine where `/dev/video0` does not exist, create ignored `config/local.yaml` containing `camera: { device: 0 }`. It is automatically merged over the tracked base configuration at startup.
 

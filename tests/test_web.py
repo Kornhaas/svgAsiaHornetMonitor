@@ -66,3 +66,13 @@ def test_gallery_page_and_events_endpoint_are_available():
 
     assert client.get("/gallery").status_code == 200
     assert client.get("/api/events").get_json() == [{"id": "event"}]
+
+
+def test_event_deletion_endpoint_forwards_the_event_id():
+    deleted = []
+    app = create_app(
+        camera=None, status=lambda: {}, delete_event=lambda event_id: deleted.append(event_id)
+    )
+
+    assert app.test_client().delete("/api/events/2026-08-31/event").status_code == 204
+    assert deleted == ["2026-08-31/event"]

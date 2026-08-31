@@ -137,6 +137,12 @@ def main() -> None:
         )
         return saved
 
+    def delete_event(event_id: str) -> None:
+        gallery.delete_event(event_id)
+        activity_log.record(
+            "event_deleted", "Event deleted from gallery", details={"event": event_id}
+        )
+
     app = create_app(
         camera,
         status,
@@ -146,6 +152,7 @@ def main() -> None:
         update_manager,
         gallery,
         save_annotation,
+        delete_event,
     )
     app.run(
         host=config["web"]["host"],

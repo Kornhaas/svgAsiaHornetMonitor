@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -17,14 +18,27 @@ class Gallery:
 
     def events(self, limit: int = 100) -> list[dict[str, Any]]:
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
-        return [self._event(image) for image in images[:limit]]
+        reviewed_images = {annotation.get("image") for annotation in self._annotations()}
+        return [
+            self._event(
+                image, image.relative_to(self.events_directory).as_posix() in reviewed_images
+            )
+            for image in images[:limit]
+        ]
 
-    def _event(self, image: Path) -> dict[str, Any]:
+    def _event(self, image: Path, reviewed: bool) -> dict[str, Any]:
         return {
             "id": image.parent.relative_to(self.events_directory).as_posix(),
             "image": image.relative_to(self.events_directory).as_posix(),
             "image_count": len(list(image.parent.glob("frame_*.jpg"))),
+            "reviewed": reviewed,
         }
+
+    def _annotations(self) -> list[dict[str, Any]]:
+        if not self.annotations_file.exists():
+            return []
+        with self.annotations_file.open(encoding="utf-8") as annotations:
+            return [json.loads(line) for line in annotations if line.strip()]
 
     def image_path(self, image_id: str) -> Path:
         candidate = (self.events_directory / image_id).resolve()
@@ -65,3 +79,19 @@ class Gallery:
             with self.annotations_file.open("a", encoding="utf-8") as annotations:
                 annotations.write(json.dumps(entry) + "\n")
         return entry
+
+    def delete_event(self, event_id: str) -> None:
+        event_directory = (self.events_directory / event_id).resolve()
+        if event_directory.parent.parent != self.events_directory or not event_directory.is_dir():
+            raise ValueError("Invalid event path.")
+        shutil.rmtree(event_directory)
+        if self.annotations_file.exists():
+            prefix = f"{event_id}/"
+            remaining = [
+                entry
+                for entry in self._annotations()
+                if not entry.get("image", "").startswith(prefix)
+            ]
+            with self.annotations_file.open("w", encoding="utf-8") as annotations:
+                for entry in remaining:
+                    annotations.write(json.dumps(entry) + "\n")

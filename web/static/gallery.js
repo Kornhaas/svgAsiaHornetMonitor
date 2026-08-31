@@ -4,6 +4,8 @@ const canvas = document.querySelector('#annotation-canvas');
 const boxElement = document.querySelector('#annotation-box');
 const message = document.querySelector('#gallery-message');
 const annotationMessage = document.querySelector('#annotation-message');
+const showReviewed = document.querySelector('#show-reviewed');
+let events = [];
 let selected = null;
 let box = null;
 
@@ -16,25 +18,44 @@ function displayBox() {
   boxElement.style.height = `${(box.height / image.naturalHeight) * 100}%`;
 }
 
-async function loadEvents() {
-  const events = await (await fetch('/api/events')).json();
-  message.textContent = events.length ? `${events.length} recent events` : 'No saved events yet.';
-  eventList.replaceChildren(...events.map((event) => {
+function selectEvent(event) {
+  selected = event;
+  box = null;
+  boxElement.style.display = 'none';
+  image.src = `/event-image/${event.image}`;
+  annotationMessage.textContent = '';
+  renderEvents();
+}
+
+function visibleEvents() { return events.filter((event) => showReviewed.checked || !event.reviewed); }
+
+function renderEvents() {
+  const visible = visibleEvents();
+  message.textContent = `${visible.length} ${showReviewed.checked ? 'events' : 'unreviewed events'}`;
+  eventList.replaceChildren(...visible.map((event) => {
     const button = document.createElement('button');
-    button.className = 'event-card';
+    button.className = `event-card ${selected === event ? 'selected' : ''}`;
     const thumbnail = document.createElement('img');
     thumbnail.src = `/event-image/${event.image}`;
     thumbnail.alt = event.id;
-    button.append(thumbnail, document.createTextNode(event.id.replace('/', ' · ')));
-    button.addEventListener('click', () => {
-      selected = event;
-      box = null;
-      boxElement.style.display = 'none';
-      image.src = `/event-image/${event.image}`;
-      annotationMessage.textContent = '';
-    });
+    const caption = document.createElement('span');
+    caption.textContent = event.id.replace('/', ' · ');
+    button.append(thumbnail, caption);
+    if (event.reviewed) {
+      const badge = document.createElement('span');
+      badge.className = 'badge text-bg-success';
+      badge.textContent = 'Reviewed';
+      button.append(badge);
+    }
+    button.addEventListener('click', () => selectEvent(event));
     return button;
   }));
+  if (!selected && visible[0]) selectEvent(visible[0]);
+}
+
+async function loadEvents() {
+  events = await (await fetch('/api/events')).json();
+  renderEvents();
 }
 
 canvas.addEventListener('pointerdown', (event) => {
@@ -58,7 +79,27 @@ document.querySelector('#annotation-form').addEventListener('submit', async (eve
   if (!selected || (!box && label !== 'empty')) { annotationMessage.textContent = 'Select an image and draw a box first.'; return; }
   const response = await fetch('/api/annotations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: selected.image, label, box: label === 'empty' ? null : box }) });
   const payload = await response.json();
-  annotationMessage.textContent = response.ok ? 'Annotation saved.' : payload.error;
+  annotationMessage.textContent = response.ok ? 'Saved — opening next event…' : payload.error;
+  if (response.ok) {
+    selected.reviewed = true;
+    const next = events.find((candidate) => !candidate.reviewed);
+    selected = null;
+    renderEvents();
+    if (next) selectEvent(next);
+  }
 });
 
+document.querySelector('#delete-event').addEventListener('click', async () => {
+  if (!selected || !confirm(`Delete event ${selected.id} and all of its burst images?`)) return;
+  const response = await fetch(`/api/events/${selected.id}`, { method: 'DELETE' });
+  if (!response.ok) { annotationMessage.textContent = 'Could not delete this event.'; return; }
+  events = events.filter((event) => event !== selected);
+  selected = null;
+  box = null;
+  image.removeAttribute('src');
+  boxElement.style.display = 'none';
+  renderEvents();
+});
+
+showReviewed.addEventListener('change', renderEvents);
 loadEvents().catch(() => { message.textContent = 'Gallery unavailable.'; });

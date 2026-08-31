@@ -29,6 +29,7 @@ def create_app(
     update_manager=None,
     gallery=None,
     save_annotation=None,
+    delete_event=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -108,6 +109,17 @@ def create_app(
             return jsonify(annotation=save_annotation(payload)), 201
         except (FileNotFoundError, ValueError) as error:
             return jsonify(error=str(error)), 400
+
+    @app.delete("/api/events/<path:event_id>")
+    @require_login
+    def remove_event(event_id):
+        if delete_event is None:
+            return jsonify(error="Event deletion is unavailable."), 503
+        try:
+            delete_event(event_id)
+            return "", 204
+        except (FileNotFoundError, ValueError) as error:
+            return jsonify(error=str(error)), 404
 
     @app.get("/status")
     @require_login
