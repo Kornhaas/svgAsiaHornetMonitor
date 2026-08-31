@@ -121,6 +121,22 @@ def test_roi_settings_and_training_pages_are_available():
     assert "Trainingsstatus" in training_page.get_data(as_text=True)
 
 
+def test_application_pages_share_the_primary_navigation():
+    app = create_app(camera=None, status=lambda: {})
+    client = app.test_client()
+
+    for path in ("/", "/gallery", "/settings/roi", "/settings/camera", "/training", "/system"):
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert b'aria-label="Primary navigation"' in response.data
+        assert b'href="/gallery"' in response.data
+        assert b'href="/settings/roi"' in response.data
+        assert b'href="/training"' in response.data
+        assert b'href="/system"' in response.data
+        assert b'href="/settings/camera"' in response.data
+
+
 def test_event_deletion_endpoint_forwards_the_event_id():
     deleted = []
     app = create_app(

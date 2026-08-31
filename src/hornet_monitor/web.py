@@ -115,22 +115,22 @@ def create_app(
     @app.get("/")
     @require_login
     def index():
-        return render_template("index.html")
+        return render_template("index.html", active_page="monitor")
 
     @app.get("/gallery")
     @require_login
     def gallery_page():
-        return render_template("gallery.html")
+        return render_template("gallery.html", active_page="gallery")
 
     @app.get("/settings/roi")
     @require_login
     def roi_settings():
-        return render_template("roi_settings.html")
+        return render_template("roi_settings.html", active_page="roi")
 
     @app.get("/settings/camera")
     @require_login
     def camera_settings():
-        return render_template("camera_settings.html")
+        return render_template("camera_settings.html", active_page="camera")
 
     @app.get("/api/cameras")
     @require_login
@@ -191,7 +191,7 @@ def create_app(
             if training_status is None
             else training_status.overview()
         )
-        return render_template("training.html", overview=overview)
+        return render_template("training.html", overview=overview, active_page="training")
 
     @app.post("/api/training/start")
     @require_login
@@ -214,7 +214,7 @@ def create_app(
     @app.get("/system")
     @require_login
     def system_page():
-        return render_template("system.html")
+        return render_template("system.html", active_page="system")
 
     @app.get("/api/system-status")
     @require_login

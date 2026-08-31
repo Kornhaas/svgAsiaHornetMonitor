@@ -2,6 +2,12 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-01 — Consistent application navigation
+
+- Introduced one shared Bootstrap base template for all authenticated application pages.
+- Added direct navigation to live monitor, gallery, ROI settings, model training, system status, and camera settings, with the current page marked as active.
+- Kept the login page intentionally separate because it is shown before authentication.
+
 ## 2026-08-31 — V0.1 foundation
 
 Created the initial Raspberry Pi camera-monitoring application.
