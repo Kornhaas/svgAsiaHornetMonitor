@@ -16,4 +16,8 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         }
     )
     assert saved["label"] == "bee"
+    empty = gallery.annotate(
+        {"image": "2026-08-31/123000_000001/frame_000.jpg", "label": "empty", "box": None}
+    )
+    assert empty["box"] is None
     assert (tmp_path / "annotations.jsonl").exists()

@@ -54,8 +54,9 @@ canvas.addEventListener('pointerdown', (event) => {
 
 document.querySelector('#annotation-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!selected || !box) { annotationMessage.textContent = 'Select an image and draw a box first.'; return; }
-  const response = await fetch('/api/annotations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: selected.image, label: document.querySelector('#annotation-label').value, box }) });
+  const label = document.querySelector('#annotation-label').value;
+  if (!selected || (!box && label !== 'empty')) { annotationMessage.textContent = 'Select an image and draw a box first.'; return; }
+  const response = await fetch('/api/annotations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: selected.image, label, box: label === 'empty' ? null : box }) });
   const payload = await response.json();
   annotationMessage.textContent = response.ok ? 'Annotation saved.' : payload.error;
 });

@@ -43,12 +43,17 @@ class Gallery:
         labels = {"vespa_velutina", "vespa_crabro", "wasp", "bee", "other", "empty", "uncertain"}
         if label not in labels:
             raise ValueError("Unknown label.")
+        if label == "empty" and box is None:
+            return self._store(image, label, box)
         if not isinstance(box, dict) or any(
             not isinstance(box.get(key), int) for key in ("x", "y", "width", "height")
         ):
             raise ValueError("Box requires integer x, y, width, and height values.")
         if box["x"] < 0 or box["y"] < 0 or box["width"] < 1 or box["height"] < 1:
             raise ValueError("Box coordinates must be positive.")
+        return self._store(image, label, box)
+
+    def _store(self, image: Path, label: str, box: dict[str, int] | None) -> dict[str, Any]:
         entry = {
             "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
             "image": image.relative_to(self.events_directory).as_posix(),
