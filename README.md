@@ -88,12 +88,15 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
 - `events.crop_to_roi` keeps saved gallery and training images limited to the ROI (enabled by default). The live stream remains full-frame so the ROI can still be adjusted comfortably.
+- `training.minimum_annotations` defines the initial dataset threshold displayed in the UI. `training.start_hour` and `stop_hour` reserve the intended future overnight training window; they do not start training yet.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
 
 ## Image gallery and manual labels
 
 Select **Open image gallery** in the web UI to review recent event images. By default it displays only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery opens the next unreviewed event automatically. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
+
+The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 
 **Delete event** asks for confirmation, then removes the selected event and all of its burst images. This is appropriate for test captures such as a hand in front of the camera and avoids keeping partial event bursts.
 

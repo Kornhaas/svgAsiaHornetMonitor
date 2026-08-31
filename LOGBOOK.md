@@ -95,3 +95,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Reused the existing motion ROI as the event-image crop, so moving trees or other scenery outside the yellow rectangle cannot create gallery or training-image content.
 - Kept the live stream full-frame for comfortable ROI adjustment; only newly captured event burst images are cropped.
 - Added a bounds-safe frame transformation with unit tests. The current ROI is read for every burst frame, so browser ROI changes apply immediately to subsequent events.
+
+## 2026-08-31 — Safer ROI and training visibility
+
+- Moved ROI editing to a dedicated browser page; the live monitor now displays the yellow ROI as read-only.
+- Added a model-and-training status page that reports reviewed images, annotation totals, label distribution, the initial readiness threshold, and the planned 21:00–06:00 window.
+- Kept training explicitly unimplemented: the page cannot misrepresent dataset collection as a trained or running model.

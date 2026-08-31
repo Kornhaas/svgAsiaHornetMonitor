@@ -68,6 +68,31 @@ def test_gallery_page_and_events_endpoint_are_available():
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 
 
+def test_roi_settings_and_training_pages_are_available():
+    training = type(
+        "Training",
+        (),
+        {
+            "overview": lambda self: {
+                "message": "No model has been trained yet.",
+                "reviewed_images": 2,
+                "annotations": 2,
+                "minimum_annotations": 50,
+                "ready": False,
+                "labels": {},
+                "schedule": {"start_hour": 21, "stop_hour": 6},
+            }
+        },
+    )()
+    app = create_app(camera=None, status=lambda: {}, training_status=training)
+    client = app.test_client()
+
+    assert client.get("/settings/roi").status_code == 200
+    training_page = client.get("/training")
+    assert training_page.status_code == 200
+    assert b"No model yet" in training_page.data
+
+
 def test_event_deletion_endpoint_forwards_the_event_id():
     deleted = []
     app = create_app(

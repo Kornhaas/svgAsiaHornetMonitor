@@ -22,6 +22,8 @@ USB webcam (/dev/video0)
                            └──────────► ActivityLog ─► data/activity.jsonl ─► Web /activities
 
 Event images ─► Gallery + annotation UI ─► data/annotations.jsonl
+                                              │
+                                              └──► TrainingStatus ─► Web /training
 
 config/config.yaml ─► main.py (composition and runtime state) ─► Web /status
                                                           └──► UpdateManager ─► Git + systemd restart
@@ -35,6 +37,7 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 | `motion.py` | ROI validation and frame-to-motion decision | Saving data, starting threads, web state |
 | `frames.py` | Bounds-safe ROI crop for event and training frames | Motion decisions, camera access, file writes |
 | `events.py` | Event folder naming, cooldown, JPEG burst writing | Camera setup, motion thresholds |
+| `training.py` | Read-only annotation counts and planned model status | Training execution, camera processing, HTTP |
 | `web.py` | HTML, MJPEG response, JSON status endpoint | Direct camera reads or event decisions |
 | `updates.py` | Fast-forward-only update check/install and service restart | Arbitrary command execution or user-supplied paths |
 
@@ -48,7 +51,8 @@ The browser UI uses Bootstrap 5 for responsive layout and accessible controls, w
 1. `main.py` reads YAML configuration and starts one camera capture thread.
 2. The monitor loop obtains copies of the latest frame and asks `MotionDetector` to inspect only the configured ROI.
 3. A positive decision crops the saved frame to the current ROI when `events.crop_to_roi` is enabled, then asks `EventWriter` to save the first JPEG immediately and remaining ROI-cropped burst frames asynchronously. Cooldown prevents event floods. The live stream is always the original full camera frame.
-4. The browser consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. It may update the ROI through the explicit `/roi` endpoint; `MotionDetector` validates it and resets its background model.
+4. The live-monitor browser page consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. Only the explicit ROI settings page may update the ROI through `/roi`; `MotionDetector` validates it and resets its background model.
+5. The model-and-training page reads local annotation metadata through `TrainingStatus`. It does not start training, perform inference, or modify the capture pipeline.
 
 ## Configuration boundary
 

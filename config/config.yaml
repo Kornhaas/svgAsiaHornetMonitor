@@ -30,6 +30,12 @@ activity:
 annotations:
   file: data/annotations.jsonl
 
+training:
+  # A future training worker may run only inside this overnight window.
+  start_hour: 21
+  stop_hour: 6
+  minimum_annotations: 50
+
 web:
   host: 0.0.0.0
   port: 8000

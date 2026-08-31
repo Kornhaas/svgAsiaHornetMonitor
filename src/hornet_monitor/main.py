@@ -18,6 +18,7 @@ from .events import EventWriter
 from .frames import crop_to_roi
 from .gallery import Gallery
 from .motion import MotionDetector
+from .training import TrainingStatus
 from .updates import UpdateManager
 from .web import create_app
 
@@ -84,6 +85,7 @@ def main() -> None:
     activity_log.record("monitor_started", "Asia Hornet Monitor started")
     update_manager = UpdateManager(config["updates"], activity_log)
     gallery = Gallery(config["events"]["directory"], config["annotations"]["file"])
+    training_status = TrainingStatus(config["annotations"]["file"], config["training"])
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
     detector = MotionDetector(config["motion"])
@@ -166,6 +168,7 @@ def main() -> None:
         gallery,
         save_annotation,
         delete_event,
+        training_status,
     )
     app.run(
         host=config["web"]["host"],

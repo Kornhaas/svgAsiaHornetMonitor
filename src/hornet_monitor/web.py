@@ -30,6 +30,7 @@ def create_app(
     gallery=None,
     save_annotation=None,
     delete_event=None,
+    training_status=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -81,6 +82,29 @@ def create_app(
     @require_login
     def gallery_page():
         return render_template("gallery.html")
+
+    @app.get("/settings/roi")
+    @require_login
+    def roi_settings():
+        return render_template("roi_settings.html")
+
+    @app.get("/training")
+    @require_login
+    def training_page():
+        overview = (
+            {
+                "message": "Training status is unavailable.",
+                "reviewed_images": 0,
+                "annotations": 0,
+                "minimum_annotations": 0,
+                "ready": False,
+                "labels": {},
+                "schedule": {"start_hour": "?", "stop_hour": "?"},
+            }
+            if training_status is None
+            else training_status.overview()
+        )
+        return render_template("training.html", overview=overview)
 
     @app.get("/api/events")
     @require_login
