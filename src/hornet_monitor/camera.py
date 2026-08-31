@@ -18,11 +18,10 @@ class Camera:
         self._running = False
         self._thread: threading.Thread | None = None
         self.error: str | None = None
-        self._last_open_attempt = 0.0
+        self._next_open_attempt = 0.0
+        self._retry_seconds = float(settings.get("reconnect_seconds", 5))
 
     def start(self) -> None:
-        if not self._open():
-            return
         self._running = True
         self._thread = threading.Thread(target=self._read_frames, name="camera", daemon=True)
         self._thread.start()
@@ -41,28 +40,35 @@ class Camera:
             self.error = f"Camera {device!r} could not be opened."
             self._capture.release()
             self._capture = None
+            self._schedule_retry()
             return False
+        self._retry_seconds = float(self.settings.get("reconnect_seconds", 5))
+        self._next_open_attempt = 0.0
         return True
+
+    def _schedule_retry(self) -> None:
+        minimum = float(self.settings.get("reconnect_seconds", 5))
+        maximum = float(self.settings.get("reconnect_max_seconds", 120))
+        self._next_open_attempt = time.monotonic() + self._retry_seconds
+        self._retry_seconds = min(maximum, max(minimum, self._retry_seconds * 2))
+
+    def _drop_capture(self) -> None:
+        if self._capture:
+            self._capture.release()
+        self._capture = None
+        self._schedule_retry()
 
     def _read_frames(self) -> None:
         while self._running:
             if self._capture is None:
-                if time.monotonic() - self._last_open_attempt >= self.settings.get(
-                    "reconnect_seconds", 5
-                ):
-                    self._last_open_attempt = time.monotonic()
+                if time.monotonic() >= self._next_open_attempt:
                     self._open()
                 time.sleep(0.2)
                 continue
             ok, frame = self._capture.read()
             if not ok:
                 self.error = "Could not read a frame from the camera."
-                if time.monotonic() - self._last_open_attempt >= self.settings.get(
-                    "reconnect_seconds", 5
-                ):
-                    self._last_open_attempt = time.monotonic()
-                    self._capture.release()
-                    self._open()
+                self._drop_capture()
                 time.sleep(0.2)
                 continue
             with self._lock:

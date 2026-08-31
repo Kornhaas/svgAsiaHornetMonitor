@@ -66,8 +66,20 @@ GERMAN = {
     "Height": "Höhe",
     "Save and restart": "Speichern und neu starten",
     "Training status": "Trainingsstatus",
-    "Start training now": "Training jetzt starten",
+    "Model versions and evaluation": "Modellversionen und Auswertung",
+    "Recent predictions": "Aktuelle Erkennungen",
+    "No trained model yet.": "Noch kein trainiertes Modell.",
+    "Use model": "Modell verwenden",
+    "Loading…": "Wird geladen…",
+    "No predictions yet.": "Noch keine Erkennungen.",
+    "Training starts only during this dark-time window.": (
+        "Das Training startet nur in diesem nächtlichen Zeitfenster."
+    ),
     "YOLO dataset export": "YOLO-Datensatzexport",
+    "Current split estimate:": "Aktuelle Aufteilungsprognose:",
+    "Create backup": "Backup erstellen",
+    "Storage:": "Speicher:",
+    "Start training now": "Training jetzt starten",
     (
         "Export reviewed animal boxes as a versioned local YOLO dataset with train, "
         "validation, and test splits. The export does not start training."

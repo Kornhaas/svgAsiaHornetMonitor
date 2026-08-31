@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
+import tempfile
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -19,7 +21,7 @@ class Gallery:
     def __init__(self, events_directory: str | Path, annotations_file: str | Path) -> None:
         self.events_directory = Path(events_directory).resolve()
         self.annotations_file = Path(annotations_file)
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def events(self, limit: int = 100) -> list[dict[str, Any]]:
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
@@ -97,22 +99,29 @@ class Gallery:
         self, image: Path, items: list[tuple[str, dict[str, int] | None]]
     ) -> list[dict[str, Any]]:
         image_id = image.relative_to(self.events_directory).as_posix()
-        entries = [entry for entry in self._annotations() if entry.get("image") != image_id]
-        entries.extend(self._entry(image, label, box) for label, box in items)
         with self._lock:
-            self.annotations_file.parent.mkdir(parents=True, exist_ok=True)
-            with self.annotations_file.open("w", encoding="utf-8") as annotations:
-                for entry in entries:
-                    annotations.write(json.dumps(entry) + "\n")
+            entries = [entry for entry in self._annotations() if entry.get("image") != image_id]
+            entries.extend(self._entry(image, label, box) for label, box in items)
+            self._write_annotations(entries)
         return [entry for entry in entries if entry.get("image") == image_id]
 
     def _store(self, image: Path, label: str, box: dict[str, int] | None) -> dict[str, Any]:
         entry = self._entry(image, label, box)
         with self._lock:
-            self.annotations_file.parent.mkdir(parents=True, exist_ok=True)
-            with self.annotations_file.open("a", encoding="utf-8") as annotations:
-                annotations.write(json.dumps(entry) + "\n")
+            self._write_annotations([*self._annotations(), entry])
         return entry
+
+    def _write_annotations(self, entries: list[dict[str, Any]]) -> None:
+        self.annotations_file.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=self.annotations_file.parent, delete=False
+        ) as temporary:
+            for entry in entries:
+                temporary.write(json.dumps(entry) + "\n")
+            temporary.flush()
+            os.fsync(temporary.fileno())
+            temporary_path = Path(temporary.name)
+        os.replace(temporary_path, self.annotations_file)
 
     def _entry(self, image: Path, label: str, box: dict[str, int] | None) -> dict[str, Any]:
         return {
@@ -129,11 +138,10 @@ class Gallery:
         shutil.rmtree(event_directory)
         if self.annotations_file.exists():
             prefix = f"{event_id}/"
-            remaining = [
-                entry
-                for entry in self._annotations()
-                if not entry.get("image", "").startswith(prefix)
-            ]
-            with self.annotations_file.open("w", encoding="utf-8") as annotations:
-                for entry in remaining:
-                    annotations.write(json.dumps(entry) + "\n")
+            with self._lock:
+                remaining = [
+                    entry
+                    for entry in self._annotations()
+                    if not entry.get("image", "").startswith(prefix)
+                ]
+                self._write_annotations(remaining)

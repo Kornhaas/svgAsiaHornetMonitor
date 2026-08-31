@@ -161,3 +161,10 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Corrected the ROI editor to use the camera dimensions provided by the monitor status API instead of a nonexistent frame object.
 - Prevented a plain click from saving a one-pixel rectangle.
+
+## 2026-09-01 — Production operations and model lifecycle
+
+- Added bounded camera reconnect after initial and later failures, operational Telegram alerts, storage retention cleanup, and complete recursive backups.
+- Made annotation replacement crash-safe with atomic local writes.
+- Added versioned model runs, model activation, YOLO evaluation metrics, prediction history, and time-windowed overnight training progress.
+- Added the maintained `TODO.md` production-readiness and Raspberry Pi acceptance checklist.

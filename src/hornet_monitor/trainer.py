@@ -1,36 +1,45 @@
-"""Bounded background YOLO training worker with durable status."""
+"""Bounded background YOLO training worker with durable model versions."""
 
 from __future__ import annotations
 
+import csv
 import json
 import multiprocessing
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from .dataset import DatasetExporter
 
 
-def _train(dataset_yaml: str, settings: dict, output: str) -> None:
+def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None:
     from ultralytics import YOLO
 
     YOLO(settings["model_name"]).train(
         data=dataset_yaml,
         epochs=settings["epochs"],
         imgsz=settings["image_size"],
+        batch=settings.get("batch", 1),
         device="cpu",
         project=output,
-        name="run",
-        exist_ok=True,
+        name=version,
+        exist_ok=False,
         workers=0,
+        cache=False,
     )
 
 
 class TrainingManager:
+    _VERSION = re.compile(r"\d{8}_\d{6}")
+
     def __init__(self, exporter: DatasetExporter, settings: dict, activity_log=None) -> None:
         self.exporter, self.settings, self.activity_log = exporter, settings, activity_log
-        self.state_file = Path(settings["models_directory"]) / "status.json"
+        self.models_directory = Path(settings["models_directory"]).resolve()
+        self.state_file = self.models_directory / "status.json"
+        self.latest_file = self.models_directory / "latest.json"
         self.process: multiprocessing.Process | None = None
         self.deadline: datetime | None = None
+        self._automatic_window_date = None
 
     def status(self) -> dict:
         state = {"state": "idle", "message": "No training run has started."}
@@ -39,10 +48,12 @@ class TrainingManager:
         if self.process and self.process.is_alive():
             if self.deadline and datetime.now() >= self.deadline:
                 self.process.terminate()
-                self._save(
+                state = self._save(
                     {
+                        **state,
                         "state": "stopped",
                         "message": "Training stopped at the configured morning deadline.",
+                        "finished_at": datetime.now().isoformat(),
                     }
                 )
             else:
@@ -50,24 +61,36 @@ class TrainingManager:
                     {
                         "state": "running",
                         "deadline": self.deadline.isoformat() if self.deadline else None,
+                        "progress": self._progress(state.get("version", "")),
                     }
                 )
         elif self.process and state.get("state") == "running":
+            state = self._finish(state)
+        elif self.process is None and state.get("state") == "running":
             state = self._save(
                 {
-                    "state": "completed" if self.process.exitcode == 0 else "failed",
-                    "message": "Training completed."
-                    if self.process.exitcode == 0
-                    else "Training worker exited with an error.",
-                    "model": str(self.models_path()),
+                    **state,
+                    "state": "interrupted",
+                    "message": "Training was interrupted by a monitor restart.",
                 }
             )
         return state
 
-    def models_path(self) -> Path:
-        return Path(self.settings["models_directory"]) / "run" / "weights" / "best.pt"
+    def start_if_scheduled(self, now: datetime | None = None) -> dict:
+        now = now or datetime.now()
+        if not self._in_window(now):
+            return {"state": "scheduled", "message": "Waiting for the configured training window."}
+        window_date = (
+            now.date()
+            if now.hour >= self.settings["start_hour"]
+            else (now - timedelta(days=1)).date()
+        )
+        if self._automatic_window_date == window_date:
+            return self.status()
+        self._automatic_window_date = window_date
+        return self.start(now)
 
-    def start(self) -> dict:
+    def start(self, now: datetime | None = None) -> dict:
         if self.process and self.process.is_alive():
             return self.status()
         summary = self.exporter.summary()
@@ -76,7 +99,8 @@ class TrainingManager:
                 {"state": "waiting", "message": "More labelled boxes are required.", **summary}
             )
         dataset = self.exporter.export()
-        now = datetime.now()
+        now = now or datetime.now()
+        version = now.strftime("%Y%m%d_%H%M%S")
         stop = now.replace(hour=self.settings["stop_hour"], minute=0, second=0, microsecond=0)
         self.deadline = stop if stop > now else stop + timedelta(days=1)
         self.process = multiprocessing.Process(
@@ -84,7 +108,8 @@ class TrainingManager:
             args=(
                 str(Path(dataset["directory"]) / "dataset.yaml"),
                 self.settings,
-                self.settings["models_directory"],
+                str(self.models_directory),
+                version,
             ),
             daemon=True,
         )
@@ -94,10 +119,109 @@ class TrainingManager:
                 "state": "running",
                 "message": "Training started.",
                 "dataset": dataset,
+                "version": version,
                 "started_at": now.isoformat(),
                 "deadline": self.deadline.isoformat(),
             }
         )
+
+    def model_versions(self) -> list[dict]:
+        versions = []
+        for manifest in sorted(self.models_directory.glob("*/model.json"), reverse=True):
+            try:
+                versions.append(json.loads(manifest.read_text(encoding="utf-8")))
+            except json.JSONDecodeError:
+                continue
+        return versions
+
+    def latest_model_path(self) -> Path | None:
+        if not self.latest_file.exists():
+            return None
+        try:
+            path = Path(json.loads(self.latest_file.read_text(encoding="utf-8"))["model"])
+        except (json.JSONDecodeError, KeyError):
+            return None
+        return path if path.is_file() else None
+
+    def activate(self, version: str) -> dict:
+        if not self._VERSION.fullmatch(version):
+            raise ValueError("Unknown model version.")
+        manifest_file = self.models_directory / version / "model.json"
+        if not manifest_file.is_file():
+            raise ValueError("Unknown model version.")
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        model = Path(manifest.get("model", ""))
+        if not model.is_file() or self.models_directory not in model.resolve().parents:
+            raise ValueError("Model files are unavailable.")
+        self.latest_file.parent.mkdir(parents=True, exist_ok=True)
+        self.latest_file.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        return manifest
+
+    def _finish(self, state: dict) -> dict:
+        successful = self.process is not None and self.process.exitcode == 0
+        model = self.models_directory / state["version"] / "weights" / "best.pt"
+        result = {
+            **state,
+            "state": "completed" if successful and model.is_file() else "failed",
+            "message": "Training completed."
+            if successful and model.is_file()
+            else "Training worker exited with an error.",
+            "finished_at": datetime.now().isoformat(),
+            "model": str(model),
+            "evaluation": self._evaluation(
+                self.models_directory / state["version"] / "results.csv"
+            ),
+        }
+        if result["state"] == "completed":
+            manifest = {
+                "version": state["version"],
+                "model": str(model),
+                "dataset": state.get("dataset", {}),
+                "evaluation": result["evaluation"],
+                "created_at": result["finished_at"],
+            }
+            version_directory = self.models_directory / state["version"]
+            version_directory.mkdir(parents=True, exist_ok=True)
+            (version_directory / "model.json").write_text(
+                json.dumps(manifest, indent=2), encoding="utf-8"
+            )
+            self.latest_file.parent.mkdir(parents=True, exist_ok=True)
+            self.latest_file.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        return self._save(result)
+
+    @staticmethod
+    def _evaluation(results_file: Path) -> dict:
+        if not results_file.exists():
+            return {}
+        with results_file.open(encoding="utf-8", newline="") as results:
+            rows = list(csv.DictReader(results))
+        if not rows:
+            return {}
+        row = rows[-1]
+        wanted = {
+            "metrics/precision(B)": "precision",
+            "metrics/recall(B)": "recall",
+            "metrics/mAP50(B)": "map50",
+            "metrics/mAP50-95(B)": "map50_95",
+        }
+        return {name: float(row[key]) for key, name in wanted.items() if row.get(key)}
+
+    def _progress(self, version: str) -> dict:
+        results = self.models_directory / version / "results.csv"
+        if not results.exists():
+            return {"epochs_completed": 0, "epochs_total": self.settings["epochs"], "percent": 0}
+        with results.open(encoding="utf-8", newline="") as result_file:
+            completed = max(0, len(list(csv.DictReader(result_file))))
+        total = self.settings["epochs"]
+        return {
+            "epochs_completed": completed,
+            "epochs_total": total,
+            "percent": round(completed / total * 100),
+        }
+
+    def _in_window(self, now: datetime) -> bool:
+        start, stop = self.settings["start_hour"], self.settings["stop_hour"]
+        return now.hour >= start or now.hour < stop if start > stop else start <= now.hour < stop
 
     def _save(self, state: dict) -> dict:
         self.state_file.parent.mkdir(parents=True, exist_ok=True)

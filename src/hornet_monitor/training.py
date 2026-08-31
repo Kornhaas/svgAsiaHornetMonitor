@@ -35,11 +35,13 @@ class TrainingStatus:
             "minimum_annotations": minimum,
             "ready": len(annotations) >= minimum,
             "labels": dict(sorted(labels.items())),
+            "dataset": self.trainer.exporter.summary() if self.trainer else {},
             "schedule": {
                 "start_hour": self.settings["start_hour"],
                 "stop_hour": self.settings["stop_hour"],
             },
             "run": training,
+            "models": self.trainer.model_versions() if self.trainer else [],
         }
 
     def _annotations(self) -> list[dict[str, Any]]:

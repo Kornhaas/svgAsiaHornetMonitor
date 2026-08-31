@@ -17,24 +17,34 @@ class TelegramNotifier:
     def notify(self, prediction: dict) -> bool:
         if not self.settings.get("enabled") or not self._needs_review(prediction):
             return False
-        if self.clock() - self.last_sent < self.settings["cooldown_seconds"]:
-            return False
-        token, chat_id = self.settings.get("bot_token"), self.settings.get("chat_id")
-        if not token or not chat_id:
-            return False
         text = (
             f"Hornet Monitor: {prediction['label']} ({prediction['confidence']:.0%})\n"
             f"{prediction['image']}"
         )
-        request = self._request(token, chat_id, text, prediction["image"])
+        return self._send(text, prediction["image"], "telegram_sent", prediction)
+
+    def alert(self, kind: str, message: str) -> bool:
+        """Send an operational alert without exposing local paths or exception details."""
+        return self._send(
+            f"Hornet Monitor alert: {kind}\n{message}", "", "telegram_alert_sent", {"kind": kind}
+        )
+
+    def _send(self, text: str, image: str, event: str, details: dict) -> bool:
+        if (
+            not self.settings.get("enabled")
+            or self.clock() - self.last_sent < self.settings["cooldown_seconds"]
+        ):
+            return False
+        token, chat_id = self.settings.get("bot_token"), self.settings.get("chat_id")
+        if not token or not chat_id:
+            return False
+        request = self._request(token, chat_id, text, image)
         try:
             with urllib.request.urlopen(request, timeout=10):
                 pass
             self.last_sent = self.clock()
             if self.activity_log:
-                self.activity_log.record(
-                    "telegram_sent", "Telegram review notification sent", details=prediction
-                )
+                self.activity_log.record(event, "Telegram notification sent", details=details)
             return True
         except OSError as error:
             if self.activity_log:

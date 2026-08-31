@@ -5,6 +5,7 @@ camera:
   fps: 30
   mjpeg: true
   reconnect_seconds: 5
+  reconnect_max_seconds: 120
 
 motion:
   # Coordinates are pixels in the configured camera resolution.
@@ -47,6 +48,7 @@ training:
   model_name: yolo11n.pt
   epochs: 30
   image_size: 320
+  batch: 1
 
 telegram:
   enabled: false
@@ -59,6 +61,9 @@ storage:
   directory: data
   backup_directory: data/backups
   minimum_free_gb: 10
+  reviewed_retention_days: 30
+  unreviewed_retention_days: 7
+  cleanup_interval_seconds: 3600
 
 background:
   image_file: data/background.jpg

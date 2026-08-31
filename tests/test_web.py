@@ -93,11 +93,15 @@ def test_roi_settings_and_training_pages_are_available():
         {
             "overview": lambda self: {
                 "message": "No model has been trained yet.",
+                "state": "idle",
                 "reviewed_images": 2,
                 "annotations": 2,
                 "minimum_annotations": 50,
                 "ready": False,
                 "labels": {},
+                "dataset": {"splits": {"train": 0, "val": 0, "test": 0}},
+                "models": [],
+                "run": {},
                 "schedule": {"start_hour": 21, "stop_hour": 6},
             }
         },
@@ -175,3 +179,25 @@ def test_dataset_export_endpoint_returns_the_versioned_export():
 
     assert response.status_code == 201
     assert response.get_json() == {"dataset": exported}
+
+
+def test_prediction_history_and_model_activation_endpoints_are_available():
+    activated = []
+    training = type(
+        "Training",
+        (),
+        {"activate": lambda self, version: activated.append(version) or {"version": version}},
+    )()
+    app = create_app(
+        camera=None,
+        status=lambda: {},
+        training_manager=training,
+        prediction_history=lambda: [{"label": "bee"}],
+    )
+    client = app.test_client()
+
+    assert client.get("/api/predictions").get_json() == [{"label": "bee"}]
+    assert client.post("/api/models/20260901_210000/activate").get_json() == {
+        "model": {"version": "20260901_210000"}
+    }
+    assert activated == ["20260901_210000"]

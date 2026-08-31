@@ -25,21 +25,32 @@ class DatasetExporter:
         annotations = self._annotations()
         counts = Counter(entry["label"] for entry in annotations if entry.get("label") in CLASSES)
         images = {entry["image"] for entry in annotations if entry.get("label") in CLASSES}
-        return {"images": len(images), "boxes": sum(counts.values()), "labels": dict(counts)}
+        splits = Counter(self._split(image) for image in images)
+        return {
+            "images": len(images),
+            "boxes": sum(counts.values()),
+            "labels": dict(counts),
+            "splits": {split: splits[split] for split in ("train", "val", "test")},
+        }
 
     def export(self) -> dict:
-        version = datetime.now().strftime("%Y%m%d_%H%M%S")
+        version = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         destination = self.output_directory / version
         grouped: dict[str, list[dict]] = defaultdict(list)
         for entry in self._annotations():
-            if entry.get("label") in CLASSES and entry.get("box"):
+            if (entry.get("label") in CLASSES and entry.get("box")) or entry.get(
+                "label"
+            ) == "empty":
                 grouped[entry["image"]].append(entry)
+        split_images = Counter()
+        empty_images = 0
         for image_id, entries in grouped.items():
             source = self.events_directory / image_id
             image = cv2.imread(str(source))
             if image is None:
                 continue
             split = self._split(image_id)
+            split_images[split] += 1
             stem = hashlib.sha256(image_id.encode()).hexdigest()[:16]
             image_target = destination / "images" / split / f"{stem}.jpg"
             label_target = destination / "labels" / split / f"{stem}.txt"
@@ -47,9 +58,15 @@ class DatasetExporter:
             label_target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, image_target)
             height, width = image.shape[:2]
-            label_target.write_text(
-                "\n".join(self._yolo_line(entry, width, height) for entry in entries) + "\n"
-            )
+            boxes = [
+                entry for entry in entries if entry.get("label") in CLASSES and entry.get("box")
+            ]
+            if boxes:
+                label_target.write_text(
+                    "\n".join(self._yolo_line(entry, width, height) for entry in boxes) + "\n"
+                )
+            else:
+                empty_images += 1
         metadata = {
             "path": str(destination.resolve()),
             "train": "images/train",
@@ -60,7 +77,13 @@ class DatasetExporter:
         (destination / "dataset.yaml").write_text(
             yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8"
         )
-        result = {"version": version, "directory": str(destination), **self.summary()}
+        result = {
+            "version": version,
+            "directory": str(destination),
+            **self.summary(),
+            "export_splits": {split: split_images[split] for split in ("train", "val", "test")},
+            "empty_images": empty_images,
+        }
         (destination / "manifest.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return result
 

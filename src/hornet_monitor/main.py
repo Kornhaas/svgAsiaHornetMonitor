@@ -8,6 +8,7 @@ import secrets
 import subprocess
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -39,14 +40,28 @@ def load_config(path: str) -> dict:
 
 def validate_config(config: dict) -> None:
     night = config["night_mode"]
+    camera = config.get("camera", {})
+    storage = config["storage"]
+    training = config["training"]
     if not 0 <= night["dark_threshold"] < night["bright_threshold"] <= 255:
         raise ValueError("Night-mode thresholds must be ordered between 0 and 255.")
-    if config["training"]["stop_hour"] not in range(24) or config["training"][
-        "start_hour"
-    ] not in range(24):
+    if training["stop_hour"] not in range(24) or training["start_hour"] not in range(24):
         raise ValueError("Training hours must be between 0 and 23.")
-    if config["storage"]["minimum_free_gb"] < 0:
+    if storage["minimum_free_gb"] < 0:
         raise ValueError("Minimum free storage cannot be negative.")
+    if camera and (
+        camera.get("reconnect_seconds", 5) < 1
+        or camera.get("reconnect_max_seconds", 120) < camera.get("reconnect_seconds", 5)
+    ):
+        raise ValueError("Camera reconnect settings are invalid.")
+    if any(
+        storage.get(key, 0) < 0 for key in ("reviewed_retention_days", "unreviewed_retention_days")
+    ):
+        raise ValueError("Storage retention days cannot be negative.")
+    if storage.get("cleanup_interval_seconds", 3600) < 60:
+        raise ValueError("Storage cleanup interval must be at least 60 seconds.")
+    if training["minimum_annotations"] < 1 or training.get("batch", 1) < 1:
+        raise ValueError("Training minimum annotations and batch size must be positive.")
 
 
 def merge_config(base: dict, override: dict) -> dict:
@@ -180,18 +195,58 @@ def main() -> None:
     storage = StorageManager(
         config["storage"],
         [
+            config["events"]["directory"],
             config["annotations"]["file"],
             config["background"]["image_file"],
             config["training"]["models_directory"],
         ],
+        config["events"]["directory"],
+        config["annotations"]["file"],
     )
 
     writer.frame_supplier = event_frame
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
     state_lock = threading.Lock()
+    last_camera_error = None
+    last_cleanup = 0.0
+    storage_alerted = False
+    last_training_minute = None
+    last_training_state = None
 
     def monitor() -> None:
+        nonlocal \
+            last_camera_error, \
+            last_cleanup, \
+            storage_alerted, \
+            last_training_minute, \
+            last_training_state
         while True:
+            if camera.error != last_camera_error:
+                last_camera_error = camera.error
+                if camera.error:
+                    activity_log.record(
+                        "camera_offline", "Camera offline; reconnecting", level="error"
+                    )
+                    notifier.alert(
+                        "camera_offline", "Camera is offline; reconnect attempts are active."
+                    )
+                else:
+                    activity_log.record("camera_online", "Camera stream restored")
+            now_monotonic = time.monotonic()
+            if now_monotonic - last_cleanup >= config["storage"]["cleanup_interval_seconds"]:
+                result = storage.cleanup()
+                last_cleanup = now_monotonic
+                if result["deleted"]:
+                    activity_log.record(
+                        "storage_cleanup", "Old event images removed", details=result
+                    )
+                warning = storage.status()["warning"]
+                if warning and not storage_alerted:
+                    storage_alerted = True
+                    activity_log.record("storage_low", "Low free storage", level="error")
+                    notifier.alert("low_storage", "Free storage is below the configured limit.")
+                elif not warning:
+                    storage_alerted = False
             frame = camera.get_frame()
             if frame is None:
                 time.sleep(0.1)
@@ -203,7 +258,6 @@ def main() -> None:
                     "Night mode started; motion capture paused and training window is available.",
                     details=night_mode.status(),
                 )
-                training_manager.start()
             elif transition is False:
                 detector.reset()
                 activity_log.record(
@@ -211,6 +265,19 @@ def main() -> None:
                     "Daylight returned; motion capture resumed.",
                     details=night_mode.status(),
                 )
+            minute = datetime.now().strftime("%Y%m%d%H%M")
+            if minute != last_training_minute:
+                last_training_minute = minute
+                training_state = training_manager.status()
+                if night_mode.active and training_state["state"] != "running":
+                    training_state = training_manager.start_if_scheduled()
+                if (
+                    training_state["state"] == "failed"
+                    and training_state["state"] != last_training_state
+                ):
+                    activity_log.record("training_failed", "Training failed", level="error")
+                    notifier.alert("training_failed", "The overnight training job failed.")
+                last_training_state = training_state["state"]
             if night_mode.active:
                 with state_lock:
                     state.update(motion=False, largest_area=0.0)
@@ -317,6 +384,7 @@ def main() -> None:
         update_camera,
         update_telegram,
         storage,
+        predictor.history,
     )
     app.run(
         host=config["web"]["host"],

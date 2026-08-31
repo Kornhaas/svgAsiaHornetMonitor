@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 from functools import wraps
 from pathlib import Path
@@ -41,6 +42,7 @@ def create_app(
     update_camera=None,
     update_telegram=None,
     storage=None,
+    prediction_history=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -181,6 +183,9 @@ def create_app(
                 "minimum_annotations": 0,
                 "ready": False,
                 "labels": {},
+                "dataset": {"splits": {"train": 0, "val": 0, "test": 0}},
+                "models": [],
+                "run": {},
                 "schedule": {"start_hour": "?", "stop_hour": "?"},
             }
             if training_status is None
@@ -194,6 +199,17 @@ def create_app(
         if training_manager is None:
             return jsonify(error="Training is unavailable."), 503
         return jsonify(training_manager.start()), 202
+
+    @app.post("/api/models/<version>/activate")
+    @require_login
+    def activate_model(version):
+        if training_manager is None:
+            return jsonify(error="Model activation is unavailable."), 503
+        try:
+            model = training_manager.activate(version)
+        except (ValueError, OSError, KeyError, json.JSONDecodeError):
+            return jsonify(error="Model version is unavailable."), 404
+        return jsonify(model=model), 200
 
     @app.get("/system")
     @require_login
@@ -260,6 +276,11 @@ def create_app(
     @require_login
     def dataset_status():
         return jsonify({} if training_manager is None else training_manager.exporter.summary())
+
+    @app.get("/api/predictions")
+    @require_login
+    def predictions():
+        return jsonify([] if prediction_history is None else prediction_history())
 
     @app.post("/api/dataset/export")
     @require_login
