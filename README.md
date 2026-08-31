@@ -97,7 +97,7 @@ Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.
 
 ## Image gallery and manual labels
 
-Select **Open image gallery** in the web UI to review recent event images. By default it displays only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery opens the next unreviewed event automatically. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
+Select **Open image gallery** in the web UI to review recent event images. It shows thumbnail previews and, by default, only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery automatically opens the next unreviewed event. Use **Show reviewed images** to inspect or correct previous annotations. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
 
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 

@@ -146,3 +146,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Added an explicit, browser-operated versioned YOLO dataset export on the model and training page.
 - The UI reports the resulting local directory and box count; exporting does not start the training worker.
+
+## 2026-08-31 — Gallery review workflow
+
+- Restored visual event thumbnails in the review list and added clear reviewed/unreviewed badges.
+- The default view now hides reviewed events, advances to the next unreviewed event after saving, and offers an explicit filter to revisit reviewed images.

@@ -64,7 +64,10 @@ def test_gallery_page_and_events_endpoint_are_available():
     app = create_app(camera=None, status=lambda: {}, gallery=gallery)
     client = app.test_client()
 
-    assert client.get("/gallery").status_code == 200
+    gallery_page = client.get("/gallery")
+    assert gallery_page.status_code == 200
+    assert b'id="show-reviewed"' in gallery_page.data
+    assert b"Show reviewed images" in gallery_page.data
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 
 
