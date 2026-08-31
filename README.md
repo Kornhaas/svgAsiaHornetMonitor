@@ -137,6 +137,8 @@ uv run ruff check .
 
 On a development PC, use the same repository and deploy with `git pull` on the Pi. VS Code Remote SSH is useful for directly testing the Pi camera, but Git remains the shared history.
 
+For repeatable YOLO export, local Windows training, and model evaluation, see [`training/README.md`](training/README.md). These manual PC tools reuse the project exporter and keep local experiment outputs separate from the Pi's active model versions.
+
 Project decisions and milestones are recorded in [`LOGBOOK.md`](LOGBOOK.md). Guidance for Copilot and coding agents is in [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
 
 ## Languages

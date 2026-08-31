@@ -8,6 +8,12 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Added direct navigation to live monitor, gallery, ROI settings, model training, system status, and camera settings, with the current page marked as active.
 - Kept the login page intentionally separate because it is shown before authentication.
 
+## 2026-09-01 — Local YOLO training toolkit
+
+- Added self-contained Windows/local-PC scripts for dataset export, training, and validation below `training/`.
+- Kept local experiment outputs separate from Pi-managed model versions so manual work cannot interrupt capture or activate an unreviewed model.
+- Documented uv-only setup, Pi data transfer, GPU detection, reproducible commands, and the small-dataset limitation.
+
 ## 2026-08-31 — V0.1 foundation
 
 Created the initial Raspberry Pi camera-monitoring application.
