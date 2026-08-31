@@ -1,3 +1,5 @@
+import pytest
+
 from hornet_monitor.gallery import Gallery
 
 
@@ -25,3 +27,20 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     gallery.delete_event("2026-08-31/123000_000001")
     assert gallery.events() == []
     assert (tmp_path / "annotations.jsonl").exists()
+
+
+@pytest.mark.parametrize(
+    "image_id",
+    [
+        "../secrets.jpg",
+        "2026-08-31/123000_000001/../../secrets.jpg",
+        "2026-08-31/123000_000001/other.jpg",
+        "2026-08-31/123000_000001/frame_000.jpg/extra",
+        "2026-08-31\\123000_000001\\frame_000.jpg",
+    ],
+)
+def test_gallery_rejects_noncanonical_image_paths_before_filesystem_access(tmp_path, image_id):
+    gallery = Gallery(tmp_path / "events", tmp_path / "annotations.jsonl")
+
+    with pytest.raises(ValueError, match="Invalid event image path"):
+        gallery.image_path(image_id)

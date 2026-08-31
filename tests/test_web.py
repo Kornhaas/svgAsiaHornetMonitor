@@ -30,6 +30,19 @@ def test_roi_endpoint_validates_and_forwards_updates():
     assert saved == [{"x": 10, "y": 20, "width": 30, "height": 40}]
 
 
+def test_api_validation_does_not_expose_internal_exception_details():
+    app = create_app(
+        camera=None,
+        status=lambda: {},
+        update_roi=lambda _roi: (_ for _ in ()).throw(ValueError("/private/config.yaml")),
+    )
+
+    response = app.test_client().put("/roi", json={"x": 1})
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "ROI settings are invalid."}
+
+
 def test_activities_endpoint_returns_recent_entries():
     entries = [{"event": "motion_event", "message": "Motion event saved"}]
     app = create_app(

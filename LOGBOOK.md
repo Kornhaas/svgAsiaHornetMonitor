@@ -151,3 +151,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Restored visual event thumbnails in the review list and added clear reviewed/unreviewed badges.
 - The default view now hides reviewed events, advances to the next unreviewed event after saving, and offers an explicit filter to revisit reviewed images.
+
+## 2026-08-31 — CodeQL path and error handling remediation
+
+- Restricted gallery file access to canonical event-image identifiers before constructing a filesystem path, rejecting traversal and alternate path encodings.
+- Replaced API responses that exposed exception text with stable client-safe error messages and added regression tests for both controls.

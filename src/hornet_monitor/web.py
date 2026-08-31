@@ -146,8 +146,8 @@ def create_app(
         try:
             update_camera(payload)
             return jsonify(message="Camera saved; monitor is restarting."), 202
-        except ValueError as error:
-            return jsonify(error=str(error)), 400
+        except ValueError:
+            return jsonify(error="Camera settings are invalid."), 400
 
     @app.put("/api/telegram")
     @require_login
@@ -160,8 +160,8 @@ def create_app(
         try:
             update_telegram(payload)
             return jsonify(message="Telegram settings saved; monitor is restarting."), 202
-        except (TypeError, ValueError) as error:
-            return jsonify(error=str(error)), 400
+        except (TypeError, ValueError):
+            return jsonify(error="Telegram settings are invalid."), 400
 
     @app.post("/api/backup")
     @require_login
@@ -225,8 +225,8 @@ def create_app(
             return jsonify(error="Camera frame is unavailable."), 503
         try:
             return jsonify(background=background.save(frame)), 201
-        except ValueError as error:
-            return jsonify(error=str(error)), 500
+        except ValueError:
+            return jsonify(error="Background update failed."), 500
 
     @app.get("/api/events/<path:image_id>/proposals")
     @require_login
@@ -271,8 +271,8 @@ def create_app(
             return jsonify(error="At least one labelled animal box is required."), 400
         try:
             dataset = training_manager.exporter.export()
-        except (OSError, ValueError) as error:
-            return jsonify(error=f"Dataset export failed: {error}"), 500
+        except (OSError, ValueError):
+            return jsonify(error="Dataset export failed."), 500
         return jsonify(dataset=dataset), 201
 
     @app.get("/event-image/<path:image_id>")
@@ -295,8 +295,8 @@ def create_app(
             return jsonify(error="Expected an annotation JSON object."), 400
         try:
             return jsonify(annotation=save_annotation(payload)), 201
-        except (FileNotFoundError, ValueError) as error:
-            return jsonify(error=str(error)), 400
+        except (FileNotFoundError, ValueError):
+            return jsonify(error="Annotation is invalid or its image is unavailable."), 400
 
     @app.delete("/api/events/<path:event_id>")
     @require_login
@@ -306,8 +306,8 @@ def create_app(
         try:
             delete_event(event_id)
             return "", 204
-        except (FileNotFoundError, ValueError) as error:
-            return jsonify(error=str(error)), 404
+        except (FileNotFoundError, ValueError):
+            return jsonify(error="Event was not found."), 404
 
     @app.get("/status")
     @require_login
@@ -324,8 +324,8 @@ def create_app(
             return jsonify(error="Expected an ROI JSON object."), 400
         try:
             return jsonify(roi=update_roi(payload))
-        except ValueError as error:
-            return jsonify(error=str(error)), 400
+        except ValueError:
+            return jsonify(error="ROI settings are invalid."), 400
 
     @app.get("/activities")
     @require_login

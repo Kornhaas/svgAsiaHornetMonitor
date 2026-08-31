@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from werkzeug.utils import safe_join
+
 
 class Gallery:
+    _EVENT_IMAGE_ID = re.compile(r"\d{4}-\d{2}-\d{2}/[0-9_]+/frame_\d+\.jpe?g\Z")
+
     def __init__(self, events_directory: str | Path, annotations_file: str | Path) -> None:
         self.events_directory = Path(events_directory).resolve()
         self.annotations_file = Path(annotations_file)
@@ -41,12 +46,13 @@ class Gallery:
             return [json.loads(line) for line in annotations if line.strip()]
 
     def image_path(self, image_id: str) -> Path:
-        candidate = (self.events_directory / image_id).resolve()
-        if self.events_directory not in candidate.parents or candidate.suffix.lower() not in {
-            ".jpg",
-            ".jpeg",
-        }:
+        if not isinstance(image_id, str) or not self._EVENT_IMAGE_ID.fullmatch(image_id):
             raise ValueError("Invalid event image path.")
+        # safe_join is a second, library-provided containment boundary for filesystem access.
+        candidate = safe_join(self.events_directory, image_id)
+        if candidate is None:
+            raise ValueError("Invalid event image path.")
+        candidate = Path(candidate)
         if not candidate.is_file():
             raise FileNotFoundError(image_id)
         return candidate
