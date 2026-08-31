@@ -56,8 +56,7 @@ class TelegramNotifier:
                 f"\r\n\r\n{chat_id}\r\n"
             ).encode(),
             (
-                f'--{boundary}\r\nContent-Disposition: form-data; name="caption"'
-                f"\r\n\r\n{text}\r\n"
+                f'--{boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n{text}\r\n'
             ).encode(),
             (
                 f'--{boundary}\r\nContent-Disposition: form-data; name="photo"; '
