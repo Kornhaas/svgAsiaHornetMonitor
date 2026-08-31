@@ -77,6 +77,8 @@ The installer asks once for a web password, enables service autostart, and confi
 
 The installer is intentionally limited to `/home/hornet/svgAsiaHornetMonitor` and only grants the `hornet` user permission to restart this one service. Do not expose the monitor directly to the internet.
 
+Installing an update restarts the monitor service and therefore briefly closes the camera stream. The browser waits eight seconds and reloads itself automatically; an interrupted stream also reconnects on its own.
+
 ## Configuration
 
 Edit [`config/config.yaml`](config/config.yaml) before deployment:

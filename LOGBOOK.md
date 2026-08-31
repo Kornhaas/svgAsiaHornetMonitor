@@ -112,3 +112,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Added a local, session-based language selector with German as the default and English as an alternative.
 - Kept the translation catalogue in source control and added no cloud translation dependency.
+
+## 2026-08-31 — Resilient stream after updates
+
+- Added automatic page reload after a browser-initiated service update and MJPEG reconnect handling after an interrupted stream.
