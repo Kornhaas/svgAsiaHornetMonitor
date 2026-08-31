@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import threading
 import time
 
@@ -43,7 +42,11 @@ def main() -> None:
             result = detector.detect(frame)
             saved = result.detected and writer.save_burst(frame)
             with state_lock:
-                state.update(motion=result.detected, largest_area=round(result.largest_area, 1), last_event=writer.last_event)
+                state.update(
+                    motion=result.detected,
+                    largest_area=round(result.largest_area, 1),
+                    last_event=writer.last_event,
+                )
             if saved:
                 print(f"Motion event saved to {writer.last_event}")
             time.sleep(0.05)
@@ -55,7 +58,12 @@ def main() -> None:
             return {**state, "camera_error": camera.error}
 
     app = create_app(camera, status)
-    app.run(host=config["web"]["host"], port=config["web"]["port"], debug=config["web"].get("debug", False), threaded=True)
+    app.run(
+        host=config["web"]["host"],
+        port=config["web"]["port"],
+        debug=config["web"].get("debug", False),
+        threaded=True,
+    )
 
 
 if __name__ == "__main__":

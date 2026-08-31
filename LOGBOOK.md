@@ -26,3 +26,13 @@ Moved dependency management from `requirements.txt` to uv.
 ## Next planned milestone
 
 Test the webcam and ROI settings on the Raspberry Pi, then tune `min_area`, threshold, cooldown, and burst settings using real captures. Keep image collection stable before introducing any classification model.
+
+## 2026-08-31 — Project engineering baseline
+
+Added an AI-assisted engineering workflow and automated quality foundation.
+
+- Added architecture documentation with runtime flow, component ownership, configuration rules, and a future classifier boundary.
+- Added an AI collaboration guide with architect/developer/test/review roles, change protocol, reusable task prompt, and Pi hardware checklist.
+- Added pytest and Ruff as development dependencies managed by uv.
+- Added a GitHub Actions workflow to install the lockfile, check formatting, lint, and run tests on pushes and pull requests.
+- Added a web route test and standardized local verification around pytest and Ruff.

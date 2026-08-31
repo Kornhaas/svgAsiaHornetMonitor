@@ -10,7 +10,8 @@ This project collects camera images and motion events for a future Vespa velutin
 - Language: Python 3.11 or later.
 - Dependency manager: `uv` only. Add packages with `uv add <package>` and commit both `pyproject.toml` and `uv.lock`.
 - Run the application with `uv run hornet-monitor`.
-- Run tests with `uv run python -m unittest discover -s tests`.
+- Run tests with `uv run pytest`.
+- Run quality checks with `uv run ruff format --check .` and `uv run ruff check .`.
 
 ## Architecture
 
@@ -29,6 +30,7 @@ This project collects camera images and motion events for a future Vespa velutin
 - Add or update focused unit tests for changed detection or event behavior.
 - Run the test suite and `uv lock --check` before considering work complete.
 - Update `LOGBOOK.md` for user-visible features, architectural decisions, deployment changes, and fixes.
+- Before a non-trivial change, state the affected component, configuration impact, failure behavior, and tests to add. Use `docs/architecture.md` as the source of truth.
 
 ## Repository hygiene
 

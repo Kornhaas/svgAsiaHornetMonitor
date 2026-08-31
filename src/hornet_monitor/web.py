@@ -29,8 +29,11 @@ def create_app(camera, status):
                     continue
                 ok, encoded = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
                 if ok:
-                    yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+                    yield (
+                        b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+                    )
                 time.sleep(0.03)
+
         return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
     return app

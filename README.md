@@ -71,9 +71,13 @@ For a local machine where `/dev/video0` does not exist, set `camera.device: 0` i
 The source package is under `src/hornet_monitor`; the browser assets are under `web`. A minimal test run is:
 
 ```bash
-uv run python -m unittest discover -s tests
+uv run pytest
+uv run ruff format --check .
+uv run ruff check .
 ```
 
 On a development PC, use the same repository and deploy with `git pull` on the Pi. VS Code Remote SSH is useful for directly testing the Pi camera, but Git remains the shared history.
 
 Project decisions and milestones are recorded in [`LOGBOOK.md`](LOGBOOK.md). Guidance for Copilot and coding agents is in [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
+
+For system design and an AI-assisted change workflow, see [`docs/architecture.md`](docs/architecture.md) and [`docs/ai-collaboration.md`](docs/ai-collaboration.md).

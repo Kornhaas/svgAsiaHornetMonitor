@@ -7,7 +7,12 @@ from hornet_monitor.motion import MotionDetector
 
 class MotionDetectorTests(unittest.TestCase):
     def test_detects_a_large_change_inside_roi(self):
-        settings = {"roi": {"x": 10, "y": 10, "width": 80, "height": 80}, "min_area": 100, "threshold": 10, "blur_size": 5}
+        settings = {
+            "roi": {"x": 10, "y": 10, "width": 80, "height": 80},
+            "min_area": 100,
+            "threshold": 10,
+            "blur_size": 5,
+        }
         detector = MotionDetector(settings)
         baseline = np.zeros((100, 100, 3), dtype=np.uint8)
         detector.detect(baseline)
@@ -16,7 +21,12 @@ class MotionDetectorTests(unittest.TestCase):
         self.assertTrue(detector.detect(changed).detected)
 
     def test_ignores_motion_outside_roi(self):
-        settings = {"roi": {"x": 10, "y": 10, "width": 40, "height": 40}, "min_area": 100, "threshold": 10, "blur_size": 5}
+        settings = {
+            "roi": {"x": 10, "y": 10, "width": 40, "height": 40},
+            "min_area": 100,
+            "threshold": 10,
+            "blur_size": 5,
+        }
         detector = MotionDetector(settings)
         baseline = np.zeros((100, 100, 3), dtype=np.uint8)
         detector.detect(baseline)

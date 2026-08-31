@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from pathlib import Path
 import threading
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -26,7 +26,9 @@ class EventWriter:
                 return False
             self._last_event = now
         timestamp = datetime.now()
-        folder = self.base_directory / timestamp.strftime("%Y-%m-%d") / timestamp.strftime("%H%M%S_%f")
+        folder = (
+            self.base_directory / timestamp.strftime("%Y-%m-%d") / timestamp.strftime("%H%M%S_%f")
+        )
         folder.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(folder / "frame_000.jpg"), frame)
         self.last_event = str(folder)
