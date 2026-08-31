@@ -110,3 +110,5 @@ On a development PC, use the same repository and deploy with `git pull` on the P
 Project decisions and milestones are recorded in [`LOGBOOK.md`](LOGBOOK.md). Guidance for Copilot and coding agents is in [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
 
 For system design and an AI-assisted change workflow, see [`docs/architecture.md`](docs/architecture.md) and [`docs/ai-collaboration.md`](docs/ai-collaboration.md).
+
+Quality checks, security scans, dependency updates, and the GitHub branch-protection recommendations are documented in [`docs/quality.md`](docs/quality.md).

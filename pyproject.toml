@@ -12,6 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest-cov>=6.0,<7.0",
     "pytest>=9.0.3,<10.0",
     "ruff>=0.8,<1.0",
 ]
@@ -25,6 +26,15 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=hornet_monitor --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=40"
+
+[tool.coverage.run]
+branch = true
+source = ["hornet_monitor"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 line-length = 100

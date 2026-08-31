@@ -77,3 +77,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Adopted Bootstrap 5 for a responsive, consistent dashboard, navigation, cards, forms, and login screen.
 - Documented the UI responsibility and usability rules in the architecture guide.
+
+## 2026-08-31 — Quality and security automation
+
+- Extended CI with Python 3.11/3.13 checks, lockfile verification, branch coverage, and uv dependency audit.
+- Added CodeQL security scanning and weekly Dependabot updates for uv dependencies and GitHub Actions.
+- Added a documented quality policy and an incremental coverage-improvement plan.
