@@ -62,7 +62,7 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 
 - `camera.device`, `width`, `height`, and `fps` select the webcam mode.
 - `motion.roi` is a rectangle in camera pixels.
-- In the browser, drag a rectangle on the live image or enter `X`, `Y`, `Width`, and `Height`, then select **Save ROI**. The change takes effect immediately and is saved only to ignored `config/local.yaml` on that device.
+- In the browser, draw a rectangle on the live image; it is saved automatically when you release the mouse. Alternatively enter `X`, `Y`, `Width`, and `Height`, then select **Save ROI**. The change takes effect immediately and is saved only to ignored `config/local.yaml` on that device.
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.

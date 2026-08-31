@@ -52,3 +52,4 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added an ROI rectangle on the live image, adjustable by dragging or through numeric fields.
 - Added validated runtime ROI updates through the web API; each update resets the motion background model.
 - Persisted the per-device ROI in ignored `config/local.yaml`, so it survives restarts without entering Git.
+- Fixed ROI editing so periodic status polling cannot overwrite an in-progress drag; releasing the mouse now saves the ROI automatically.

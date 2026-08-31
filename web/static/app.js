@@ -2,11 +2,13 @@ const indicator = document.querySelector('#indicator');
 const message = document.querySelector('#message');
 const details = document.querySelector('#details');
 const stream = document.querySelector('#stream');
+const streamContainer = document.querySelector('.stream-container');
 const roiBox = document.querySelector('#roi');
 const roiForm = document.querySelector('#roi-form');
 const roiMessage = document.querySelector('#roi-message');
 const inputs = Object.fromEntries(['x', 'y', 'width', 'height'].map((key) => [key, document.querySelector(`#roi-${key}`)]));
 let frameSize = { width: 1280, height: 720 };
+let editingRoi = false;
 
 function currentRoi() { return Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, Number(input.value)])); }
 function showRoi(roi) {
@@ -24,19 +26,24 @@ async function refreshStatus() {
     indicator.classList.toggle('motion', state.motion);
     message.textContent = state.camera_error || (state.motion ? 'Motion detected in ROI' : 'Watching ROI');
     details.textContent = `Largest moving area: ${state.largest_area}px²${state.last_event ? ` · Latest event: ${state.last_event}` : ''}`;
-    if (!roiForm.contains(document.activeElement)) showRoi(state.roi);
+    if (!editingRoi && !roiForm.contains(document.activeElement)) showRoi(state.roi);
   } catch (_) { message.textContent = 'Status unavailable'; }
 }
 
-roiForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+async function saveRoi() {
   const response = await fetch('/roi', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentRoi()) });
   const payload = await response.json();
   roiMessage.textContent = response.ok ? 'Saved locally.' : payload.error;
   if (response.ok) showRoi(payload.roi);
+}
+
+roiForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await saveRoi();
 });
 
-stream.addEventListener('pointerdown', (event) => {
+streamContainer.addEventListener('pointerdown', (event) => {
+  editingRoi = true;
   const bounds = stream.getBoundingClientRect();
   const start = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
   const draw = (moveEvent) => {
@@ -44,9 +51,13 @@ stream.addEventListener('pointerdown', (event) => {
     const endY = Math.max(0, Math.min(bounds.height, moveEvent.clientY - bounds.top));
     showRoi({ x: Math.round((Math.min(start.x, endX) / bounds.width) * frameSize.width), y: Math.round((Math.min(start.y, endY) / bounds.height) * frameSize.height), width: Math.max(1, Math.round((Math.abs(endX - start.x) / bounds.width) * frameSize.width)), height: Math.max(1, Math.round((Math.abs(endY - start.y) / bounds.height) * frameSize.height)) });
   };
-  stream.setPointerCapture(event.pointerId);
-  stream.addEventListener('pointermove', draw);
-  stream.addEventListener('pointerup', () => stream.removeEventListener('pointermove', draw), { once: true });
+  streamContainer.setPointerCapture(event.pointerId);
+  streamContainer.addEventListener('pointermove', draw);
+  streamContainer.addEventListener('pointerup', async () => {
+    streamContainer.removeEventListener('pointermove', draw);
+    editingRoi = false;
+    await saveRoi();
+  }, { once: true });
 });
 
 refreshStatus(); setInterval(refreshStatus, 1000);
