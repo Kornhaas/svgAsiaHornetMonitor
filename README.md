@@ -11,6 +11,7 @@ It deliberately contains no species classification or machine learning. The firs
 - Browser live stream at `http://<pi-address>:8000`
 - ROI-only motion detection with a visible live status
 - Visible, drag-adjustable ROI overlay with numeric controls in the browser
+- ROI-cropped event images, excluding moving background outside the yellow rectangle
 - Persistent activity log in the web UI for motion events and configuration changes
 - Browser image gallery for reviewing events and saving labelled bounding boxes
 - Timestamped event folders with a JPEG burst
@@ -86,6 +87,7 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
+- `events.crop_to_roi` keeps saved gallery and training images limited to the ROI (enabled by default). The live stream remains full-frame so the ROI can still be adjusted comfortably.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
 

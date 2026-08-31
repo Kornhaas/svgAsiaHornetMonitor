@@ -15,6 +15,7 @@ from werkzeug.security import generate_password_hash
 from .activity import ActivityLog
 from .camera import Camera
 from .events import EventWriter
+from .frames import crop_to_roi
 from .gallery import Gallery
 from .motion import MotionDetector
 from .updates import UpdateManager
@@ -85,8 +86,19 @@ def main() -> None:
     gallery = Gallery(config["events"]["directory"], config["annotations"]["file"])
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
-    writer.frame_supplier = camera.get_frame
     detector = MotionDetector(config["motion"])
+
+    def event_frame(frame=None):
+        frame = camera.get_frame() if frame is None else frame
+        if frame is None:
+            return None
+        return (
+            crop_to_roi(frame, detector.roi())
+            if config["events"].get("crop_to_roi", True)
+            else frame
+        )
+
+    writer.frame_supplier = event_frame
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
     state_lock = threading.Lock()
 
@@ -97,7 +109,7 @@ def main() -> None:
                 time.sleep(0.1)
                 continue
             result = detector.detect(frame)
-            saved = result.detected and writer.save_burst(frame)
+            saved = result.detected and writer.save_burst(event_frame(frame))
             with state_lock:
                 state.update(
                     motion=result.detected,
@@ -118,6 +130,7 @@ def main() -> None:
                 "roi": detector.roi(),
                 "frame_width": config["camera"]["width"],
                 "frame_height": config["camera"]["height"],
+                "event_crop": config["events"].get("crop_to_roi", True),
             }
 
     def update_roi(roi: dict[str, int]) -> dict[str, int]:

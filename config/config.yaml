@@ -19,6 +19,8 @@ motion:
 
 events:
   directory: data/events
+  # Save only the motion ROI for a focused, background-free training dataset.
+  crop_to_roi: true
   burst_frames: 5
   burst_interval_seconds: 0.25
 

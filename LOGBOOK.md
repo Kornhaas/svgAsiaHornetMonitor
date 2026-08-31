@@ -89,3 +89,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Extended CI with Python 3.11/3.13 checks, lockfile verification, branch coverage, and uv dependency audit.
 - Added CodeQL security scanning and weekly Dependabot updates for uv dependencies and GitHub Actions.
 - Added a documented quality policy and an incremental coverage-improvement plan.
+
+## 2026-08-31 — Background-free event captures
+
+- Reused the existing motion ROI as the event-image crop, so moving trees or other scenery outside the yellow rectangle cannot create gallery or training-image content.
+- Kept the live stream full-frame for comfortable ROI adjustment; only newly captured event burst images are cropped.
+- Added a bounds-safe frame transformation with unit tests. The current ROI is read for every burst frame, so browser ROI changes apply immediately to subsequent events.

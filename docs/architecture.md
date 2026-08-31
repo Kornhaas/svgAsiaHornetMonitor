@@ -17,7 +17,7 @@ USB webcam (/dev/video0)
        └──────────► MotionDetector (ROI only)
                            │ motion event
                            ▼
-                    EventWriter ─► data/events/YYYY-MM-DD/...
+                 ROI frame crop ─► EventWriter ─► data/events/YYYY-MM-DD/...
                            │
                            └──────────► ActivityLog ─► data/activity.jsonl ─► Web /activities
 
@@ -33,6 +33,7 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 | --- | --- | --- |
 | `camera.py` | Opening and reading a camera; thread-safe latest-frame access | Motion rules, HTTP, file storage |
 | `motion.py` | ROI validation and frame-to-motion decision | Saving data, starting threads, web state |
+| `frames.py` | Bounds-safe ROI crop for event and training frames | Motion decisions, camera access, file writes |
 | `events.py` | Event folder naming, cooldown, JPEG burst writing | Camera setup, motion thresholds |
 | `web.py` | HTML, MJPEG response, JSON status endpoint | Direct camera reads or event decisions |
 | `updates.py` | Fast-forward-only update check/install and service restart | Arbitrary command execution or user-supplied paths |
@@ -46,7 +47,7 @@ The browser UI uses Bootstrap 5 for responsive layout and accessible controls, w
 
 1. `main.py` reads YAML configuration and starts one camera capture thread.
 2. The monitor loop obtains copies of the latest frame and asks `MotionDetector` to inspect only the configured ROI.
-3. A positive decision asks `EventWriter` to save the first JPEG immediately and remaining burst frames asynchronously. Cooldown prevents event floods.
+3. A positive decision crops the saved frame to the current ROI when `events.crop_to_roi` is enabled, then asks `EventWriter` to save the first JPEG immediately and remaining ROI-cropped burst frames asynchronously. Cooldown prevents event floods. The live stream is always the original full camera frame.
 4. The browser consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. It may update the ROI through the explicit `/roi` endpoint; `MotionDetector` validates it and resets its background model.
 
 ## Configuration boundary
