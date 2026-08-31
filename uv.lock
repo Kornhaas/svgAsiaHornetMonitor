@@ -611,10 +611,6 @@ dependencies = [
     { name = "flask" },
     { name = "opencv-python" },
     { name = "pyyaml" },
-]
-
-[package.optional-dependencies]
-ml = [
     { name = "ultralytics" },
 ]
 
@@ -630,7 +626,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.0,<4.0" },
     { name = "opencv-python", specifier = ">=4.8,<6.0" },
     { name = "pyyaml", specifier = ">=6.0,<7.0" },
-    { name = "ultralytics", marker = "extra == 'ml'", specifier = ">=8.4.137" },
+    { name = "ultralytics", specifier = ">=8.4.137" },
 ]
 provides-extras = ["ml"]
 

@@ -71,4 +71,4 @@ Appliance mode uses `hornet-monitor.service` under systemd. The web UI is passwo
 
 ## Training and classifier boundary
 
-`dataset.py` is the only component that turns confirmed gallery boxes into YOLO data. `trainer.py` owns a separate, deadline-bounded process; `predictor.py` runs only after an event has been saved, in its own thread. `notifier.py` receives only prediction summaries and cannot block camera, motion, event writing, or the web UI. The optional `ml` dependency profile owns Ultralytics/PyTorch; a missing or failed model must degrade to collection-only mode.
+`dataset.py` is the only component that turns confirmed gallery boxes into YOLO data. `trainer.py` owns a separate, deadline-bounded process; `predictor.py` runs only after an event has been saved, in its own thread. `notifier.py` receives only prediction summaries and cannot block camera, motion, event writing, or the web UI. A missing or failed model must degrade to collection-only mode.

@@ -25,5 +25,5 @@ else
 fi
 
 cd "$project_dir"
-uv sync --locked --no-dev --extra ml
+uv sync --locked --no-dev
 bash scripts/install-service.sh

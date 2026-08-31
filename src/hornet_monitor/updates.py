@@ -52,7 +52,7 @@ class UpdateManager:
             try:
                 subprocess.run(["git", "pull", "--ff-only"], cwd=self.repository, check=True)
                 subprocess.run(
-                    [self.settings["uv_binary"], "sync", "--locked", "--no-dev", "--extra", "ml"],
+                    [self.settings["uv_binary"], "sync", "--locked", "--no-dev"],
                     cwd=self.repository,
                     check=True,
                 )

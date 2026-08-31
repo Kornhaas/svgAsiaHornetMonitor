@@ -8,6 +8,7 @@ dependencies = [
     "flask>=3.0,<4.0",
     "opencv-python>=4.8,<6.0",
     "pyyaml>=6.0,<7.0",
+    "ultralytics>=8.4.137",
 ]
 
 [dependency-groups]
@@ -21,9 +22,7 @@ dev = [
 hornet-monitor = "hornet_monitor.main:main"
 
 [project.optional-dependencies]
-ml = [
-    "ultralytics>=8.4.137",
-]
+ml = []
 
 [build-system]
 requires = ["uv_build>=0.12.7,<0.13"]

@@ -38,10 +38,10 @@ git clone https://github.com/Kornhaas/svgAsiaHornetMonitor.git
 cd svgAsiaHornetMonitor
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
-uv sync --locked --no-dev --extra ml
+uv sync --locked --no-dev
 ```
 
-`libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. The ML profile installs YOLO/PyTorch for local training and requires substantial disk space and time on a Pi 4. The `export PATH=...` command makes the just-installed uv executable available in the current shell.
+`libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. YOLO/PyTorch are installed for local training and require substantial disk space and time on a Pi 4. The `export PATH=...` command makes the just-installed uv executable available in the current shell.
 
 Check that the webcam is available and supports the expected MJPEG mode:
 
