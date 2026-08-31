@@ -65,3 +65,4 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added optional password-protected web access with locally stored password hash and session secret.
 - Added an update panel that checks the fixed Git remote and installs fast-forward-only updates before restarting the service.
 - Added a restricted systemd service installer and sudo rule; no arbitrary browser-supplied shell command can be run.
+- Added a one-time Raspberry Pi bootstrap script for installing prerequisites, cloning/updating the fixed repository, setting up uv, and enabling appliance mode.

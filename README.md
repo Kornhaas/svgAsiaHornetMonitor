@@ -59,7 +59,13 @@ Open `http://<raspberry-pi-ip>:8000` from a device on the same network. Stop wit
 
 ## Appliance mode: browser-only operation
 
-For normal use without an open terminal, install the provided systemd service once from the project root on the Pi:
+For a new Raspberry Pi, run the one-time setup as the `hornet` user. It installs curl and Git, installs uv if needed, clones or updates this repository, creates the production environment, asks for one web password, and activates the service:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/Kornhaas/svgAsiaHornetMonitor/main/scripts/setup-pi.sh | bash
+```
+
+For an already-cloned project, install the service once from the project root instead:
 
 ```bash
 bash scripts/install-service.sh

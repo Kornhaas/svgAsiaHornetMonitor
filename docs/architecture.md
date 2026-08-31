@@ -51,6 +51,8 @@ config/config.yaml ─► main.py (composition and runtime state) ─► Web /st
 
 Appliance mode uses `hornet-monitor.service` under systemd. The web UI is password-protected after `scripts/install-service.sh` has configured ignored local credentials. The updater accepts no user-supplied Git URL, command, path, or service name: it updates only the configured repository by `git pull --ff-only`, runs `uv sync --locked --no-dev`, then restarts only `hornet-monitor.service` through a narrowly scoped sudo rule.
 
+`scripts/setup-pi.sh` is the one-time bootstrap for a new Pi. It is deliberately fixed to the `hornet` user and this repository; it does not accept remote URLs or arbitrary installation paths.
+
 ## Future classifier boundary
 
 When classification is requested, add `classifier.py` behind an explicit interface such as `classify(frame) -> ClassificationResult`. Run it only after an event is created, ideally in a bounded worker queue. Do not put inference in the camera thread, MJPEG generator, or motion detector.
