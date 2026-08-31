@@ -123,6 +123,10 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added optional, rate-limited Telegram review notifications with credentials stored only in local configuration.
 - Added camera selection/settings, camera reconnect attempts, local metadata backups, configuration validation, and storage-warning state.
 
+## 2026-08-31 — Editable reviewed annotations
+
+- Gallery now reloads saved boxes when revisiting an image, allowing labels and boxes to be corrected as one replacement set.
+
 ## 2026-08-31 — Image-based night mode
 
 - Added ROI brightness measurement with a 20-minute sustained-darkness timer and separate bright/dark thresholds.
