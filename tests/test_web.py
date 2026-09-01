@@ -88,6 +88,7 @@ def test_gallery_page_and_events_endpoint_are_available():
     assert b'id="event-filter"' in gallery_page.data
     assert b'id="event-frames"' in gallery_page.data
     assert b'id="annotation-boxes"' in gallery_page.data
+    assert b'<option value="empty" selected' in gallery_page.data
     assert b"Reviewed events with animals" in gallery_page.data
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 

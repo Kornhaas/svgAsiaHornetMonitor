@@ -200,3 +200,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Made annotation replacement crash-safe with atomic local writes.
 - Added versioned model runs, model activation, YOLO evaluation metrics, prediction history, and time-windowed overnight training progress.
 - Added the maintained `TODO.md` production-readiness and Raspberry Pi acceptance checklist.
+
+## 2026-09-01 — Safer gallery default
+
+- The image-gallery class selector now defaults to **Empty**, preventing accidental Asian-hornet annotations on blank event images.
