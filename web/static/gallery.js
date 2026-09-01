@@ -185,10 +185,15 @@ function eventCard(event) {
   const card = document.createElement("button");
   card.type = "button";
   card.className = "event-card" + (selected === event ? " selected" : "");
-  const preview = document.createElement("img");
-  preview.src = "/event-image/" + event.image;
-  preview.alt = "Event " + event.id;
-  preview.loading = "lazy";
+  const preview = event.night_preview ? document.createElement("span") : document.createElement("img");
+  if (event.night_preview) {
+    preview.className = "event-night-preview";
+    preview.textContent = "Night mode · preview disabled";
+  } else {
+    preview.src = "/event-image/" + event.image;
+    preview.alt = "Event " + event.id;
+    preview.loading = "lazy";
+  }
   const title = document.createElement("span");
   title.className = "event-card-title";
   title.textContent = event.id;

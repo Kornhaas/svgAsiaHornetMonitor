@@ -239,3 +239,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Added a priority inbox for low-confidence, rare-class, and inconsistent burst predictions; model boxes render as cyan `AI` overlays before confirmation.
 - Added feedback, confidence-calibration, class-balance, brightness-drift, and per-model quality evidence to the Model & Training page.
 - Added an explicitly disabled-by-default automatic-acceptance policy. It can only label an allowed class after the configured confidence, sample-count, and observed-precision gates are met.
+
+## 2026-09-01 — Dark event previews
+
+- New events now store their measured brightness in local event metadata.
+- Gallery cards hide a thumbnail below brightness 30 and show a clear night-mode indication instead, avoiding wasted preview loading for dark captures.

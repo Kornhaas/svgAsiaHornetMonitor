@@ -68,6 +68,20 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     assert (tmp_path / "annotations.jsonl").exists()
 
 
+def test_gallery_exposes_night_preview_metadata_without_reading_images(tmp_path):
+    image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
+    image.parent.mkdir(parents=True)
+    image.write_bytes(b"test")
+    (image.parent / "event.json").write_text(
+        '{"brightness": 12.5, "night_preview": true}', encoding="utf-8"
+    )
+
+    event = Gallery(image.parents[2], tmp_path / "annotations.jsonl").events()[0]
+
+    assert event["brightness"] == 12.5
+    assert event["night_preview"] is True
+
+
 def test_gallery_records_confirmed_model_suggestions_as_auditable_annotations(tmp_path):
     image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
     image.parent.mkdir(parents=True)

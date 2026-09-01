@@ -35,3 +35,9 @@ def test_event_writer_saves_a_burst_and_respects_cooldown(monkeypatch, tmp_path)
     assert writer.last_event is not None
     assert len(completed) == 1
     assert str(completed[0]) == writer.last_event
+
+
+def test_event_writer_marks_dark_preview_metadata():
+    import numpy as np
+
+    assert EventWriter._brightness(np.zeros((2, 2, 3), dtype=np.uint8)) == 0.0

@@ -59,6 +59,7 @@ class Gallery:
             frame.relative_to(self.events_directory).as_posix()
             for frame in sorted(image.parent.glob("frame_*.jpg"))
         ]
+        metadata = self._event_metadata(image.parent)
         return {
             "id": image.parent.relative_to(self.events_directory).as_posix(),
             "image": image.relative_to(self.events_directory).as_posix(),
@@ -67,7 +68,20 @@ class Gallery:
             "reviewed_frames": [frame for frame in frames if frame in reviewed_images],
             "animal_frames": [frame for frame in frames if frame in animal_images],
             "reviewed": any(frame in reviewed_images for frame in frames),
+            "brightness": metadata.get("brightness"),
+            "night_preview": metadata.get("night_preview", False),
         }
+
+    @staticmethod
+    def _event_metadata(directory: Path) -> dict[str, Any]:
+        metadata = directory / "event.json"
+        if not metadata.exists():
+            return {}
+        try:
+            value = json.loads(metadata.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+        return value if isinstance(value, dict) else {}
 
     def _annotations(self) -> list[dict[str, Any]]:
         if not self.annotations_file.exists():

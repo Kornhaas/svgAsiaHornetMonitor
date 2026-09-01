@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 from datetime import datetime
@@ -12,6 +13,8 @@ import cv2
 
 
 class EventWriter:
+    NIGHT_PREVIEW_THRESHOLD = 30
+
     def __init__(self, settings: dict[str, Any], activity_log=None) -> None:
         self.settings = settings
         self.base_directory = Path(settings["directory"])
@@ -32,6 +35,17 @@ class EventWriter:
         )
         folder.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(folder / "frame_000.jpg"), frame)
+        brightness = self._brightness(frame)
+        (folder / "event.json").write_text(
+            json.dumps(
+                {
+                    "brightness": brightness,
+                    "night_preview": brightness is not None
+                    and brightness < self.NIGHT_PREVIEW_THRESHOLD,
+                }
+            ),
+            encoding="utf-8",
+        )
         self.last_event = str(folder)
         if self.activity_log:
             self.activity_log.record(
@@ -50,3 +64,9 @@ class EventWriter:
         callback = getattr(self, "burst_complete_callback", None)
         if callback is not None:
             callback(folder)
+
+    @staticmethod
+    def _brightness(frame) -> float | None:
+        if not hasattr(frame, "shape"):
+            return None
+        return round(float(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).mean()), 1)

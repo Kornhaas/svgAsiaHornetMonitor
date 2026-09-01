@@ -54,6 +54,7 @@ GERMAN = {
     "Reviewed": "Bewertet",
     "Unreviewed": "Unbewertet",
     "No events available.": "Keine Ereignisse verfügbar.",
+    "Night mode · preview disabled": "Nachtmodus · Vorschau deaktiviert",
     "Refresh inbox": "Eingang aktualisieren",
     "Model suggestion:": "Modellvorschlag:",
     "Accept suggestion": "Vorschlag übernehmen",
