@@ -32,6 +32,35 @@ Die GPU-Nutzung prüfen:
 
 Bei einer RTX 4070 müssen torch.cuda.is_available() den Wert True und der Gerätename NVIDIA GeForce RTX 4070 ausgeben. Falls False erscheint, zuerst mit nvidia-smi auf einen fehlenden oder zu alten NVIDIA-Treiber prüfen. Ein separates CUDA Toolkit ist normalerweise nicht erforderlich.
 
+## Schnellablauf für jeden Trainingslauf
+
+Nach der einmaligen Einrichtung erledigt ein PowerShell-Skript den wiederholten Ablauf: Daten vom Pi kopieren, exportieren, auf der GPU trainieren und auf dem Validierungs-Split auswerten.
+
+~~~powershell
+.\training\run_local_training.ps1 -Epochs 50
+~~~
+
+Falls PowerShell die Ausführung lokaler Skripte blockiert, nur für das aktuelle Fenster erlauben:
+
+~~~powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\training\run_local_training.ps1 -Epochs 50
+~~~
+
+Der Standard-Pi ist hornet@hornet.local. Für einen anderen Host:
+
+~~~powershell
+.\training\run_local_training.ps1 -PiHost hornet@192.168.178.67 -Epochs 50
+~~~
+
+Wenn Ereignisbilder und Annotationen bereits aktuell lokal vorhanden sind, kann der Download übersprungen werden:
+
+~~~powershell
+.\training\run_local_training.ps1 -SkipDownload -Epochs 50
+~~~
+
+Das Skript beendet sich bei einem fehlgeschlagenen Kopier-, Export-, Trainings- oder Evaluierungsschritt mit einer verständlichen Fehlermeldung. Es aktiviert niemals automatisch ein Modell auf dem Pi.
+
 ## Daten vom Pi übernehmen
 
 Zuerst den lokalen Zielordner anlegen. Die Inhalte von events müssen unter data/events landen, damit die relativen Pfade der Annotationen passen:
@@ -80,6 +109,14 @@ Standardmäßig wird die Validierungsmenge ausgewertet. Für die einmalige Schlu
 
 ## Übernahme auf den Pi
 
-Ein Modell erst übernehmen, wenn die Validierung plausibel ist und die Bilder manuell geprüft wurden. Kopiere best.pt nach data/models/Version/weights/best.pt auf dem Pi und lege die zugehörige model.json mit Datensatz- und Evaluationsdaten an. Das bestehende Pi-Training erzeugt diese Metadaten automatisch; diese lokalen Skripte überschreiben niemals ein aktives Pi-Modell.
+Ein Modell erst übernehmen, wenn die Validierung plausibel ist und die Bilder manuell geprüft wurden. Das Importskript kopiert best.pt als neue Modellversion und legt die erforderliche model.json an:
+
+~~~powershell
+.\training\import_model_to_pi.ps1 `
+  -Model .\data\models\local-experiments\local_20260901_112400\weights\best.pt `
+  -Version 20260901_112400
+~~~
+
+Nach erfolgreichem Import auf dem Pi im Menü **Modell & Training** die neue Version prüfen und erst mit **Modell verwenden** aktivieren. Das Importskript schreibt absichtlich keine latest.json und startet den Monitor nicht neu; ein ungeprüftes Modell kann dadurch nie automatisch die Erkennung übernehmen.
 
 > Mit 5–10 Bildern nicht auf Kennzahlen vertrauen: Die ersten Durchläufe dienen vor allem dazu, Export, Boxen und Bildqualität zu kontrollieren. Für robuste Erkennung sind viele unterschiedliche lokale Ereignisse, Perspektiven und Lichtbedingungen nötig.

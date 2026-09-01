@@ -24,3 +24,15 @@ def test_find_dataset_uses_the_most_recent_versioned_export(tmp_path):
 
 def test_training_scripts_resolve_the_repository_root():
     assert (load_training_module().repository_root() / "pyproject.toml").is_file()
+
+
+def test_windows_training_helpers_are_available_and_keep_activation_manual():
+    directory = Path(__file__).parents[1] / "training"
+    runner = (directory / "run_local_training.ps1").read_text(encoding="utf-8")
+    importer = (directory / "import_model_to_pi.ps1").read_text(encoding="utf-8")
+
+    assert "export_yolo.py" in runner
+    assert "train_local.py" in runner
+    assert "evaluate_model.py" in runner
+    assert "latest.json" not in importer
+    assert "model.json" in importer
