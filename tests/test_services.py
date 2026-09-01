@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 
 import hornet_monitor.predictor as predictor_module
 from hornet_monitor.dataset import DatasetExporter
@@ -108,6 +109,16 @@ def test_predictor_limits_native_inference_to_one_isolated_process(tmp_path, mon
 
     assert records[-1][0][0] == "prediction_failed"
     assert records[-1][1]["details"] == {"exit_code": -4}
+
+
+def test_predictor_limits_worker_cpu_use_on_the_pi():
+    source = (Path(__file__).parents[1] / "src" / "hornet_monitor" / "predictor.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'os.environ.setdefault("OMP_NUM_THREADS", "1")' in source
+    assert "torch.set_num_threads(1)" in source
+    assert "torch.set_num_interop_threads(1)" in source
 
 
 def test_training_manager_waits_for_enough_labelled_boxes(tmp_path):

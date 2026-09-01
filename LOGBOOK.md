@@ -221,6 +221,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Moved YOLO inference into a single spawned worker process so a native model crash cannot restart camera monitoring or the web UI.
 - Replaced the unstable Ultralytics AutoBackend inference path with the verified direct YOLO forward pass and NMS path on the Pi.
+- Limited the isolated inference worker to one low-priority CPU thread so new events do not monopolise the Pi while the gallery is in use.
 
 ## 2026-09-01 — Empty burst-frame review
 

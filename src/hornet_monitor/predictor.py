@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import multiprocessing
+import os
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -34,12 +35,21 @@ def _predict_image(
     if model_path is None:
         return
     try:
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+        try:
+            os.nice(10)
+        except OSError:
+            pass
         import cv2
         import numpy as np
         import torch
         from ultralytics import YOLO
         from ultralytics.utils.nms import non_max_suppression
 
+        cv2.setNumThreads(1)
+        torch.set_num_threads(1)
+        torch.set_num_interop_threads(1)
         captured = cv2.imread(image)
         if captured is None:
             raise ValueError("Event image could not be read.")
