@@ -69,6 +69,9 @@ def test_enabled_auth_protects_monitor_and_accepts_valid_login():
 
     assert client.get("/").status_code == 302
     assert client.get("/status").status_code == 401
+    login = client.get("/login")
+    assert b'autocomplete="username"' in login.data
+    assert b'autocomplete="current-password"' in login.data
     assert (
         client.post("/login", data={"username": "hornet", "password": "secret"}).status_code == 302
     )
