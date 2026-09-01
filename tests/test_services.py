@@ -1,8 +1,11 @@
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import hornet_monitor.predictor as predictor_module
+import hornet_monitor.trainer as trainer_module
 from hornet_monitor.dataset import DatasetExporter
 from hornet_monitor.notifier import TelegramNotifier
 from hornet_monitor.predictor import Predictor
@@ -159,6 +162,26 @@ def test_training_manager_reports_a_native_worker_signal(tmp_path):
     assert state["state"] == "failed"
     assert state["exit_code"] == -4
     assert state["message"] == "Training worker was terminated by SIGILL."
+
+
+def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
+    options = {}
+
+    class Model:
+        def train(self, **kwargs):
+            options.update(kwargs)
+
+    monkeypatch.setitem(sys.modules, "ultralytics", SimpleNamespace(YOLO=lambda _: Model()))
+
+    trainer_module._train(
+        "dataset.yaml",
+        {"model_name": "yolo11n.pt", "epochs": 30, "image_size": 320},
+        "models",
+        "v1",
+    )
+
+    assert options["device"] == "cpu"
+    assert options["amp"] is False
 
 
 def test_training_manager_only_schedules_inside_the_overnight_window(tmp_path):

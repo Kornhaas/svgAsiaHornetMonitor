@@ -257,3 +257,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Training-worker diagnostics
 
 - Failed Pi training runs now retain the worker exit code and display a safe signal name such as `SIGILL`, making native-library failures distinguishable from normal Python errors without exposing stack traces in the web UI.
+
+## 2026-09-01 — Pi-safe YOLO training setup
+
+- Disabled Ultralytics automatic mixed-precision validation for Pi CPU training. The check uses the same high-level inference route that is unstable on the target ARM build, while AMP provides no benefit for CPU-only runs.

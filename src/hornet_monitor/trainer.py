@@ -27,6 +27,10 @@ def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None
         exist_ok=False,
         workers=0,
         cache=False,
+        # Ultralytics' automatic AMP check invokes its high-level inference path,
+        # which is not stable with the ARM PyTorch build used on the Pi. Training
+        # is CPU-only here, so AMP offers no benefit and must stay disabled.
+        amp=False,
     )
 
 
