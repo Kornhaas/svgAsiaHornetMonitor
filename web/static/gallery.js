@@ -154,11 +154,18 @@ document.querySelector("#suggest-boxes").onclick = async () => {
 document.querySelector("#annotation-form").onsubmit = async (event) => {
   event.preventDefault();
   if (!selected) return;
-  if (!items.length && document.querySelector("#annotation-label").value === "empty") {
+  const label = document.querySelector("#annotation-label").value;
+  if (box && label !== "empty") {
+    items.push({ label, box });
+    box = null;
+    overlay.style.display = "none";
+    renderRows();
+  }
+  if (!items.length && label === "empty") {
     items = [{ label: "empty", box: null }];
   }
   if (!items.length) {
-    annotationMessage.textContent = "Add a box, or choose Empty.";
+    annotationMessage.textContent = "Draw a box, or choose Empty.";
     return;
   }
   const response = await fetch("/api/annotations", {

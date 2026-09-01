@@ -109,6 +109,7 @@ GERMAN = {
     "Code update:": "Code-Aktualisierung:",
     "Saved locally.": "Lokal gespeichert.",
     "Draw a box first.": "Bitte zuerst eine Box zeichnen.",
+    "Draw a box, or choose Empty.": "Bitte eine Box zeichnen oder Leer auswählen.",
     "Add a box, or choose Empty.": "Bitte eine Box hinzufügen oder Leer auswählen.",
     (
         "For an empty image, choose Empty and select Save all. For an animal, draw and add every "
