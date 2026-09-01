@@ -166,12 +166,16 @@ def test_training_manager_reports_a_native_worker_signal(tmp_path):
 
 def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
     options = {}
+    enabled = []
 
     class Model:
         def train(self, **kwargs):
             options.update(kwargs)
 
     monkeypatch.setattr(ultralytics, "YOLO", lambda _: Model())
+    monkeypatch.setattr(
+        trainer_module.faulthandler, "enable", lambda **kwargs: enabled.append(kwargs)
+    )
 
     trainer_module._train(
         "dataset.yaml",
@@ -183,6 +187,7 @@ def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
     assert options["device"] == "cpu"
     assert options["amp"] is False
     assert options["trainer"].__name__ == "PiDetectionTrainer"
+    assert enabled == [{"all_threads": True}]
 
 
 def test_training_manager_only_schedules_inside_the_overnight_window(tmp_path):

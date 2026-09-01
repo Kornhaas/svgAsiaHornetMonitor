@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import faulthandler
 import json
 import multiprocessing
 import re
@@ -14,6 +15,9 @@ from .dataset import DatasetExporter
 
 
 def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None:
+    # The training worker is deliberately isolated. Keep a Python traceback in
+    # the service journal if an ARM native extension terminates it with SIGILL.
+    faulthandler.enable(all_threads=True)
     from ultralytics import YOLO
     from ultralytics.models.yolo.detect.train import DetectionTrainer
 
