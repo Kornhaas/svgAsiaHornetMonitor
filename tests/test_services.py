@@ -139,6 +139,28 @@ def test_training_manager_waits_for_enough_labelled_boxes(tmp_path):
     assert manager.status()["state"] == "waiting"
 
 
+def test_training_manager_reports_a_native_worker_signal(tmp_path):
+    exporter = DatasetExporter(
+        str(tmp_path / "events"),
+        str(tmp_path / "annotations.jsonl"),
+        str(tmp_path / "datasets"),
+    )
+    manager = TrainingManager(
+        exporter,
+        {"models_directory": str(tmp_path / "models"), "minimum_annotations": 1, "stop_hour": 6},
+    )
+    manager.process = type(
+        "FinishedProcess", (), {"exitcode": -4, "is_alive": lambda self: False}
+    )()
+    manager._save({"state": "running", "version": "20260901_210300"})
+
+    state = manager.status()
+
+    assert state["state"] == "failed"
+    assert state["exit_code"] == -4
+    assert state["message"] == "Training worker was terminated by SIGILL."
+
+
 def test_training_manager_only_schedules_inside_the_overnight_window(tmp_path):
     exporter = DatasetExporter(
         str(tmp_path / "events"), str(tmp_path / "annotations.jsonl"), str(tmp_path / "datasets")

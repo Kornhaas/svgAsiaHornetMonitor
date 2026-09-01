@@ -253,3 +253,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Training-status interaction
 
 - The training start action now changes immediately to a disabled running state and the page refreshes periodically while the job is active, keeping epoch progress and completion state visible without accidental duplicate starts.
+
+## 2026-09-01 — Training-worker diagnostics
+
+- Failed Pi training runs now retain the worker exit code and display a safe signal name such as `SIGILL`, making native-library failures distinguishable from normal Python errors without exposing stack traces in the web UI.

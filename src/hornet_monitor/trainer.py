@@ -6,6 +6,7 @@ import csv
 import json
 import multiprocessing
 import re
+import signal
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -176,13 +177,15 @@ class TrainingManager:
 
     def _finish(self, state: dict) -> dict:
         successful = self.process is not None and self.process.exitcode == 0
+        exit_code = self.process.exitcode if self.process is not None else None
         model = self.models_directory / state["version"] / "weights" / "best.pt"
         result = {
             **state,
             "state": "completed" if successful and model.is_file() else "failed",
             "message": "Training completed."
             if successful and model.is_file()
-            else "Training worker exited with an error.",
+            else self._failure_message(exit_code),
+            "exit_code": exit_code,
             "finished_at": datetime.now().isoformat(),
             "model": str(model),
             "evaluation": self._evaluation(
@@ -205,6 +208,18 @@ class TrainingManager:
             self.latest_file.parent.mkdir(parents=True, exist_ok=True)
             self.latest_file.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         return self._save(result)
+
+    @staticmethod
+    def _failure_message(exit_code: int | None) -> str:
+        if exit_code is None:
+            return "Training worker exited before reporting a status."
+        if exit_code < 0:
+            try:
+                reason = signal.Signals(-exit_code).name
+            except ValueError:
+                reason = f"signal {-exit_code}"
+            return f"Training worker was terminated by {reason}."
+        return f"Training worker exited with code {exit_code}."
 
     @staticmethod
     def _evaluation(results_file: Path) -> dict:
