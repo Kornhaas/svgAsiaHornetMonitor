@@ -6,6 +6,7 @@ import csv
 import faulthandler
 import json
 import multiprocessing
+import os
 import re
 import signal
 from datetime import datetime, timedelta
@@ -18,8 +19,19 @@ def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None
     # The training worker is deliberately isolated. Keep a Python traceback in
     # the service journal if an ARM native extension terminates it with SIGILL.
     faulthandler.enable(all_threads=True)
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("MKL_NUM_THREADS", "1")
+    import torch
     from ultralytics import YOLO
     from ultralytics.models.yolo.detect.train import DetectionTrainer
+
+    torch.set_num_threads(1)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        # The spawned Pi worker is fresh. This keeps unit-test and embedded use
+        # safe if another component configured inter-op threads beforehand.
+        pass
 
     class PiDetectionTrainer(DetectionTrainer):
         """Avoid model profiling, which is unsafe in the target ARM wheel."""

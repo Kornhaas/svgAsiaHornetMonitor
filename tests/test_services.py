@@ -235,6 +235,16 @@ def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
     assert enabled == [{"all_threads": True}]
 
 
+def test_pi_training_limits_native_cpu_threads():
+    source = (Path(__file__).parents[1] / "src" / "hornet_monitor" / "trainer.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'os.environ.setdefault("OMP_NUM_THREADS", "1")' in source
+    assert "torch.set_num_threads(1)" in source
+    assert "torch.set_num_interop_threads(1)" in source
+
+
 def test_training_manager_only_schedules_inside_the_overnight_window(tmp_path):
     exporter = DatasetExporter(
         str(tmp_path / "events"), str(tmp_path / "annotations.jsonl"), str(tmp_path / "datasets")
