@@ -71,6 +71,6 @@ Appliance mode uses `hornet-monitor.service` under systemd. The web UI is passwo
 
 ## Training and classifier boundary
 
-`dataset.py` is the only component that turns confirmed gallery boxes into versioned YOLO data. `trainer.py` owns a separate, deadline-bounded process and versioned model manifests; `predictor.py` runs only after an event has been saved, in its own thread. `notifier.py` receives prediction summaries and operational state transitions and cannot block camera, motion, event writing, or the web UI. `storage.py` owns retention cleanup and recursive backups. A missing or failed model must degrade to collection-only mode.
+`dataset.py` is the only component that turns confirmed gallery boxes into versioned YOLO data. `trainer.py` owns a separate, deadline-bounded process and versioned model manifests; `predictor.py` runs only after an event has been saved in one isolated worker process. Native ML failures are therefore contained to that worker, and at most one prediction runs at a time. `notifier.py` receives prediction summaries and operational state transitions and cannot block camera, motion, event writing, or the web UI. `storage.py` owns retention cleanup and recursive backups. A missing or failed model must degrade to collection-only mode.
 
 The operator-invoked scripts in `training/` are a separate local-PC workflow. They reuse `DatasetExporter` for an identical dataset format, train below `data/models/local-experiments/`, and never alter a running Pi camera or its active `latest.json` model pointer.

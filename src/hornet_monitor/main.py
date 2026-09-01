@@ -221,6 +221,7 @@ def main() -> None:
             last_training_minute, \
             last_training_state
         while True:
+            predictor.reap()
             if camera.error != last_camera_error:
                 last_camera_error = camera.error
                 if camera.error:

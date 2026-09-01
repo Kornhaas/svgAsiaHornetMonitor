@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+import hornet_monitor.predictor as predictor_module
 from hornet_monitor.dataset import DatasetExporter
 from hornet_monitor.notifier import TelegramNotifier
 from hornet_monitor.predictor import Predictor
@@ -50,6 +51,63 @@ def test_predictor_returns_newest_prediction_history_first(tmp_path):
     predictor = Predictor(str(tmp_path / "models"), str(predictions))
 
     assert [item["label"] for item in predictor.history()] == ["wasp", "bee"]
+
+
+def test_predictor_limits_native_inference_to_one_isolated_process(tmp_path, monkeypatch):
+    model = tmp_path / "models" / "version" / "weights" / "best.pt"
+    model.parent.mkdir(parents=True)
+    model.write_bytes(b"model")
+    (model.parents[2] / "latest.json").write_text(
+        json.dumps({"model": str(model)}), encoding="utf-8"
+    )
+    records = []
+
+    class Activity:
+        path = tmp_path / "activity.jsonl"
+
+        def record(self, *args, **kwargs):
+            records.append((args, kwargs))
+
+    class Process:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.alive, self.exitcode = True, None
+
+        def start(self):
+            return None
+
+        def is_alive(self):
+            return self.alive
+
+        def join(self):
+            return None
+
+        def close(self):
+            return None
+
+    processes = []
+
+    class Context:
+        def Process(self, **kwargs):
+            process = Process(**kwargs)
+            processes.append(process)
+            return process
+
+    monkeypatch.setattr(predictor_module.multiprocessing, "get_context", lambda _name: Context())
+    predictor = Predictor(
+        str(model.parents[2]), str(tmp_path / "predictions.jsonl"), activity_log=Activity()
+    )
+
+    assert predictor.submit("event.jpg")
+    assert not predictor.submit("second-event.jpg")
+    assert len(processes) == 1
+    assert records[-1][0][0] == "prediction_skipped"
+    processes[0].alive, processes[0].exitcode = False, -4
+
+    predictor.reap()
+
+    assert records[-1][0][0] == "prediction_failed"
+    assert records[-1][1]["details"] == {"exit_code": -4}
 
 
 def test_training_manager_waits_for_enough_labelled_boxes(tmp_path):

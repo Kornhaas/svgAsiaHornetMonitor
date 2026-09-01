@@ -216,3 +216,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Numbered gallery proposals
 
 - Gallery boxes and their annotation-list entries now share stable visible numbers for faster proposal review.
+
+## 2026-09-01 — Isolated Pi inference
+
+- Moved YOLO inference into a single spawned worker process so a native model crash cannot restart camera monitoring or the web UI.
