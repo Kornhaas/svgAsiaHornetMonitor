@@ -51,6 +51,37 @@ v4l2-ctl --list-formats-ext --device /dev/video0
 
 If `v4l2-ctl` is unavailable, install it with `sudo apt install v4l-utils`.
 
+### Optional: tune and lock webcam focus
+
+Some USB webcams continuously adjust their autofocus. This can create visible image changes and
+unnecessary motion events. A practical setup approach is to start with autofocus enabled, position
+the trap and camera, wait until the image is sharp, read the resulting focus value, and then lock
+that value for normal monitoring.
+
+First check whether the camera supports `focus_automatic_continuous` and `focus_absolute`:
+
+```bash
+v4l2-ctl -d /dev/video0 --list-ctrls-menus | grep -i focus
+```
+
+Stop the monitor before changing controls so the camera is free. The following example turns off
+continuous autofocus, reads the value chosen by autofocus, and locks it. Replace `322` only when
+you have tested a sharper fixed value.
+
+```bash
+sudo systemctl stop hornet-monitor.service
+sudo v4l2-ctl -d /dev/video0 --set-ctrl=focus_automatic_continuous=0
+sudo v4l2-ctl -d /dev/video0 --get-ctrl=focus_absolute
+sudo v4l2-ctl -d /dev/video0 --set-ctrl=focus_absolute=322
+sudo systemctl start hornet-monitor.service
+```
+
+To return to continuous autofocus, stop the service and set
+`focus_automatic_continuous=1`, then start the service again. Focus controls differ between
+webcams; if they are not listed, that camera cannot be adjusted through V4L2. These values may
+reset after reconnecting the USB camera or rebooting the Pi; configuring them automatically in the
+camera settings is a future optimisation.
+
 ## Run
 
 ```bash

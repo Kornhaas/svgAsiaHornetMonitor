@@ -20,6 +20,10 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Removed subprocess and unexpected update-manager exception details from browser/API responses and activity entries.
 - Kept internal exception logging on the server and added regression tests for both web update endpoints.
 
+## 2026-09-01 - Camera focus tuning guidance
+
+- Documented the optional V4L2 workflow to use autofocus during installation, retain its sharp focus value, and lock manual focus during normal monitoring.
+
 ## 2026-08-31 — V0.1 foundation
 
 Created the initial Raspberry Pi camera-monitoring application.
