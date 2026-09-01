@@ -33,13 +33,20 @@ On Raspberry Pi OS Lite 64-bit:
 
 ```bash
 sudo apt update
-sudo apt install -y curl
+sudo apt install -y ca-certificates curl git libgl1 libglib2.0-0 libgomp1 v4l-utils
+sudo usermod -aG video "$USER"
 git clone https://github.com/Kornhaas/svgAsiaHornetMonitor.git
 cd svgAsiaHornetMonitor
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 uv sync --locked --no-dev
 ```
+
+`uv sync --locked --no-dev` installs every Python package required by the
+monitor from the checked-in lockfile. The system packages provide USB-camera
+diagnostics and the shared libraries used by OpenCV. The appliance setup script
+also adds the `hornet` user to the `video` group, then enables and starts
+`hornet-monitor.service`; it will start automatically after every reboot.
 
 `libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. YOLO/PyTorch are installed for local training and require substantial disk space and time on a Pi 4. The `export PATH=...` command makes the just-installed uv executable available in the current shell.
 
@@ -125,6 +132,16 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `night_mode` estimates brightness from the saved ROI image. After `dark_seconds` below `dark_threshold`, motion capture pauses; it resumes only after `bright_threshold` is reached, avoiding rapid switching at dusk.
 
 Saved events are created as `data/events/YYYY-MM-DD/HHMMSS_microseconds/frame_*.jpg`. This data, local config overrides, and logs are intentionally excluded from Git.
+
+To start a new collection phase, stop the monitor service first and run the guarded reset script from the project folder. It removes event images, annotations, predictions, activity history, background references, and generated datasets; models and backups stay available unless explicitly included:
+
+```bash
+sudo systemctl stop hornet-monitor.service
+bash scripts/reset-runtime-data.sh --yes
+sudo systemctl start hornet-monitor.service
+```
+
+Use `bash scripts/reset-runtime-data.sh --help` to see the optional complete removal of local models or backups. The deletion is permanent.
 
 ## Image gallery and manual labels
 

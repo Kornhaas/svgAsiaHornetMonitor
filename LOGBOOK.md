@@ -2,6 +2,11 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-01 — Complete Raspberry Pi bootstrap dependencies
+
+- Updated `scripts/setup-pi.sh` to install the required OS packages for camera diagnostics and OpenCV, add the service user to the `video` group, and install all locked production Python dependencies.
+- Documented that the bootstrap enables and starts `hornet-monitor.service`, so the monitor starts automatically following each Raspberry Pi reboot.
+
 ## 2026-09-01 — Consistent application navigation
 
 - Introduced one shared Bootstrap base template for all authenticated application pages.
@@ -20,7 +25,12 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Removed subprocess and unexpected update-manager exception details from browser/API responses and activity entries.
 - Kept internal exception logging on the server and added regression tests for both web update endpoints.
 
-## 2026-09-01 - Camera focus tuning guidance
+## 2026-09-01 — Guarded runtime-data reset
+
+- Added a confirmation-gated script to remove locally collected images and analysis data for a fresh collection phase.
+- Models and backups require separate explicit options, preventing an accidental loss of trained models or recovery archives.
+
+## 2026-09-01 — Camera focus tuning guidance
 
 - Documented the optional V4L2 workflow to use autofocus during installation, retain its sharp focus value, and lock manual focus during normal monitoring.
 

@@ -11,7 +11,10 @@ if [[ "$(id -un)" != "hornet" ]]; then
 fi
 
 sudo apt update
-sudo apt install -y curl git
+# System packages needed by the installer, USB camera diagnostics, and the
+# OpenCV wheel. Python dependencies are installed below from uv.lock.
+sudo apt install -y ca-certificates curl git libgl1 libglib2.0-0 libgomp1 v4l-utils
+sudo usermod -aG video hornet
 
 if [[ ! -x "$HOME/.local/bin/uv" ]]; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -25,5 +28,9 @@ else
 fi
 
 cd "$project_dir"
+# Install every locked production dependency. Development-only tools are not
+# needed by the appliance service and are intentionally excluded.
 uv sync --locked --no-dev
+# install-service enables the unit and starts it immediately; systemd will
+# consequently start it again after every Raspberry Pi reboot.
 bash scripts/install-service.sh
