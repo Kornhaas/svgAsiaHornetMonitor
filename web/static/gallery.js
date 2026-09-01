@@ -72,12 +72,21 @@ function renderFrames() {
       button.className = "frame-card" + (frame === selectedFrame ? " selected" : "");
       button.setAttribute("aria-pressed", String(frame === selectedFrame));
       button.title = "Frame " + index;
+      if (selected.reviewed_frames.includes(frame)) {
+        button.classList.add("reviewed");
+      }
       const preview = document.createElement("img");
       preview.src = "/event-image/" + frame;
       preview.alt = "Frame " + index;
       preview.loading = "lazy";
       const caption = document.createElement("span");
       caption.textContent = "Frame " + index;
+      if (selected.reviewed_frames.includes(frame)) {
+        const reviewed = document.createElement("span");
+        reviewed.className = "ms-1 text-success";
+        reviewed.textContent = "Reviewed";
+        caption.append(reviewed);
+      }
       button.append(preview, caption);
       button.onclick = () => selectFrame(frame);
       return button;
@@ -85,8 +94,8 @@ function renderFrames() {
   );
 }
 
-async function selectFrame(frame) {
-  if (!selected || frame === selectedFrame) return;
+async function selectFrame(frame, force = false) {
+  if (!selected || (!force && frame === selectedFrame)) return;
   selectedFrame = frame;
   box = null;
   overlay.style.display = "none";
@@ -99,7 +108,7 @@ async function selectFrame(frame) {
 async function select(event) {
   selected = event;
   selectedFrame = null;
-  await selectFrame(event.image);
+  await selectFrame(event.image, true);
   render();
 }
 
@@ -124,7 +133,7 @@ function eventCard(event) {
 
 function render() {
   const visible = visibleEvents();
-  if (selected && !visible.includes(selected)) clearSelection();
+  if (selected && !events.some((event) => event.id === selected.id)) clearSelection();
   list.replaceChildren(...visible.map(eventCard));
   message.textContent = showReviewed.checked
     ? String(events.length) + " recent events"
@@ -143,6 +152,24 @@ function render() {
 
 async function load() {
   events = await (await fetch("/api/events")).json();
+  render();
+}
+
+async function reloadSelectedEvent() {
+  const selectedId = selected && selected.id;
+  const previousFrame = selectedFrame;
+  events = await (await fetch("/api/events")).json();
+  const refreshed = events.find((event) => event.id === selectedId);
+  if (!refreshed) {
+    clearSelection();
+    render();
+    return;
+  }
+  selected = refreshed;
+  const nextFrame = refreshed.frames.find(
+    (frame) => !refreshed.reviewed_frames.includes(frame),
+  ) || previousFrame || refreshed.image;
+  await selectFrame(nextFrame, true);
   render();
 }
 
@@ -214,7 +241,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
   if (response.ok) {
-    await load();
+    await reloadSelectedEvent();
   }
 };
 

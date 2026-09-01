@@ -123,6 +123,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert 'items = [{ label: "empty", box: null }]' in gallery_script.read_text(encoding="utf-8")
     assert 'if (box && label !== "empty")' in gallery_script.read_text(encoding="utf-8")
     assert "selectedFrame" in gallery_script.read_text(encoding="utf-8")
+    assert "reloadSelectedEvent" in gallery_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)

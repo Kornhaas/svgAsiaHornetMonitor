@@ -38,6 +38,7 @@ class Gallery:
             "image": image.relative_to(self.events_directory).as_posix(),
             "frames": frames,
             "image_count": len(frames),
+            "reviewed_frames": [frame for frame in frames if frame in reviewed_images],
             "reviewed": any(frame in reviewed_images for frame in frames),
         }
 
