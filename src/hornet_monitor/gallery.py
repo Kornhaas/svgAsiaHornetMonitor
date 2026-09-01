@@ -14,6 +14,20 @@ from typing import Any
 
 from werkzeug.utils import safe_join
 
+ANIMAL_LABELS = frozenset(
+    {
+        "vespa_velutina",
+        "vespa_crabro",
+        "wasp",
+        "bee",
+        "other",
+        "goldfly",
+        "fleshfly",
+        "blue_blowfly",
+    }
+)
+VALID_LABELS = ANIMAL_LABELS | {"empty", "uncertain"}
+
 
 class Gallery:
     _EVENT_IMAGE_ID = re.compile(r"\d{4}-\d{2}-\d{2}/[0-9_]+/frame_\d+\.jpe?g\Z")
@@ -25,10 +39,21 @@ class Gallery:
 
     def events(self, limit: int = 100) -> list[dict[str, Any]]:
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
-        reviewed_images = {annotation.get("image") for annotation in self._annotations()}
-        return [self._event(image, reviewed_images) for image in images[:limit]]
+        annotations = self._annotations()
+        reviewed_images = {annotation.get("image") for annotation in annotations}
+        animal_images = {
+            annotation.get("image")
+            for annotation in annotations
+            if annotation.get("label") in ANIMAL_LABELS
+        }
+        return [self._event(image, reviewed_images, animal_images) for image in images[:limit]]
 
-    def _event(self, image: Path, reviewed_images: set[str | None]) -> dict[str, Any]:
+    def _event(
+        self,
+        image: Path,
+        reviewed_images: set[str | None],
+        animal_images: set[str | None],
+    ) -> dict[str, Any]:
         frames = [
             frame.relative_to(self.events_directory).as_posix()
             for frame in sorted(image.parent.glob("frame_*.jpg"))
@@ -39,6 +64,7 @@ class Gallery:
             "frames": frames,
             "image_count": len(frames),
             "reviewed_frames": [frame for frame in frames if frame in reviewed_images],
+            "animal_frames": [frame for frame in frames if frame in animal_images],
             "reviewed": any(frame in reviewed_images for frame in frames),
         }
 
@@ -83,19 +109,7 @@ class Gallery:
         )
 
     def _validate(self, image: Path, label: str | None, box: dict[str, int] | None):
-        labels = {
-            "vespa_velutina",
-            "vespa_crabro",
-            "wasp",
-            "bee",
-            "other",
-            "goldfly",
-            "fleshfly",
-            "blue_blowfly",
-            "empty",
-            "uncertain",
-        }
-        if label not in labels:
+        if label not in VALID_LABELS:
             raise ValueError("Unknown label.")
         if label == "empty" and box is None:
             return label, box

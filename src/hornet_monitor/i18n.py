@@ -41,6 +41,11 @@ GERMAN = {
     "Save all": "Alle speichern",
     "Delete event": "Ereignis löschen",
     "Show reviewed images": "Bewertete Bilder anzeigen",
+    "Show": "Anzeigen",
+    "Unreviewed events": "Unbewertete Ereignisse",
+    "Reviewed events with animals": "Bewertete Ereignisse mit Tieren",
+    "All reviewed events": "Alle bewerteten Ereignisse",
+    "All events": "Alle Ereignisse",
     "Burst frames": "Bildserie",
     "Choose the sharpest image for annotation.": (
         "Wähle das schärfste Bild für die Markierung aus."

@@ -5,7 +5,7 @@ const overlay = document.querySelector("#annotation-box");
 const message = document.querySelector("#gallery-message");
 const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
-const showReviewed = document.querySelector("#show-reviewed");
+const eventFilter = document.querySelector("#event-filter");
 const eventFrames = document.querySelector("#event-frames");
 
 let events = [];
@@ -15,7 +15,14 @@ let box = null;
 let items = [];
 
 function visibleEvents() {
-  return showReviewed.checked ? events : events.filter((event) => !event.reviewed);
+  if (eventFilter.value === "animals") {
+    return events.filter((event) => event.animal_frames.length);
+  }
+  if (eventFilter.value === "reviewed") {
+    return events.filter((event) => event.reviewed);
+  }
+  if (eventFilter.value === "all") return events;
+  return events.filter((event) => !event.reviewed);
 }
 
 function clearSelection() {
@@ -108,7 +115,7 @@ async function selectFrame(frame, force = false) {
 async function select(event) {
   selected = event;
   selectedFrame = null;
-  await selectFrame(event.image, true);
+  await selectFrame(event.animal_frames[0] || event.image, true);
   render();
 }
 
@@ -135,15 +142,11 @@ function render() {
   const visible = visibleEvents();
   if (selected && !events.some((event) => event.id === selected.id)) clearSelection();
   list.replaceChildren(...visible.map(eventCard));
-  message.textContent = showReviewed.checked
-    ? String(events.length) + " recent events"
-    : String(visible.length) + " unreviewed event" + (visible.length === 1 ? "" : "s");
+  message.textContent = String(visible.length) + " events";
   if (!visible.length) {
     const empty = document.createElement("p");
     empty.className = "text-body-secondary";
-    empty.textContent = showReviewed.checked
-      ? "No events available."
-      : "All visible events have been reviewed.";
+    empty.textContent = "No events available.";
     list.replaceChildren(empty);
   } else if (!selected) {
     select(visible[0]);
@@ -251,5 +254,8 @@ document.querySelector("#delete-event").onclick = async () => {
   if (response.ok) await load();
 };
 
-showReviewed.onchange = render;
+eventFilter.onchange = () => {
+  clearSelection();
+  render();
+};
 load();
