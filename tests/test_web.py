@@ -132,6 +132,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert "pointercancel" in gallery_script.read_text(encoding="utf-8")
     assert "Drag to draw a rectangle." in gallery_script.read_text(encoding="utf-8")
     assert "renderSavedBoxes" in gallery_script.read_text(encoding="utf-8")
+    assert "annotation-box-number" in gallery_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)

@@ -212,3 +212,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Active model visibility
 
 - The training page now identifies the active model version and marks it clearly in the version table.
+
+## 2026-09-01 — Numbered gallery proposals
+
+- Gallery boxes and their annotation-list entries now share stable visible numbers for faster proposal review.

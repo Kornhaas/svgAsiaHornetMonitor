@@ -52,6 +52,7 @@ function renderRows() {
     ...items.map((item, index) => {
       const row = document.createElement("li");
       row.className = "list-group-item d-flex justify-content-between align-items-center";
+      row.append("#" + (index + 1) + " · ");
       row.append(
         item.label + ": " + (item.box ? item.box.width + " × " + item.box.height : "empty"),
       );
@@ -73,7 +74,8 @@ function renderRows() {
 function renderSavedBoxes() {
   if (!image.naturalWidth || !image.naturalHeight) return;
   annotationBoxes.replaceChildren(
-    ...items.filter((item) => item.box).map((item) => {
+    ...items.flatMap((item, index) => {
+      if (!item.box) return [];
       const itemBox = document.createElement("div");
       itemBox.className = "annotation-box";
       itemBox.style.display = "block";
@@ -85,6 +87,14 @@ function renderSavedBoxes() {
         itemBox.style.borderColor = "#0dcaf0";
         itemBox.style.borderStyle = "dashed";
       }
+      const number = document.createElement("span");
+      number.className = "annotation-box-number";
+      number.textContent = String(index + 1);
+      number.style.cssText = "display:grid;place-items:center;width:1.5rem;height:1.5rem;"
+        + "margin:-3px 0 0 -3px;border-radius:0 0 .3rem 0;background:"
+        + (item.label === "uncertain" ? "#0dcaf0" : "#ffc107")
+        + ";color:#101713;font-size:.9rem;font-weight:700;line-height:1;";
+      itemBox.append(number);
       return itemBox;
     }),
   );
