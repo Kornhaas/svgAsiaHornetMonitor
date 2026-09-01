@@ -8,6 +8,8 @@ import cv2
 
 
 class NightMode:
+    PREVIEW_DARK_THRESHOLD = 30
+
     def __init__(self, settings: dict, clock=time.monotonic) -> None:
         self.settings = settings
         self.clock = clock
@@ -40,4 +42,7 @@ class NightMode:
             "active": self.active,
             "brightness": self.brightness,
             "dark_seconds": self.settings["dark_seconds"],
+            "preview_disabled": self.brightness is not None
+            and self.brightness < self.PREVIEW_DARK_THRESHOLD,
+            "pending": self.dark_since is not None and not self.active,
         }

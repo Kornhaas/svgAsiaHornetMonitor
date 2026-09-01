@@ -244,3 +244,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - New events now store their measured brightness in local event metadata.
 - Gallery cards hide a thumbnail below brightness 30 and show a clear night-mode indication instead, avoiding wasted preview loading for dark captures.
+
+## 2026-09-01 — Immediate dark live-preview protection
+
+- The live monitor now hides the MJPEG preview immediately below brightness 30 and closes its stream connection to save browser and Pi work.
+- Motion capture still waits for the configured sustained-darkness period before entering the real night mode; the UI distinguishes this pending state from the active capture pause.
