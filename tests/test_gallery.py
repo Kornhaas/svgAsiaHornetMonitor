@@ -31,6 +31,14 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         }
     )
     assert goldfly["label"] == "goldfly"
+    fleshfly = gallery.annotate(
+        {
+            "image": "2026-08-31/123000_000001/frame_000.jpg",
+            "label": "fleshfly",
+            "box": {"x": 9, "y": 10, "width": 11, "height": 12},
+        }
+    )
+    assert fleshfly["label"] == "fleshfly"
     assert gallery.events()[0]["reviewed"]
     gallery.delete_event("2026-08-31/123000_000001")
     assert gallery.events() == []

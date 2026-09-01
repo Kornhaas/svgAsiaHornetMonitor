@@ -89,6 +89,7 @@ class Gallery:
             "bee",
             "other",
             "goldfly",
+            "fleshfly",
             "empty",
             "uncertain",
         }

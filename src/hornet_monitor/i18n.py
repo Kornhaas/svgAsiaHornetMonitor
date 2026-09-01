@@ -32,6 +32,7 @@ GERMAN = {
     "Bee": "Biene",
     "Other": "Andere",
     "Goldfly": "Goldfliege",
+    "Flesh fly": "Echte Fleischfliege",
     "Empty": "Leer",
     "Uncertain": "Unsicher",
     "Add box": "Box hinzufügen",
