@@ -34,17 +34,31 @@ def _predict_image(
     if model_path is None:
         return
     try:
+        import cv2
+        import numpy as np
+        import torch
         from ultralytics import YOLO
+        from ultralytics.utils.nms import non_max_suppression
 
-        result = YOLO(str(model_path))(image, verbose=False)[0]
-        if not len(result.boxes):
+        captured = cv2.imread(image)
+        if captured is None:
+            raise ValueError("Event image could not be read.")
+        resized = cv2.resize(captured, (640, 640))
+        tensor = (
+            torch.from_numpy(np.ascontiguousarray(resized[..., ::-1].transpose(2, 0, 1))).float()
+            / 255
+        )
+        model = YOLO(str(model_path))
+        raw = model.model(tensor.unsqueeze(0))
+        boxes = non_max_suppression(raw, conf_thres=0.25)[0]
+        if not len(boxes):
             return
         detections = [
             {
-                "label": result.names[int(result.boxes.cls[index])],
-                "confidence": float(result.boxes.conf[index]),
+                "label": model.names[int(box[5])],
+                "confidence": float(box[4]),
             }
-            for index in range(len(result.boxes))
+            for box in boxes
         ]
         best = max(detections, key=lambda detection: detection["confidence"])
         prediction = {
