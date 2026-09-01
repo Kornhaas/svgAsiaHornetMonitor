@@ -114,7 +114,8 @@ class DatasetExporter:
 
     @staticmethod
     def _split(image_id: str) -> str:
-        value = int(hashlib.sha256(image_id.encode()).hexdigest(), 16) % 100
+        event_id = image_id.rsplit("/", maxsplit=1)[0]
+        value = int(hashlib.sha256(event_id.encode()).hexdigest(), 16) % 100
         return "train" if value < 70 else "val" if value < 90 else "test"
 
     @staticmethod

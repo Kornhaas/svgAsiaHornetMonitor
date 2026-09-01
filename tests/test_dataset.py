@@ -63,3 +63,13 @@ def test_dataset_export_creates_manifest_when_annotated_images_are_missing(tmp_p
     assert exported["skipped_images"] == 1
     assert (destination / "dataset.yaml").exists()
     assert (destination / "manifest.json").exists()
+
+
+def test_dataset_split_keeps_all_frames_of_one_event_together():
+    event_frames = [
+        "2026-01-01/120000_000001/frame_000.jpg",
+        "2026-01-01/120000_000001/frame_001.jpg",
+        "2026-01-01/120000_000001/frame_004.jpg",
+    ]
+
+    assert len({DatasetExporter._split(frame) for frame in event_frames}) == 1
