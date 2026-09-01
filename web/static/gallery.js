@@ -153,7 +153,14 @@ document.querySelector("#suggest-boxes").onclick = async () => {
 
 document.querySelector("#annotation-form").onsubmit = async (event) => {
   event.preventDefault();
-  if (!selected || !items.length) return;
+  if (!selected) return;
+  if (!items.length && document.querySelector("#annotation-label").value === "empty") {
+    items = [{ label: "empty", box: null }];
+  }
+  if (!items.length) {
+    annotationMessage.textContent = "Add a box, or choose Empty.";
+    return;
+  }
   const response = await fetch("/api/annotations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

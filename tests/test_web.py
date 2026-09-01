@@ -118,6 +118,8 @@ def test_roi_settings_and_training_pages_are_available():
     roi_script = Path(app.static_folder) / "roi.js"
     assert "width: status.frame_width" in roi_script.read_text(encoding="utf-8")
     assert "[key, Number(value)]" in roi_script.read_text(encoding="utf-8")
+    gallery_script = Path(app.static_folder) / "gallery.js"
+    assert 'items = [{ label: "empty", box: null }]' in gallery_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)
