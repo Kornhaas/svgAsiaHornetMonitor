@@ -13,7 +13,9 @@ let mode = "outer";
 let drawing = null;
 
 function values(form) {
-  return Object.fromEntries(new FormData(form).entries());
+  return Object.fromEntries(
+    [...new FormData(form).entries()].map(([key, value]) => [key, Number(value)]),
+  );
 }
 
 function fill(form, roi) {
