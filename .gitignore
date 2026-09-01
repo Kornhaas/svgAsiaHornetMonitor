@@ -152,6 +152,8 @@ activemq-data/
 .envrc
 .venv
 .venv-gpu/
+/weights/
+/yolo11n.pt
 env/
 venv/
 ENV/
