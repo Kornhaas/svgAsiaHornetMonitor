@@ -196,6 +196,40 @@ def test_training_page_renders_imported_model_without_evaluation():
     assert b"Active model:" in response.data
 
 
+def test_training_page_disables_start_button_while_job_is_running():
+    training = type(
+        "Training",
+        (),
+        {
+            "overview": lambda self: {
+                "message": "Training started.",
+                "state": "running",
+                "reviewed_images": 60,
+                "annotations": 60,
+                "minimum_annotations": 50,
+                "ready": True,
+                "labels": {},
+                "dataset": {"splits": {"train": 42, "val": 12, "test": 6}},
+                "models": [],
+                "run": {"progress": {"epochs_completed": 3, "epochs_total": 30, "percent": 10}},
+                "schedule": {"start_hour": 21, "stop_hour": 6},
+            }
+        },
+    )()
+
+    page = (
+        create_app(camera=None, status=lambda: {}, training_status=training)
+        .test_client()
+        .get("/training")
+    )
+    text = page.get_data(as_text=True)
+
+    assert page.status_code == 200
+    assert 'id="start" class="btn btn-warning" disabled aria-disabled="true"' in text
+    assert "Training running" in text
+    assert "setTimeout(() => location.reload(), 5000)" in text
+
+
 def test_application_pages_share_the_primary_navigation():
     app = create_app(camera=None, status=lambda: {})
     client = app.test_client()

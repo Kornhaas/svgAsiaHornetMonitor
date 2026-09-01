@@ -10,7 +10,7 @@
   <p>Schedule: {{ overview.schedule.start_hour }}:00–{{ overview.schedule.stop_hour }}:00. Training starts only during this dark-time window.</p>
   {% if overview.run.deadline %}<p>Deadline: {{ overview.run.deadline }}</p>{% endif %}
   {% if overview.run.progress %}<p>Progress: {{ overview.run.progress.epochs_completed }} / {{ overview.run.progress.epochs_total }} epochs ({{ overview.run.progress.percent }}%)</p>{% endif %}
-  <button id="start" class="btn btn-warning">Start training now</button>
+  <button id="start" class="btn btn-warning"{% if overview.state == "running" %} disabled aria-disabled="true"{% endif %}>{% if overview.state == "running" %}Training running…{% else %}Start training now{% endif %}</button>
   <span id="result" class="ms-2" aria-live="polite"></span>
 </section>
 <section class="card card-body mt-3">
@@ -57,7 +57,20 @@ async function action(url, target) {
   document.querySelector(target).textContent = value.message || value.error || (value.dataset ? `Exported ${value.dataset.boxes} boxes to ${value.dataset.directory}.` : '');
   return response.ok;
 }
-document.querySelector('#start').onclick = async () => { if (await action('/api/training/start', '#result')) setTimeout(() => location.reload(), 1000); };
+const startButton = document.querySelector('#start');
+startButton.onclick = async () => {
+  if (startButton.disabled) return;
+  startButton.disabled = true;
+  startButton.setAttribute('aria-disabled', 'true');
+  startButton.textContent = 'Training running…';
+  if (await action('/api/training/start', '#result')) setTimeout(() => location.reload(), 1000);
+  else {
+    startButton.disabled = false;
+    startButton.removeAttribute('aria-disabled');
+    startButton.textContent = 'Start training now';
+  }
+};
+if (startButton.disabled) setTimeout(() => location.reload(), 5000);
 document.querySelector('#export').onclick = () => action('/api/dataset/export', '#export-result');
 document.querySelectorAll('.activate-model').forEach((button) => {
   button.onclick = async () => {

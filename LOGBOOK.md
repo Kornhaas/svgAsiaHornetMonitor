@@ -249,3 +249,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - The live monitor now hides the MJPEG preview immediately below brightness 30 and closes its stream connection to save browser and Pi work.
 - Motion capture still waits for the configured sustained-darkness period before entering the real night mode; the UI distinguishes this pending state from the active capture pause.
+
+## 2026-09-01 — Training-status interaction
+
+- The training start action now changes immediately to a disabled running state and the page refreshes periodically while the job is active, keeping epoch progress and completion state visible without accidental duplicate starts.

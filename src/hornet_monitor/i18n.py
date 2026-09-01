@@ -110,6 +110,7 @@ GERMAN = {
     "Create backup": "Backup erstellen",
     "Storage:": "Speicher:",
     "Start training now": "Training jetzt starten",
+    "Training running…": "Training läuft…",
     (
         "Export reviewed animal boxes as a versioned local YOLO dataset with train, "
         "validation, and test splits. The export does not start training."
