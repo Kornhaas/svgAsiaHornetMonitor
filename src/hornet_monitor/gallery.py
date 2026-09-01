@@ -90,6 +90,7 @@ class Gallery:
             "other",
             "goldfly",
             "fleshfly",
+            "blue_blowfly",
             "empty",
             "uncertain",
         }

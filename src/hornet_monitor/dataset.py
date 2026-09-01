@@ -12,7 +12,16 @@ from pathlib import Path
 import cv2
 import yaml
 
-CLASSES = ["vespa_velutina", "vespa_crabro", "wasp", "bee", "other", "goldfly", "fleshfly"]
+CLASSES = [
+    "vespa_velutina",
+    "vespa_crabro",
+    "wasp",
+    "bee",
+    "other",
+    "goldfly",
+    "fleshfly",
+    "blue_blowfly",
+]
 
 
 class DatasetExporter:

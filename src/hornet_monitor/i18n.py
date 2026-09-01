@@ -33,6 +33,7 @@ GERMAN = {
     "Other": "Andere",
     "Goldfly": "Goldfliege",
     "Flesh fly": "Echte Fleischfliege",
+    "Blue blowfly": "Blaue Schmeißfliege",
     "Empty": "Leer",
     "Uncertain": "Unsicher",
     "Add box": "Box hinzufügen",
