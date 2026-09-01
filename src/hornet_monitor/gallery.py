@@ -31,6 +31,7 @@ VALID_LABELS = ANIMAL_LABELS | {"empty", "uncertain"}
 
 class Gallery:
     _EVENT_IMAGE_ID = re.compile(r"\d{4}-\d{2}-\d{2}/[0-9_]+/frame_\d+\.jpe?g\Z")
+    _EVENT_ID = re.compile(r"\d{4}-\d{2}-\d{2}/[0-9_]+\Z")
 
     def __init__(self, events_directory: str | Path, annotations_file: str | Path) -> None:
         self.events_directory = Path(events_directory).resolve()
@@ -158,9 +159,7 @@ class Gallery:
         }
 
     def delete_event(self, event_id: str) -> None:
-        event_directory = (self.events_directory / event_id).resolve()
-        if event_directory.parent.parent != self.events_directory or not event_directory.is_dir():
-            raise ValueError("Invalid event path.")
+        event_directory = self._event_directory(event_id)
         shutil.rmtree(event_directory)
         if self.annotations_file.exists():
             prefix = f"{event_id}/"
@@ -171,3 +170,27 @@ class Gallery:
                     if not entry.get("image", "").startswith(prefix)
                 ]
                 self._write_annotations(remaining)
+
+    def mark_unannotated_frames_empty(self, event_id: str) -> list[str]:
+        """Mark only untouched frames in a reviewed event as empty."""
+        event_directory = self._event_directory(event_id)
+        with self._lock:
+            entries = self._annotations()
+            annotated = {entry.get("image") for entry in entries}
+            empty_frames = [
+                frame
+                for frame in sorted(event_directory.glob("frame_*.jpg"))
+                if frame.relative_to(self.events_directory).as_posix() not in annotated
+            ]
+            entries.extend(self._entry(frame, "empty", None) for frame in empty_frames)
+            if empty_frames:
+                self._write_annotations(entries)
+        return [frame.relative_to(self.events_directory).as_posix() for frame in empty_frames]
+
+    def _event_directory(self, event_id: str) -> Path:
+        if not isinstance(event_id, str) or not self._EVENT_ID.fullmatch(event_id):
+            raise ValueError("Invalid event path.")
+        event_directory = (self.events_directory / event_id).resolve()
+        if event_directory.parent.parent != self.events_directory or not event_directory.is_dir():
+            raise ValueError("Invalid event path.")
+        return event_directory

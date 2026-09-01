@@ -58,6 +58,10 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     )
     assert blue_blowfly["label"] == "blue_blowfly"
     assert gallery.events()[0]["reviewed"]
+    assert gallery.mark_unannotated_frames_empty("2026-08-31/123000_000001") == [
+        "2026-08-31/123000_000001/frame_001.jpg"
+    ]
+    assert gallery.annotations_for("2026-08-31/123000_000001/frame_001.jpg")[0]["label"] == "empty"
     gallery.delete_event("2026-08-31/123000_000001")
     assert gallery.events() == []
     assert (tmp_path / "annotations.jsonl").exists()

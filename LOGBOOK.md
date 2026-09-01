@@ -221,3 +221,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 
 - Moved YOLO inference into a single spawned worker process so a native model crash cannot restart camera monitoring or the web UI.
 - Replaced the unstable Ultralytics AutoBackend inference path with the verified direct YOLO forward pass and NMS path on the Pi.
+
+## 2026-09-01 — Empty burst-frame review
+
+- Saving an empty selected frame now marks all remaining unannotated frames of that event as empty without overwriting reviewed animal frames.

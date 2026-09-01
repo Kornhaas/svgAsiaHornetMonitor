@@ -319,6 +319,16 @@ def create_app(
         except (FileNotFoundError, ValueError):
             return jsonify(error="Annotation is invalid or its image is unavailable."), 400
 
+    @app.post("/api/events/<path:event_id>/mark-empty")
+    @require_login
+    def mark_event_empty(event_id):
+        if gallery is None:
+            return jsonify(error="Gallery is unavailable."), 503
+        try:
+            return jsonify(frames=gallery.mark_unannotated_frames_empty(event_id)), 201
+        except (FileNotFoundError, ValueError):
+            return jsonify(error="Event is unavailable."), 404
+
     @app.delete("/api/events/<path:event_id>")
     @require_login
     def remove_event(event_id):

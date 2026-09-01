@@ -269,6 +269,26 @@ def test_prediction_history_and_model_activation_endpoints_are_available():
     assert activated == ["20260901_210000"]
 
 
+def test_mark_event_empty_endpoint_forwards_only_the_event_id():
+    marked = []
+    gallery = type(
+        "Gallery",
+        (),
+        {
+            "mark_unannotated_frames_empty": lambda self, event_id: (
+                marked.append(event_id) or ["frame"]
+            )
+        },
+    )()
+    client = create_app(camera=None, status=lambda: {}, gallery=gallery).test_client()
+
+    response = client.post("/api/events/2026-09-01/123000_000001/mark-empty")
+
+    assert response.status_code == 201
+    assert response.get_json() == {"frames": ["frame"]}
+    assert marked == ["2026-09-01/123000_000001"]
+
+
 def test_update_endpoints_hide_manager_exception_details():
     class BrokenUpdates:
         def check(self):

@@ -137,6 +137,9 @@ GERMAN = {
         "Keine Vorschläge; bitte zuerst Hintergrund aktualisieren."
     ),
     "Saved.": "Gespeichert.",
+    "Saved and marked unannotated frames as empty.": (
+        "Gespeichert und alle unbewerteten Bilder der Serie als Leer markiert."
+    ),
     "Delete event?": "Ereignis löschen?",
     "Status unavailable": "Status nicht verfügbar",
     "No activity recorded yet.": "Noch keine Aktivität erfasst.",

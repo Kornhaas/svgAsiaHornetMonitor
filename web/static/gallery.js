@@ -293,6 +293,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   event.preventDefault();
   if (!selectedFrame) return;
   const label = document.querySelector("#annotation-label").value;
+  let savedEmpty = false;
   if (box && label !== "empty") {
     items.push({ label, box });
     box = null;
@@ -314,6 +315,15 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
   if (response.ok) {
+    savedEmpty = items.length === 1 && items[0].label === "empty" && items[0].box === null;
+    if (savedEmpty) {
+      const emptyFrames = await fetch("/api/events/" + selected.id + "/mark-empty", {
+        method: "POST",
+      });
+      if (emptyFrames.ok) {
+        annotationMessage.textContent = "Saved and marked unannotated frames as empty.";
+      }
+    }
     await reloadSelectedEvent();
   }
 };
