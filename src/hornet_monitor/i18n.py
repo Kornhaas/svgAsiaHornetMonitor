@@ -43,6 +43,7 @@ GERMAN = {
     "Show reviewed images": "Bewertete Bilder anzeigen",
     "Show": "Anzeigen",
     "Unreviewed events": "Unbewertete Ereignisse",
+    "Model suggestions": "Modellvorschläge",
     "Reviewed events with animals": "Bewertete Ereignisse mit Tieren",
     "All reviewed events": "Alle bewerteten Ereignisse",
     "All events": "Alle Ereignisse",
@@ -53,6 +54,16 @@ GERMAN = {
     "Reviewed": "Bewertet",
     "Unreviewed": "Unbewertet",
     "No events available.": "Keine Ereignisse verfügbar.",
+    "Refresh inbox": "Eingang aktualisieren",
+    "Model suggestion:": "Modellvorschlag:",
+    "Accept suggestion": "Vorschlag übernehmen",
+    (
+        "Confirm only if the animal and box are correct. You can adjust the box or select another "
+        "class instead."
+    ): (
+        "Bitte nur übernehmen, wenn Tier und Box stimmen. Du kannst die Box anpassen oder eine "
+        "andere Klasse wählen."
+    ),
     "All visible events have been reviewed.": "Alle sichtbaren Ereignisse wurden bewertet.",
     "Remove": "Entfernen",
     "Image and trigger regions": "Bild- und Auslösebereiche",
@@ -137,6 +148,9 @@ GERMAN = {
         "Keine Vorschläge; bitte zuerst Hintergrund aktualisieren."
     ),
     "Saved.": "Gespeichert.",
+    "Model suggestion accepted. Save to confirm it for training.": (
+        "Modellvorschlag übernommen. Zum Bestätigen für das Training speichern."
+    ),
     "Saved and marked unannotated frames as empty.": (
         "Gespeichert und alle unbewerteten Bilder der Serie als Leer markiert."
     ),

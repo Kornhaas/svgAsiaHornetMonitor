@@ -7,11 +7,13 @@
   <label class="mb-0">Show
     <select id="event-filter" class="form-select">
       <option value="unreviewed">Unreviewed events</option>
+      <option value="suggestions">Model suggestions</option>
       <option value="animals">Reviewed events with animals</option>
       <option value="reviewed">All reviewed events</option>
       <option value="all">All events</option>
     </select>
   </label>
+  <button id="refresh-events" type="button" class="btn btn-outline-secondary">Refresh inbox</button>
 </div>
 <div class="gallery-layout">
   <section id="event-list" class="event-list" aria-label="Event images"></section>
@@ -28,6 +30,11 @@
           <span class="small text-body-secondary">Choose the sharpest image for annotation.</span>
         </div>
         <div id="event-frames" class="event-frames"></div>
+      </section>
+      <section id="model-suggestion" class="alert alert-info mt-3 d-none" aria-live="polite">
+        <strong>Model suggestion:</strong> <span id="model-suggestion-details"></span>
+        <button id="accept-suggestion" type="button" class="btn btn-sm btn-info ms-2">Accept suggestion</button>
+        <p class="small mb-0 mt-2">Confirm only if the animal and box are correct. You can adjust the box or select another class instead.</p>
       </section>
       <form id="annotation-form" class="mt-3">
         <label>Class

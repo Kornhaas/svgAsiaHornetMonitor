@@ -147,6 +147,12 @@ Use `bash scripts/reset-runtime-data.sh --help` to see the optional complete rem
 
 Select **Open image gallery** in the web UI to review recent event images. It shows thumbnail previews and, by default, only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery automatically opens the next unreviewed event. Use **Show reviewed images** to inspect or correct previous annotations. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
 
+### Active-learning review workflow
+
+After a saved event, an active Pi model may create a **model suggestion** for its first frame. A suggestion contains the predicted class, confidence, bounding box, and model version, but is never training data by itself. In the gallery choose **Model suggestions** to work through this inbox. Inspect the image and either select **Accept suggestion**, adjust the box/class manually, or mark the image as **Empty**. Accepting then saving creates an annotation tagged `model_confirmed`; every manual correction is tagged `manual`. Both are confirmed annotations and are included in the next YOLO export. This audit trail prevents a weak model from silently training on its own mistakes while reducing the number of empty images that need manual review.
+
+Use **Refresh inbox** when new events arrive while the gallery is open. The gallery deliberately does not auto-refresh while you draw, so a newly saved event cannot interrupt an annotation.
+
 The **ROI settings** page is the only page that can change the motion and event-image crop. The live monitor displays the ROI read-only. The **Model & training** page shows the number and distribution of local annotations, the model state, and the reserved 21:00–06:00 training window. It does not claim to train or classify until the separate training worker is implemented.
 
 The ROI page displays and edits two rectangles directly on the live image: the yellow **outer image ROI** is saved with every event, while the blue **inner trigger ROI** starts motion capture only after an animal reaches it. The inner rectangle must remain fully inside the outer one.

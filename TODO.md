@@ -12,6 +12,7 @@ This checklist is kept in source control and records the implemented operating m
 - [x] Versioned model runs, latest-model activation/rollback, evaluation fields (precision, recall, mAP50, mAP50-95), and prediction history.
 - [x] Night training starts only inside the configured time window, has a 06:00 deadline, and exposes epoch progress when YOLO writes `results.csv`.
 - [x] Configuration validation, unit tests, Ruff, dependency lock validation, dependency audit, CodeQL workflow, and Dependabot.
+- [x] Active-learning inbox: isolated predictions persist model version and boxes; only explicit human confirmation creates an auditable training annotation.
 
 ## Required Pi acceptance checks
 

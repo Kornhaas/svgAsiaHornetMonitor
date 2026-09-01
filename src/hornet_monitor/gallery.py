@@ -92,6 +92,9 @@ class Gallery:
         return [entry for entry in self._annotations() if entry.get("image") == image_id]
 
     def annotate(self, annotation: dict[str, Any]) -> dict[str, Any]:
+        source = annotation.get("source", "manual")
+        if source not in {"manual", "model_confirmed"}:
+            raise ValueError("Unknown annotation source.")
         if "annotations" in annotation:
             items = annotation["annotations"]
             if not isinstance(items, list) or not items:
@@ -102,11 +105,13 @@ class Gallery:
             ]
             return {
                 "image": image.relative_to(self.events_directory).as_posix(),
-                "annotations": self._replace(image, validated),
+                "annotations": self._replace(image, validated, source),
             }
         image = self.image_path(annotation["image"])
         return self._store(
-            image, *self._validate(image, annotation.get("label"), annotation.get("box"))
+            image,
+            *self._validate(image, annotation.get("label"), annotation.get("box")),
+            source,
         )
 
     def _validate(self, image: Path, label: str | None, box: dict[str, int] | None):
@@ -123,17 +128,22 @@ class Gallery:
         return label, box
 
     def _replace(
-        self, image: Path, items: list[tuple[str, dict[str, int] | None]]
+        self,
+        image: Path,
+        items: list[tuple[str, dict[str, int] | None]],
+        source: str,
     ) -> list[dict[str, Any]]:
         image_id = image.relative_to(self.events_directory).as_posix()
         with self._lock:
             entries = [entry for entry in self._annotations() if entry.get("image") != image_id]
-            entries.extend(self._entry(image, label, box) for label, box in items)
+            entries.extend(self._entry(image, label, box, source) for label, box in items)
             self._write_annotations(entries)
         return [entry for entry in entries if entry.get("image") == image_id]
 
-    def _store(self, image: Path, label: str, box: dict[str, int] | None) -> dict[str, Any]:
-        entry = self._entry(image, label, box)
+    def _store(
+        self, image: Path, label: str, box: dict[str, int] | None, source: str
+    ) -> dict[str, Any]:
+        entry = self._entry(image, label, box, source)
         with self._lock:
             self._write_annotations([*self._annotations(), entry])
         return entry
@@ -150,12 +160,15 @@ class Gallery:
             temporary_path = Path(temporary.name)
         os.replace(temporary_path, self.annotations_file)
 
-    def _entry(self, image: Path, label: str, box: dict[str, int] | None) -> dict[str, Any]:
+    def _entry(
+        self, image: Path, label: str, box: dict[str, int] | None, source: str = "manual"
+    ) -> dict[str, Any]:
         return {
             "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
             "image": image.relative_to(self.events_directory).as_posix(),
             "label": label,
             "box": box,
+            "source": source,
         }
 
     def delete_event(self, event_id: str) -> None:

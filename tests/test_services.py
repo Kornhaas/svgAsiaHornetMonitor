@@ -99,9 +99,10 @@ def test_predictor_limits_native_inference_to_one_isolated_process(tmp_path, mon
         str(model.parents[2]), str(tmp_path / "predictions.jsonl"), activity_log=Activity()
     )
 
-    assert predictor.submit("event.jpg")
+    assert predictor.submit("event.jpg", "2026-09-01/123000_000001/frame_000.jpg")
     assert not predictor.submit("second-event.jpg")
     assert len(processes) == 1
+    assert processes[0].kwargs["args"][3] == "2026-09-01/123000_000001/frame_000.jpg"
     assert records[-1][0][0] == "prediction_skipped"
     processes[0].alive, processes[0].exitcode = False, -4
 

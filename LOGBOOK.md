@@ -226,3 +226,9 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Empty burst-frame review
 
 - Saving an empty selected frame now marks all remaining unannotated frames of that event as empty without overwriting reviewed animal frames.
+
+## 2026-09-01 — Active-learning review inbox
+
+- Persisted image-space detection boxes and active model versions alongside isolated post-event predictions.
+- Added a gallery filter and one-click, human-confirmed model-suggestion workflow; predictions remain separate from annotations until saved.
+- Added annotation provenance (`manual` or `model_confirmed`) so exported training data remains auditable and a weak model cannot self-label future training data.

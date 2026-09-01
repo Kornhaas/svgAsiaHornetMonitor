@@ -8,16 +8,24 @@ const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
 const eventFilter = document.querySelector("#event-filter");
 const eventFrames = document.querySelector("#event-frames");
+const suggestionPanel = document.querySelector("#model-suggestion");
+const suggestionDetails = document.querySelector("#model-suggestion-details");
+const acceptSuggestion = document.querySelector("#accept-suggestion");
 
 let events = [];
 let selected = null;
 let selectedFrame = null;
 let box = null;
 let items = [];
+let currentSuggestion = null;
+let annotationSource = "manual";
 
 function visibleEvents() {
   if (eventFilter.value === "animals") {
     return events.filter((event) => event.animal_frames.length);
+  }
+  if (eventFilter.value === "suggestions") {
+    return events.filter((event) => Object.keys(event.suggestions || {}).length);
   }
   if (eventFilter.value === "reviewed") {
     return events.filter((event) => event.reviewed);
@@ -36,6 +44,8 @@ function clearSelection() {
   annotationBoxes.replaceChildren();
   rows.replaceChildren();
   eventFrames.replaceChildren();
+  currentSuggestion = null;
+  suggestionPanel.classList.add("d-none");
 }
 
 function showBox() {
@@ -142,6 +152,17 @@ async function selectFrame(frame, force = false) {
   annotationBoxes.replaceChildren();
   image.src = "/event-image/" + frame;
   items = await (await fetch("/api/annotations/" + frame)).json();
+  annotationSource = "manual";
+  currentSuggestion = (selected.suggestions || {})[frame] || null;
+  if (currentSuggestion) {
+    suggestionDetails.textContent = currentSuggestion.label + " · "
+      + Math.round(currentSuggestion.confidence * 100) + "%"
+      + (currentSuggestion.model_version ? " · " + currentSuggestion.model_version : "");
+    acceptSuggestion.disabled = items.length > 0;
+    suggestionPanel.classList.remove("d-none");
+  } else {
+    suggestionPanel.classList.add("d-none");
+  }
   renderRows();
   renderSavedBoxes();
   renderFrames();
@@ -150,7 +171,8 @@ async function selectFrame(frame, force = false) {
 async function select(event) {
   selected = event;
   selectedFrame = null;
-  await selectFrame(event.animal_frames[0] || event.image, true);
+  const suggestedFrame = Object.keys(event.suggestions || {})[0];
+  await selectFrame(event.animal_frames[0] || suggestedFrame || event.image, true);
   render();
 }
 
@@ -237,6 +259,7 @@ function finishDrawing(event) {
 canvas.addEventListener("pointerdown", (event) => {
   if (!selectedFrame || !image.naturalWidth) return;
   event.preventDefault();
+  annotationSource = "manual";
   const bounds = image.getBoundingClientRect();
   const start = imageCoordinates(event, bounds);
   drawing = { pointerId: event.pointerId, bounds, start, dragged: false };
@@ -271,6 +294,7 @@ document.querySelector("#add-box").onclick = () => {
     return;
   }
   items.push({ label, box: label === "empty" ? null : box });
+  annotationSource = "manual";
   box = null;
   overlay.style.display = "none";
   annotationMessage.textContent = "";
@@ -280,6 +304,7 @@ document.querySelector("#add-box").onclick = () => {
 
 document.querySelector("#suggest-boxes").onclick = async () => {
   if (!selectedFrame) return;
+  annotationSource = "manual";
   const boxes = await (await fetch("/api/events/" + selectedFrame + "/proposals")).json();
   items.push(...boxes.map((suggestion) => ({ label: "uncertain", box: suggestion })));
   renderRows();
@@ -287,6 +312,17 @@ document.querySelector("#suggest-boxes").onclick = async () => {
   annotationMessage.textContent = boxes.length
     ? "Suggestions added as uncertain."
     : "No suggestions; update the background first.";
+};
+
+acceptSuggestion.onclick = () => {
+  if (!currentSuggestion || items.length) return;
+  items = [{ label: currentSuggestion.label, box: currentSuggestion.box }];
+  annotationSource = "model_confirmed";
+  box = null;
+  overlay.style.display = "none";
+  annotationMessage.textContent = "Model suggestion accepted. Save to confirm it for training.";
+  renderRows();
+  renderSavedBoxes();
 };
 
 document.querySelector("#annotation-form").onsubmit = async (event) => {
@@ -311,7 +347,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   const response = await fetch("/api/annotations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: selectedFrame, annotations: items }),
+    body: JSON.stringify({ image: selectedFrame, annotations: items, source: annotationSource }),
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
   if (response.ok) {
@@ -333,6 +369,9 @@ document.querySelector("#delete-event").onclick = async () => {
   const response = await fetch("/api/events/" + selected.id, { method: "DELETE" });
   if (response.ok) await load();
 };
+
+document.querySelector("#annotation-label").onchange = () => { annotationSource = "manual"; };
+document.querySelector("#refresh-events").onclick = load;
 
 eventFilter.onchange = () => {
   clearSelection();

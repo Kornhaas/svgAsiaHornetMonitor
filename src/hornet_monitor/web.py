@@ -21,6 +21,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash
 
+from .gallery import ANIMAL_LABELS
 from .i18n import translations
 
 
@@ -53,6 +54,42 @@ def create_app(
             "Enabled web authentication requires username, password_hash, and secret_key."
         )
     app.secret_key = auth.get("secret_key", "development-only-secret")
+
+    def gallery_events_with_suggestions() -> list[dict]:
+        """Attach the newest actionable model proposal to each unreviewed event frame.
+
+        Predictions remain separate from annotations until a person confirms them in the
+        gallery. This prevents a weak model from feeding its own errors back into training.
+        """
+        if gallery is None:
+            return []
+        events = gallery.events()
+        if prediction_history is None:
+            return events
+        newest_by_image: dict[str, dict] = {}
+        for prediction in prediction_history():
+            image = prediction.get("image")
+            box = prediction.get("box")
+            if (
+                isinstance(image, str)
+                and image not in newest_by_image
+                and prediction.get("label") in ANIMAL_LABELS
+                and isinstance(prediction.get("confidence"), (int, float))
+                and isinstance(box, dict)
+                and all(isinstance(box.get(key), int) for key in ("x", "y", "width", "height"))
+                and box["x"] >= 0
+                and box["y"] >= 0
+                and box["width"] > 0
+                and box["height"] > 0
+            ):
+                newest_by_image[image] = prediction
+        for event in events:
+            event["suggestions"] = {
+                frame: newest_by_image[frame]
+                for frame in event["frames"]
+                if frame not in event["reviewed_frames"] and frame in newest_by_image
+            }
+        return events
 
     @app.context_processor
     def inject_i18n():
@@ -260,7 +297,7 @@ def create_app(
     @app.get("/api/events")
     @require_login
     def events():
-        return jsonify([] if gallery is None else gallery.events())
+        return jsonify(gallery_events_with_suggestions())
 
     @app.get("/api/annotations/<path:image_id>")
     @require_login

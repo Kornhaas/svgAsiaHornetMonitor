@@ -93,6 +93,31 @@ def test_gallery_page_and_events_endpoint_are_available():
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 
 
+def test_events_endpoint_exposes_only_actionable_unreviewed_model_suggestions():
+    event = {
+        "id": "2026-09-01/123000_000001",
+        "image": "2026-09-01/123000_000001/frame_000.jpg",
+        "frames": ["2026-09-01/123000_000001/frame_000.jpg"],
+        "reviewed_frames": [],
+    }
+    gallery = type("Gallery", (), {"events": lambda self: [event.copy()]})()
+    prediction = {
+        "image": event["image"],
+        "label": "fleshfly",
+        "confidence": 0.88,
+        "box": {"x": 10, "y": 20, "width": 30, "height": 40},
+        "model_version": "20260901_145318",
+    }
+    client = create_app(
+        camera=None, status=lambda: {}, gallery=gallery, prediction_history=lambda: [prediction]
+    ).test_client()
+
+    assert client.get("/api/events").get_json()[0]["suggestions"] == {event["image"]: prediction}
+
+    event["reviewed_frames"] = [event["image"]]
+    assert client.get("/api/events").get_json()[0]["suggestions"] == {}
+
+
 def test_roi_settings_and_training_pages_are_available():
     training = type(
         "Training",

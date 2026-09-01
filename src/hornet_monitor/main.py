@@ -294,7 +294,9 @@ def main() -> None:
                 )
             if saved:
                 print(f"Motion event saved to {writer.last_event}")
-                predictor.submit(str(Path(writer.last_event) / "frame_000.jpg"))
+                saved_image = Path(writer.last_event) / "frame_000.jpg"
+                image_id = saved_image.relative_to(Path(config["events"]["directory"])).as_posix()
+                predictor.submit(str(saved_image), image_id)
             time.sleep(0.05)
 
     threading.Thread(target=monitor, name="motion-monitor", daemon=True).start()

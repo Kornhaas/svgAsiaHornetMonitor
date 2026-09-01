@@ -23,10 +23,26 @@ def _model_path(models_directory: Path) -> Path | None:
     return legacy if legacy.exists() else None
 
 
+def _model_version(models_directory: Path, model_path: Path) -> str | None:
+    """Return the active manifest version when it belongs to the loaded model."""
+    latest = models_directory / "latest.json"
+    if not latest.exists():
+        return None
+    try:
+        manifest = json.loads(latest.read_text(encoding="utf-8"))
+        if Path(manifest["model"]).resolve() == model_path.resolve():
+            version = manifest.get("version")
+            return version if isinstance(version, str) else None
+    except (json.JSONDecodeError, KeyError, OSError):
+        return None
+    return None
+
+
 def _predict_image(
     models_directory: str,
     predictions_file: str,
     image: str,
+    image_id: str | None,
     telegram_settings: dict | None,
     activity_file: str | None,
 ) -> None:
@@ -63,17 +79,27 @@ def _predict_image(
         boxes = non_max_suppression(raw, conf_thres=0.25)[0]
         if not len(boxes):
             return
-        detections = [
-            {
-                "label": model.names[int(box[5])],
-                "confidence": float(box[4]),
-            }
-            for box in boxes
-        ]
+        height, width = captured.shape[:2]
+        scale_x, scale_y = width / 640, height / 640
+        detections = []
+        for box in boxes:
+            left, top, right, bottom = (float(value) for value in box[:4])
+            x = max(0, min(width - 1, round(left * scale_x)))
+            y = max(0, min(height - 1, round(top * scale_y)))
+            right = max(x + 1, min(width, round(right * scale_x)))
+            bottom = max(y + 1, min(height, round(bottom * scale_y)))
+            detections.append(
+                {
+                    "label": model.names[int(box[5])],
+                    "confidence": float(box[4]),
+                    "box": {"x": x, "y": y, "width": right - x, "height": bottom - y},
+                }
+            )
         best = max(detections, key=lambda detection: detection["confidence"])
         prediction = {
             "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
-            "image": image,
+            "image": image_id or image,
+            "model_version": _model_version(Path(models_directory), model_path),
             **best,
             "detections": detections,
         }
@@ -109,7 +135,7 @@ class Predictor:
         self._process: multiprocessing.Process | None = None
         self._lock = threading.Lock()
 
-    def submit(self, image: str) -> bool:
+    def submit(self, image: str, image_id: str | None = None) -> bool:
         """Queue one isolated inference; retain camera stability if native ML crashes."""
         if self._model_path() is None:
             return False
@@ -129,6 +155,7 @@ class Predictor:
                     str(self.models_directory),
                     str(self.predictions_file),
                     image,
+                    image_id,
                     self.notifier.settings if self.notifier else None,
                     str(self.activity_log.path) if self.activity_log else None,
                 ),
@@ -153,11 +180,12 @@ class Predictor:
                 details={"exit_code": exitcode},
             )
 
-    def _predict(self, image: str) -> None:
+    def _predict(self, image: str, image_id: str | None = None) -> None:
         _predict_image(
             str(self.models_directory),
             str(self.predictions_file),
             image,
+            image_id,
             self.notifier.settings if self.notifier else None,
             str(self.activity_log.path) if self.activity_log else None,
         )

@@ -27,6 +27,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         }
     )
     assert saved["label"] == "bee"
+    assert saved["source"] == "manual"
     assert gallery.events()[0]["reviewed_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
     assert gallery.events()[0]["animal_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
     empty = gallery.annotate(
@@ -65,6 +66,34 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     gallery.delete_event("2026-08-31/123000_000001")
     assert gallery.events() == []
     assert (tmp_path / "annotations.jsonl").exists()
+
+
+def test_gallery_records_confirmed_model_suggestions_as_auditable_annotations(tmp_path):
+    image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
+    image.parent.mkdir(parents=True)
+    image.write_bytes(b"test")
+    gallery = Gallery(image.parents[2], tmp_path / "annotations.jsonl")
+
+    saved = gallery.annotate(
+        {
+            "image": "2026-09-01/123000_000001/frame_000.jpg",
+            "annotations": [
+                {"label": "fleshfly", "box": {"x": 1, "y": 2, "width": 3, "height": 4}}
+            ],
+            "source": "model_confirmed",
+        }
+    )
+
+    assert saved["annotations"][0]["source"] == "model_confirmed"
+    with pytest.raises(ValueError, match="Unknown annotation source"):
+        gallery.annotate(
+            {
+                "image": "2026-09-01/123000_000001/frame_000.jpg",
+                "label": "empty",
+                "box": None,
+                "source": "untrusted",
+            }
+        )
 
 
 @pytest.mark.parametrize(
