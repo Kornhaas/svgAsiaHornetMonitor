@@ -2,6 +2,7 @@ const list = document.querySelector("#event-list");
 const image = document.querySelector("#annotation-image");
 const canvas = document.querySelector("#annotation-canvas");
 const overlay = document.querySelector("#annotation-box");
+const annotationBoxes = document.querySelector("#annotation-boxes");
 const message = document.querySelector("#gallery-message");
 const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
@@ -32,6 +33,7 @@ function clearSelection() {
   box = null;
   image.removeAttribute("src");
   overlay.style.display = "none";
+  annotationBoxes.replaceChildren();
   rows.replaceChildren();
   eventFrames.replaceChildren();
 }
@@ -60,9 +62,30 @@ function renderRows() {
       remove.onclick = () => {
         items.splice(index, 1);
         renderRows();
+        renderSavedBoxes();
       };
       row.append(remove);
       return row;
+    }),
+  );
+}
+
+function renderSavedBoxes() {
+  if (!image.naturalWidth || !image.naturalHeight) return;
+  annotationBoxes.replaceChildren(
+    ...items.filter((item) => item.box).map((item) => {
+      const itemBox = document.createElement("div");
+      itemBox.className = "annotation-box";
+      itemBox.style.display = "block";
+      itemBox.style.left = String((item.box.x / image.naturalWidth) * 100) + "%";
+      itemBox.style.top = String((item.box.y / image.naturalHeight) * 100) + "%";
+      itemBox.style.width = String((item.box.width / image.naturalWidth) * 100) + "%";
+      itemBox.style.height = String((item.box.height / image.naturalHeight) * 100) + "%";
+      if (item.label === "uncertain") {
+        itemBox.style.borderColor = "#0dcaf0";
+        itemBox.style.borderStyle = "dashed";
+      }
+      return itemBox;
     }),
   );
 }
@@ -106,9 +129,11 @@ async function selectFrame(frame, force = false) {
   selectedFrame = frame;
   box = null;
   overlay.style.display = "none";
+  annotationBoxes.replaceChildren();
   image.src = "/event-image/" + frame;
   items = await (await fetch("/api/annotations/" + frame)).json();
   renderRows();
+  renderSavedBoxes();
   renderFrames();
 }
 
@@ -240,6 +265,7 @@ document.querySelector("#add-box").onclick = () => {
   overlay.style.display = "none";
   annotationMessage.textContent = "";
   renderRows();
+  renderSavedBoxes();
 };
 
 document.querySelector("#suggest-boxes").onclick = async () => {
@@ -247,6 +273,7 @@ document.querySelector("#suggest-boxes").onclick = async () => {
   const boxes = await (await fetch("/api/events/" + selectedFrame + "/proposals")).json();
   items.push(...boxes.map((suggestion) => ({ label: "uncertain", box: suggestion })));
   renderRows();
+  renderSavedBoxes();
   annotationMessage.textContent = boxes.length
     ? "Suggestions added as uncertain."
     : "No suggestions; update the background first.";
@@ -261,6 +288,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
     box = null;
     overlay.style.display = "none";
     renderRows();
+    renderSavedBoxes();
   }
   if (!items.length && label === "empty") {
     items = [{ label: "empty", box: null }];
@@ -290,4 +318,5 @@ eventFilter.onchange = () => {
   clearSelection();
   render();
 };
+image.addEventListener("load", renderSavedBoxes);
 load();

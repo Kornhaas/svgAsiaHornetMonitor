@@ -87,6 +87,7 @@ def test_gallery_page_and_events_endpoint_are_available():
     assert gallery_page.status_code == 200
     assert b'id="event-filter"' in gallery_page.data
     assert b'id="event-frames"' in gallery_page.data
+    assert b'id="annotation-boxes"' in gallery_page.data
     assert b"Reviewed events with animals" in gallery_page.data
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 
@@ -129,6 +130,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert "reloadSelectedEvent" in gallery_script.read_text(encoding="utf-8")
     assert "pointercancel" in gallery_script.read_text(encoding="utf-8")
     assert "Drag to draw a rectangle." in gallery_script.read_text(encoding="utf-8")
+    assert "renderSavedBoxes" in gallery_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)
