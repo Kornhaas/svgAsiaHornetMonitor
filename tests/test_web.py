@@ -83,6 +83,7 @@ def test_gallery_page_and_events_endpoint_are_available():
     gallery_page = client.get("/gallery")
     assert gallery_page.status_code == 200
     assert b'id="show-reviewed"' in gallery_page.data
+    assert b'id="event-frames"' in gallery_page.data
     assert b"Show reviewed images" in gallery_page.data
     assert client.get("/api/events").get_json() == [{"id": "event"}]
 
@@ -121,6 +122,7 @@ def test_roi_settings_and_training_pages_are_available():
     gallery_script = Path(app.static_folder) / "gallery.js"
     assert 'items = [{ label: "empty", box: null }]' in gallery_script.read_text(encoding="utf-8")
     assert 'if (box && label !== "empty")' in gallery_script.read_text(encoding="utf-8")
+    assert "selectedFrame" in gallery_script.read_text(encoding="utf-8")
     training_page = client.get("/training")
     assert training_page.status_code == 200
     assert "Trainingsstatus" in training_page.get_data(as_text=True)

@@ -1,6 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Image gallery · Asia Hornet Monitor{% endblock %}
 {% block content %}
-<h1 class="h2">Image gallery</h1><div class="d-flex flex-wrap align-items-center gap-3 mb-3"><p id="gallery-message" class="mb-0" aria-live="polite"></p><label class="form-check form-switch mb-0"><input id="show-reviewed" class="form-check-input" type="checkbox"><span class="form-check-label">Show reviewed images</span></label></div><div class="gallery-layout"><section id="event-list" class="event-list" aria-label="Event images"></section><section class="card"><div class="card-body"><div id="annotation-canvas" class="annotation-canvas"><img id="annotation-image" alt="Selected event image"><div id="annotation-box" class="annotation-box"></div></div><form id="annotation-form" class="mt-3"><label>Class<select id="annotation-label" class="form-select"><option value="vespa_velutina">Asian hornet</option><option value="vespa_crabro">European hornet</option><option value="wasp">Wasp</option><option value="bee">Bee</option><option value="other">Other</option><option value="goldfly">Goldfly</option><option value="fleshfly">Flesh fly</option><option value="blue_blowfly">Blue blowfly</option><option value="empty">Empty</option><option value="uncertain">Uncertain</option></select></label><button id="add-box" type="button" class="btn btn-outline-light">Add box</button><button id="suggest-boxes" type="button" class="btn btn-outline-info">Suggest objects</button><button class="btn btn-warning">Save all</button><button id="delete-event" type="button" class="btn btn-outline-danger">Delete event</button><ul id="annotation-list" class="list-group mt-3"></ul><span id="annotation-message" class="ms-2" aria-live="polite"></span></form><p class="small mt-3 mb-0">For an empty image, choose Empty and select Save all. For an animal, draw and add every box, then save all boxes together. Suggestions require review.</p></div></section></div>
+<h1 class="h2">Image gallery</h1>
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+  <p id="gallery-message" class="mb-0" aria-live="polite"></p>
+  <label class="form-check form-switch mb-0">
+    <input id="show-reviewed" class="form-check-input" type="checkbox">
+    <span class="form-check-label">Show reviewed images</span>
+  </label>
+</div>
+<div class="gallery-layout">
+  <section id="event-list" class="event-list" aria-label="Event images"></section>
+  <section class="card">
+    <div class="card-body">
+      <div id="annotation-canvas" class="annotation-canvas">
+        <img id="annotation-image" alt="Selected event image">
+        <div id="annotation-box" class="annotation-box"></div>
+      </div>
+      <section class="mt-3" aria-label="Burst frames">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0">Burst frames</h2>
+          <span class="small text-body-secondary">Choose the sharpest image for annotation.</span>
+        </div>
+        <div id="event-frames" class="event-frames"></div>
+      </section>
+      <form id="annotation-form" class="mt-3">
+        <label>Class
+          <select id="annotation-label" class="form-select">
+            <option value="vespa_velutina">Asian hornet</option>
+            <option value="vespa_crabro">European hornet</option>
+            <option value="wasp">Wasp</option>
+            <option value="bee">Bee</option>
+            <option value="other">Other</option>
+            <option value="goldfly">Goldfly</option>
+            <option value="fleshfly">Flesh fly</option>
+            <option value="blue_blowfly">Blue blowfly</option>
+            <option value="empty">Empty</option>
+            <option value="uncertain">Uncertain</option>
+          </select>
+        </label>
+        <button id="add-box" type="button" class="btn btn-outline-light">Add box</button>
+        <button id="suggest-boxes" type="button" class="btn btn-outline-info">Suggest objects</button>
+        <button class="btn btn-warning">Save all</button>
+        <button id="delete-event" type="button" class="btn btn-outline-danger">Delete event</button>
+        <ul id="annotation-list" class="list-group mt-3"></ul>
+        <span id="annotation-message" class="ms-2" aria-live="polite"></span>
+      </form>
+      <p class="small mt-3 mb-0">For an empty image, choose Empty and select Save all. For an animal, draw and add every box, then save all boxes together. Suggestions require review.</p>
+    </div>
+  </section>
+</div>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='gallery.js') }}"></script>{% endblock %}

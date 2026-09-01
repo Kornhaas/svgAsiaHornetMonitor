@@ -6,9 +6,11 @@ const message = document.querySelector("#gallery-message");
 const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
 const showReviewed = document.querySelector("#show-reviewed");
+const eventFrames = document.querySelector("#event-frames");
 
 let events = [];
 let selected = null;
+let selectedFrame = null;
 let box = null;
 let items = [];
 
@@ -18,20 +20,22 @@ function visibleEvents() {
 
 function clearSelection() {
   selected = null;
+  selectedFrame = null;
   items = [];
   box = null;
   image.removeAttribute("src");
   overlay.style.display = "none";
   rows.replaceChildren();
+  eventFrames.replaceChildren();
 }
 
 function showBox() {
   if (!box || !image.naturalWidth || !image.naturalHeight) return;
   overlay.style.display = "block";
-  overlay.style.left = `${(box.x / image.naturalWidth) * 100}%`;
-  overlay.style.top = `${(box.y / image.naturalHeight) * 100}%`;
-  overlay.style.width = `${(box.width / image.naturalWidth) * 100}%`;
-  overlay.style.height = `${(box.height / image.naturalHeight) * 100}%`;
+  overlay.style.left = String((box.x / image.naturalWidth) * 100) + "%";
+  overlay.style.top = String((box.y / image.naturalHeight) * 100) + "%";
+  overlay.style.width = String((box.width / image.naturalWidth) * 100) + "%";
+  overlay.style.height = String((box.height / image.naturalHeight) * 100) + "%";
 }
 
 function renderRows() {
@@ -39,7 +43,9 @@ function renderRows() {
     ...items.map((item, index) => {
       const row = document.createElement("li");
       row.className = "list-group-item d-flex justify-content-between align-items-center";
-      row.append(`${item.label}: ${item.box ? `${item.box.width} × ${item.box.height}` : "empty"}`);
+      row.append(
+        item.label + ": " + (item.box ? item.box.width + " × " + item.box.height : "empty"),
+      );
       const remove = document.createElement("button");
       remove.className = "btn btn-sm btn-outline-danger";
       remove.type = "button";
@@ -54,29 +60,62 @@ function renderRows() {
   );
 }
 
-async function select(event) {
-  selected = event;
+function renderFrames() {
+  if (!selected) {
+    eventFrames.replaceChildren();
+    return;
+  }
+  eventFrames.replaceChildren(
+    ...selected.frames.map((frame, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "frame-card" + (frame === selectedFrame ? " selected" : "");
+      button.setAttribute("aria-pressed", String(frame === selectedFrame));
+      button.title = "Frame " + index;
+      const preview = document.createElement("img");
+      preview.src = "/event-image/" + frame;
+      preview.alt = "Frame " + index;
+      preview.loading = "lazy";
+      const caption = document.createElement("span");
+      caption.textContent = "Frame " + index;
+      button.append(preview, caption);
+      button.onclick = () => selectFrame(frame);
+      return button;
+    }),
+  );
+}
+
+async function selectFrame(frame) {
+  if (!selected || frame === selectedFrame) return;
+  selectedFrame = frame;
   box = null;
   overlay.style.display = "none";
-  image.src = `/event-image/${event.image}`;
-  items = await (await fetch(`/api/annotations/${event.image}`)).json();
+  image.src = "/event-image/" + frame;
+  items = await (await fetch("/api/annotations/" + frame)).json();
   renderRows();
+  renderFrames();
+}
+
+async function select(event) {
+  selected = event;
+  selectedFrame = null;
+  await selectFrame(event.image);
   render();
 }
 
 function eventCard(event) {
   const card = document.createElement("button");
   card.type = "button";
-  card.className = `event-card ${selected === event ? "selected" : ""}`;
+  card.className = "event-card" + (selected === event ? " selected" : "");
   const preview = document.createElement("img");
-  preview.src = `/event-image/${event.image}`;
-  preview.alt = `Event ${event.id}`;
+  preview.src = "/event-image/" + event.image;
+  preview.alt = "Event " + event.id;
   preview.loading = "lazy";
   const title = document.createElement("span");
   title.className = "event-card-title";
   title.textContent = event.id;
   const state = document.createElement("span");
-  state.className = `badge ${event.reviewed ? "text-bg-success" : "text-bg-warning"}`;
+  state.className = "badge " + (event.reviewed ? "text-bg-success" : "text-bg-warning");
   state.textContent = event.reviewed ? "Reviewed" : "Unreviewed";
   card.append(preview, title, state);
   card.onclick = () => select(event);
@@ -88,8 +127,8 @@ function render() {
   if (selected && !visible.includes(selected)) clearSelection();
   list.replaceChildren(...visible.map(eventCard));
   message.textContent = showReviewed.checked
-    ? `${events.length} recent events`
-    : `${visible.length} unreviewed event${visible.length === 1 ? "" : "s"}`;
+    ? String(events.length) + " recent events"
+    : String(visible.length) + " unreviewed event" + (visible.length === 1 ? "" : "s");
   if (!visible.length) {
     const empty = document.createElement("p");
     empty.className = "text-body-secondary";
@@ -108,7 +147,7 @@ async function load() {
 }
 
 canvas.onpointerdown = (event) => {
-  if (!selected || !image.naturalWidth) return;
+  if (!selectedFrame || !image.naturalWidth) return;
   const bounds = image.getBoundingClientRect();
   const start = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
   canvas.setPointerCapture(event.pointerId);
@@ -142,8 +181,8 @@ document.querySelector("#add-box").onclick = () => {
 };
 
 document.querySelector("#suggest-boxes").onclick = async () => {
-  if (!selected) return;
-  const boxes = await (await fetch(`/api/events/${selected.image}/proposals`)).json();
+  if (!selectedFrame) return;
+  const boxes = await (await fetch("/api/events/" + selectedFrame + "/proposals")).json();
   items.push(...boxes.map((suggestion) => ({ label: "uncertain", box: suggestion })));
   renderRows();
   annotationMessage.textContent = boxes.length
@@ -153,7 +192,7 @@ document.querySelector("#suggest-boxes").onclick = async () => {
 
 document.querySelector("#annotation-form").onsubmit = async (event) => {
   event.preventDefault();
-  if (!selected) return;
+  if (!selectedFrame) return;
   const label = document.querySelector("#annotation-label").value;
   if (box && label !== "empty") {
     items.push({ label, box });
@@ -171,7 +210,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   const response = await fetch("/api/annotations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: selected.image, annotations: items }),
+    body: JSON.stringify({ image: selectedFrame, annotations: items }),
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
   if (response.ok) {
@@ -181,7 +220,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
 
 document.querySelector("#delete-event").onclick = async () => {
   if (!selected || !confirm("Delete event?")) return;
-  const response = await fetch(`/api/events/${selected.id}`, { method: "DELETE" });
+  const response = await fetch("/api/events/" + selected.id, { method: "DELETE" });
   if (response.ok) await load();
 };
 

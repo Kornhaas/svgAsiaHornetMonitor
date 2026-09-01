@@ -26,19 +26,19 @@ class Gallery:
     def events(self, limit: int = 100) -> list[dict[str, Any]]:
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
         reviewed_images = {annotation.get("image") for annotation in self._annotations()}
-        return [
-            self._event(
-                image, image.relative_to(self.events_directory).as_posix() in reviewed_images
-            )
-            for image in images[:limit]
-        ]
+        return [self._event(image, reviewed_images) for image in images[:limit]]
 
-    def _event(self, image: Path, reviewed: bool) -> dict[str, Any]:
+    def _event(self, image: Path, reviewed_images: set[str | None]) -> dict[str, Any]:
+        frames = [
+            frame.relative_to(self.events_directory).as_posix()
+            for frame in sorted(image.parent.glob("frame_*.jpg"))
+        ]
         return {
             "id": image.parent.relative_to(self.events_directory).as_posix(),
             "image": image.relative_to(self.events_directory).as_posix(),
-            "image_count": len(list(image.parent.glob("frame_*.jpg"))),
-            "reviewed": reviewed,
+            "frames": frames,
+            "image_count": len(frames),
+            "reviewed": any(frame in reviewed_images for frame in frames),
         }
 
     def _annotations(self) -> list[dict[str, Any]]:
