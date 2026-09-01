@@ -36,6 +36,7 @@ class DatasetExporter:
     def export(self) -> dict:
         version = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         destination = self.output_directory / version
+        destination.mkdir(parents=True, exist_ok=False)
         grouped: dict[str, list[dict]] = defaultdict(list)
         for entry in self._annotations():
             if (entry.get("label") in CLASSES and entry.get("box")) or entry.get(
@@ -44,10 +45,15 @@ class DatasetExporter:
                 grouped[entry["image"]].append(entry)
         split_images = Counter()
         empty_images = 0
+        skipped_images = 0
         for image_id, entries in grouped.items():
             source = self.events_directory / image_id
+            if not source.is_file():
+                skipped_images += 1
+                continue
             image = cv2.imread(str(source))
             if image is None:
+                skipped_images += 1
                 continue
             split = self._split(image_id)
             split_images[split] += 1
@@ -83,6 +89,7 @@ class DatasetExporter:
             **self.summary(),
             "export_splits": {split: split_images[split] for split in ("train", "val", "test")},
             "empty_images": empty_images,
+            "skipped_images": skipped_images,
         }
         (destination / "manifest.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return result

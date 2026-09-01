@@ -34,10 +34,11 @@ Bei einer RTX 4070 müssen torch.cuda.is_available() den Wert True und der Gerä
 
 ## Daten vom Pi übernehmen
 
-Zuerst Ereignisbilder und Annotationen vom Pi in den lokalen Projektordner kopieren:
+Zuerst den lokalen Zielordner anlegen. Die Inhalte von events müssen unter data/events landen, damit die relativen Pfade der Annotationen passen:
 
 ~~~powershell
-scp -r hornet@hornet.local:~/svgAsiaHornetMonitor/data/events .\data\
+New-Item -ItemType Directory -Force .\data\events | Out-Null
+scp -r hornet@hornet.local:~/svgAsiaHornetMonitor/data/events/. .\data\events\
 scp hornet@hornet.local:~/svgAsiaHornetMonitor/data/annotations.jsonl .\data\
 ~~~
 

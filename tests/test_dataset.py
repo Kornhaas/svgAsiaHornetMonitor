@@ -37,3 +37,26 @@ def test_dataset_export_writes_yolo_labels_and_ignores_empty_entries(tmp_path):
     assert labels[0].read_text().startswith("3 0.200000 0.200000 0.200000 0.200000")
     assert "goldfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
     assert "fleshfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
+
+
+def test_dataset_export_creates_manifest_when_annotated_images_are_missing(tmp_path):
+    annotations = tmp_path / "annotations.jsonl"
+    annotations.write_text(
+        json.dumps(
+            {
+                "image": "2026-01-01/missing/frame_000.jpg",
+                "label": "empty",
+                "box": None,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exported = DatasetExporter(
+        str(tmp_path / "events"), str(annotations), str(tmp_path / "datasets")
+    ).export()
+
+    destination = tmp_path / "datasets" / exported["version"]
+    assert exported["skipped_images"] == 1
+    assert (destination / "dataset.yaml").exists()
+    assert (destination / "manifest.json").exists()
