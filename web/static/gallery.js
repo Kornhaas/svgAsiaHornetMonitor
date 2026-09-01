@@ -83,8 +83,13 @@ function renderRows() {
 
 function renderSavedBoxes() {
   if (!image.naturalWidth || !image.naturalHeight) return;
+  const modelBoxes = currentSuggestion && !items.length ? [{
+    label: currentSuggestion.label,
+    box: currentSuggestion.box,
+    model: true,
+  }] : [];
   annotationBoxes.replaceChildren(
-    ...items.flatMap((item, index) => {
+    ...[...items, ...modelBoxes].flatMap((item, index) => {
       if (!item.box) return [];
       const itemBox = document.createElement("div");
       itemBox.className = "annotation-box";
@@ -93,16 +98,16 @@ function renderSavedBoxes() {
       itemBox.style.top = String((item.box.y / image.naturalHeight) * 100) + "%";
       itemBox.style.width = String((item.box.width / image.naturalWidth) * 100) + "%";
       itemBox.style.height = String((item.box.height / image.naturalHeight) * 100) + "%";
-      if (item.label === "uncertain") {
+      if (item.label === "uncertain" || item.model) {
         itemBox.style.borderColor = "#0dcaf0";
         itemBox.style.borderStyle = "dashed";
       }
       const number = document.createElement("span");
       number.className = "annotation-box-number";
-      number.textContent = String(index + 1);
+      number.textContent = item.model ? "AI" : String(index + 1);
       number.style.cssText = "display:grid;place-items:center;width:1.5rem;height:1.5rem;"
         + "margin:-3px 0 0 -3px;border-radius:0 0 .3rem 0;background:"
-        + (item.label === "uncertain" ? "#0dcaf0" : "#ffc107")
+        + (item.label === "uncertain" || item.model ? "#0dcaf0" : "#ffc107")
         + ";color:#101713;font-size:.9rem;font-weight:700;line-height:1;";
       itemBox.append(number);
       return itemBox;
@@ -171,7 +176,7 @@ async function selectFrame(frame, force = false) {
 async function select(event) {
   selected = event;
   selectedFrame = null;
-  const suggestedFrame = Object.keys(event.suggestions || {})[0];
+  const suggestedFrame = event.best_suggestion_image || Object.keys(event.suggestions || {})[0];
   await selectFrame(event.animal_frames[0] || suggestedFrame || event.image, true);
   render();
 }
@@ -347,7 +352,13 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   const response = await fetch("/api/annotations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: selectedFrame, annotations: items, source: annotationSource }),
+    body: JSON.stringify({
+      image: selectedFrame,
+      annotations: items,
+      source: annotationSource,
+      model_version: annotationSource === "model_confirmed" ? currentSuggestion.model_version : null,
+      prediction_id: annotationSource === "model_confirmed" ? currentSuggestion.id : null,
+    }),
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
   if (response.ok) {

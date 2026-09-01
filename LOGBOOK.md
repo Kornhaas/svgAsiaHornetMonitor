@@ -232,3 +232,10 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Persisted image-space detection boxes and active model versions alongside isolated post-event predictions.
 - Added a gallery filter and one-click, human-confirmed model-suggestion workflow; predictions remain separate from annotations until saved.
 - Added annotation provenance (`manual` or `model_confirmed`) so exported training data remains auditable and a weak model cannot self-label future training data.
+
+## 2026-09-01 — Burst-based active learning
+
+- Moved post-event model inference to the completed burst so a single isolated worker evaluates every saved frame and selects the strongest proposal.
+- Added a priority inbox for low-confidence, rare-class, and inconsistent burst predictions; model boxes render as cyan `AI` overlays before confirmation.
+- Added feedback, confidence-calibration, class-balance, brightness-drift, and per-model quality evidence to the Model & Training page.
+- Added an explicitly disabled-by-default automatic-acceptance policy. It can only label an allowed class after the configured confidence, sample-count, and observed-precision gates are met.

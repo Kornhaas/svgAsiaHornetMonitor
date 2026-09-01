@@ -11,6 +11,7 @@ class _InlineThread:
 
 def test_event_writer_saves_a_burst_and_respects_cooldown(monkeypatch, tmp_path):
     saved = []
+    completed = []
     monkeypatch.setattr(
         "hornet_monitor.events.cv2.imwrite", lambda path, frame: saved.append((path, frame))
     )
@@ -25,9 +26,12 @@ def test_event_writer_saves_a_burst_and_respects_cooldown(monkeypatch, tmp_path)
         }
     )
     writer.frame_supplier = lambda: "next"
+    writer.burst_complete_callback = lambda folder: completed.append(folder)
     monkeypatch.setattr("hornet_monitor.events.time.monotonic", lambda: 100)
 
     assert writer.save_burst("first")
     assert not writer.save_burst("second")
     assert [frame for _path, frame in saved] == ["first", "next", "next"]
     assert writer.last_event is not None
+    assert len(completed) == 1
+    assert str(completed[0]) == writer.last_event

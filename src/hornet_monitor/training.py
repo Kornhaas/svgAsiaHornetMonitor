@@ -12,11 +12,16 @@ class TrainingStatus:
     """Summarize locally stored annotations without starting model training."""
 
     def __init__(
-        self, annotations_file: str | Path, settings: dict[str, Any], trainer=None
+        self,
+        annotations_file: str | Path,
+        settings: dict[str, Any],
+        trainer=None,
+        active_learning=None,
     ) -> None:
         self.annotations_file = Path(annotations_file)
         self.settings = settings
         self.trainer = trainer
+        self.active_learning = active_learning
 
     def overview(self) -> dict[str, Any]:
         annotations = self._annotations()
@@ -43,6 +48,7 @@ class TrainingStatus:
             "run": training,
             "models": self.trainer.model_versions() if self.trainer else [],
             "active_model": self.trainer.active_version() if self.trainer else None,
+            "active_learning": self.active_learning.overview() if self.active_learning else {},
         }
 
     def _annotations(self) -> list[dict[str, Any]]:

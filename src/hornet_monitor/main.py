@@ -14,6 +14,7 @@ from pathlib import Path
 import yaml
 from werkzeug.security import generate_password_hash
 
+from .active_learning import ActiveLearningStatus
 from .activity import ActivityLog
 from .background import BackgroundReference
 from .camera import Camera
@@ -62,6 +63,14 @@ def validate_config(config: dict) -> None:
         raise ValueError("Storage cleanup interval must be at least 60 seconds.")
     if training["minimum_annotations"] < 1 or training.get("batch", 1) < 1:
         raise ValueError("Training minimum annotations and batch size must be positive.")
+    active = config.get("active_learning", {})
+    if active and (
+        not 0 < active["auto_accept_confidence"] <= 1
+        or not 0 < active["auto_accept_min_precision"] <= 1
+        or active["auto_accept_min_samples"] < 1
+        or active["target_per_class"] < 1
+    ):
+        raise ValueError("Active-learning thresholds are invalid.")
 
 
 def merge_config(base: dict, override: dict) -> dict:
@@ -162,8 +171,13 @@ def main() -> None:
         config["training"]["datasets_directory"],
     )
     training_manager = TrainingManager(exporter, config["training"], activity_log)
+    active_learning = ActiveLearningStatus(
+        config["annotations"]["file"],
+        config["annotations"]["predictions_file"],
+        config["active_learning"],
+    )
     training_status = TrainingStatus(
-        config["annotations"]["file"], config["training"], training_manager
+        config["annotations"]["file"], config["training"], training_manager, active_learning
     )
     event_settings = {**config["events"], "cooldown_seconds": config["motion"]["cooldown_seconds"]}
     writer = EventWriter(event_settings, activity_log)
@@ -205,6 +219,16 @@ def main() -> None:
     )
 
     writer.frame_supplier = event_frame
+
+    def predict_completed_burst(folder: Path) -> None:
+        event_root = Path(config["events"]["directory"])
+        images = [
+            (str(frame), frame.relative_to(event_root).as_posix())
+            for frame in sorted(folder.glob("frame_*.jpg"))
+        ]
+        predictor.submit_burst(images)
+
+    writer.burst_complete_callback = predict_completed_burst
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
     state_lock = threading.Lock()
     last_camera_error = None
@@ -212,6 +236,31 @@ def main() -> None:
     storage_alerted = False
     last_training_minute = None
     last_training_state = None
+    auto_accepted_predictions: set[str] = set()
+
+    def apply_automatic_acceptance() -> None:
+        for prediction in active_learning.automatic_candidates():
+            prediction_id = prediction.get("id")
+            if not isinstance(prediction_id, str) or prediction_id in auto_accepted_predictions:
+                continue
+            try:
+                gallery.annotate(
+                    {
+                        "image": prediction["image"],
+                        "annotations": [{"label": prediction["label"], "box": prediction["box"]}],
+                        "source": "model_confirmed",
+                        "model_version": prediction.get("model_version"),
+                        "prediction_id": prediction_id,
+                    }
+                )
+            except (FileNotFoundError, KeyError, ValueError):
+                continue
+            auto_accepted_predictions.add(prediction_id)
+            activity_log.record(
+                "prediction_auto_accepted",
+                "Prediction accepted by the configured evidence gate.",
+                details={"prediction_id": prediction_id, "image": prediction["image"]},
+            )
 
     def monitor() -> None:
         nonlocal \
@@ -222,6 +271,7 @@ def main() -> None:
             last_training_state
         while True:
             predictor.reap()
+            apply_automatic_acceptance()
             if camera.error != last_camera_error:
                 last_camera_error = camera.error
                 if camera.error:
@@ -294,9 +344,6 @@ def main() -> None:
                 )
             if saved:
                 print(f"Motion event saved to {writer.last_event}")
-                saved_image = Path(writer.last_event) / "frame_000.jpg"
-                image_id = saved_image.relative_to(Path(config["events"]["directory"])).as_posix()
-                predictor.submit(str(saved_image), image_id)
             time.sleep(0.05)
 
     threading.Thread(target=monitor, name="motion-monitor", daemon=True).start()

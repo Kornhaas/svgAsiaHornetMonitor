@@ -37,6 +37,18 @@
 </section>
 <section class="card card-body mt-3"><h2 class="h5">Recent predictions</h2><ul id="predictions" class="mb-0"><li>Loading…</li></ul></section>
 <section class="card card-body mt-3"><h2 class="h5">Class distribution</h2>{% for label, count in overview.labels.items() %}<span class="badge text-bg-secondary">{{ label }}: {{ count }}</span>{% else %}<p>No labelled boxes yet.</p>{% endfor %}</section>
+<section class="card card-body mt-3">
+  <h2 class="h5">Active-learning quality</h2>
+  {% set active = overview.active_learning|default({}, true) %}
+  {% set feedback = active.get("feedback", {}) %}{% set brightness = active.get("brightness", {}) %}{% set auto = active.get("auto_accept", {}) %}{% set gates = auto.get("gates", {}) %}
+  <p>Review feedback: accepted {{ feedback.get("accepted", 0) }}, corrected {{ feedback.get("corrected", 0) }}, empty {{ feedback.get("empty", 0) }}, pending {{ feedback.get("pending", 0) }}.</p>
+  <p>Brightness drift signal: {{ brightness.get("samples", 0) }} frames; mean {{ brightness.get("mean", "—") }}, range {{ brightness.get("range", "—") }}.</p>
+  {% if active.get("underrepresented", []) %}<p>Prioritize more examples for: {{ active.get("underrepresented", [])|join(", ") }}.</p>{% endif %}
+  <p>{{ auto.get("message", "Automatic acceptance is unavailable.") }}</p>
+  <div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Class</th><th>High-confidence reviews</th><th>Observed precision</th><th>Automatic gate</th></tr></thead><tbody>
+  {% for label, gate in gates.items() %}<tr><td>{{ label }}</td><td>{{ gate.samples }}</td><td>{{ gate.precision }}</td><td>{{ "ready" if gate.permitted else "not ready" }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
 {% endblock %}
 {% block scripts %}<script>
 async function action(url, target) {

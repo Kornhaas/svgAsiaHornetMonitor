@@ -14,6 +14,19 @@ This checklist is kept in source control and records the implemented operating m
 - [x] Configuration validation, unit tests, Ruff, dependency lock validation, dependency audit, CodeQL workflow, and Dependabot.
 - [x] Active-learning inbox: isolated predictions persist model version and boxes; only explicit human confirmation creates an auditable training annotation.
 
+## Active-learning expansion
+
+- [x] Run one isolated inference job over every completed burst and select the best review frame.
+- [x] Prioritize the review inbox by uncertainty, rare predicted class, and conflicting burst predictions.
+- [x] Render model boxes as clearly separate, non-training suggestions before a user accepts them.
+- [x] Persist review outcomes and report acceptance, correction, and empty-image feedback by model version.
+- [x] Calculate per-class confidence calibration and expose the evidence required for automatic acceptance.
+- [x] Keep automatic acceptance disabled by default; permit it only for explicitly allowed classes that satisfy sample and precision gates.
+- [x] Report class imbalance and prioritize underrepresented classes and difficult lighting/background conditions.
+- [ ] Identify near-duplicate burst images so operators can skip redundant reviews and exports can remain diverse.
+- [ ] Preserve a fixed, versioned evaluation split and compare a candidate model with the active model before activation.
+- [ ] Record image-brightness and background/reference changes as drift signals in the model status.
+
 ## Required Pi acceptance checks
 
 - [ ] Disconnect the USB camera before boot; confirm the browser stays reachable and reconnects after the camera is restored.

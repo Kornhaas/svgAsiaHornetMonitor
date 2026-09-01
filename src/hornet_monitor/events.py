@@ -47,3 +47,6 @@ class EventWriter:
             frame = self.frame_supplier() if hasattr(self, "frame_supplier") else None
             if frame is not None:
                 cv2.imwrite(str(folder / f"frame_{index:03d}.jpg"), frame)
+        callback = getattr(self, "burst_complete_callback", None)
+        if callback is not None:
+            callback(folder)

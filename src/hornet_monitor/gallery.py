@@ -95,6 +95,12 @@ class Gallery:
         source = annotation.get("source", "manual")
         if source not in {"manual", "model_confirmed"}:
             raise ValueError("Unknown annotation source.")
+        model_version = annotation.get("model_version") if source == "model_confirmed" else None
+        prediction_id = annotation.get("prediction_id") if source == "model_confirmed" else None
+        if model_version is not None and not isinstance(model_version, str):
+            raise ValueError("Invalid model version.")
+        if prediction_id is not None and not isinstance(prediction_id, str):
+            raise ValueError("Invalid prediction identifier.")
         if "annotations" in annotation:
             items = annotation["annotations"]
             if not isinstance(items, list) or not items:
@@ -105,13 +111,17 @@ class Gallery:
             ]
             return {
                 "image": image.relative_to(self.events_directory).as_posix(),
-                "annotations": self._replace(image, validated, source),
+                "annotations": self._replace(
+                    image, validated, source, model_version, prediction_id
+                ),
             }
         image = self.image_path(annotation["image"])
         return self._store(
             image,
             *self._validate(image, annotation.get("label"), annotation.get("box")),
             source,
+            model_version,
+            prediction_id,
         )
 
     def _validate(self, image: Path, label: str | None, box: dict[str, int] | None):
@@ -132,18 +142,29 @@ class Gallery:
         image: Path,
         items: list[tuple[str, dict[str, int] | None]],
         source: str,
+        model_version: str | None,
+        prediction_id: str | None,
     ) -> list[dict[str, Any]]:
         image_id = image.relative_to(self.events_directory).as_posix()
         with self._lock:
             entries = [entry for entry in self._annotations() if entry.get("image") != image_id]
-            entries.extend(self._entry(image, label, box, source) for label, box in items)
+            entries.extend(
+                self._entry(image, label, box, source, model_version, prediction_id)
+                for label, box in items
+            )
             self._write_annotations(entries)
         return [entry for entry in entries if entry.get("image") == image_id]
 
     def _store(
-        self, image: Path, label: str, box: dict[str, int] | None, source: str
+        self,
+        image: Path,
+        label: str,
+        box: dict[str, int] | None,
+        source: str,
+        model_version: str | None,
+        prediction_id: str | None,
     ) -> dict[str, Any]:
-        entry = self._entry(image, label, box, source)
+        entry = self._entry(image, label, box, source, model_version, prediction_id)
         with self._lock:
             self._write_annotations([*self._annotations(), entry])
         return entry
@@ -161,15 +182,26 @@ class Gallery:
         os.replace(temporary_path, self.annotations_file)
 
     def _entry(
-        self, image: Path, label: str, box: dict[str, int] | None, source: str = "manual"
+        self,
+        image: Path,
+        label: str,
+        box: dict[str, int] | None,
+        source: str = "manual",
+        model_version: str | None = None,
+        prediction_id: str | None = None,
     ) -> dict[str, Any]:
-        return {
+        entry = {
             "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
             "image": image.relative_to(self.events_directory).as_posix(),
             "label": label,
             "box": box,
             "source": source,
         }
+        if model_version:
+            entry["model_version"] = model_version
+        if prediction_id:
+            entry["prediction_id"] = prediction_id
+        return entry
 
     def delete_event(self, event_id: str) -> None:
         event_directory = self._event_directory(event_id)

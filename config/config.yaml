@@ -38,6 +38,15 @@ annotations:
   file: data/annotations.jsonl
   predictions_file: data/predictions.jsonl
 
+active_learning:
+  # Suggestions require human confirmation by default. The gate only reports evidence.
+  auto_accept_enabled: false
+  auto_accept_confidence: 0.98
+  auto_accept_min_samples: 30
+  auto_accept_min_precision: 0.98
+  auto_accept_labels: [fleshfly]
+  target_per_class: 50
+
 training:
   # A future training worker may run only inside this overnight window.
   start_hour: 21

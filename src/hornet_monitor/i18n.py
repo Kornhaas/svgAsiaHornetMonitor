@@ -114,6 +114,22 @@ GERMAN = {
     ),
     "Export YOLO dataset": "YOLO-Datensatz exportieren",
     "Class distribution": "Klassenverteilung",
+    "Active-learning quality": "Active-Learning-Qualität",
+    "Review feedback:": "Prüfungsrückmeldung:",
+    "Brightness drift signal:": "Helligkeits-Driftsignal:",
+    "Prioritize more examples for:": "Weitere Beispiele priorisieren für:",
+    "Automatic acceptance is unavailable.": "Automatische Übernahme ist nicht verfügbar.",
+    "Automatic acceptance is disabled until explicitly enabled.": (
+        "Die automatische Übernahme ist bis zur ausdrücklichen Aktivierung deaktiviert."
+    ),
+    "Only classes passing their evidence gate may be accepted automatically.": (
+        "Nur Klassen mit erfüllter Nachweis-Freigabe dürfen automatisch übernommen werden."
+    ),
+    "High-confidence reviews": "Prüfungen mit hoher Konfidenz",
+    "Observed precision": "Beobachtete Präzision",
+    "Automatic gate": "Automatische Freigabe",
+    "ready": "bereit",
+    "not ready": "nicht bereit",
     "No labelled boxes yet.": "Noch keine markierten Boxen.",
     "Update background image": "Hintergrundbild aktualisieren",
     "Telegram notifications": "Telegram-Benachrichtigungen",

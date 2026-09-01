@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections import Counter
 from functools import wraps
 from pathlib import Path
 
@@ -83,12 +84,35 @@ def create_app(
                 and box["height"] > 0
             ):
                 newest_by_image[image] = prediction
+        predicted_labels = Counter(prediction["label"] for prediction in newest_by_image.values())
         for event in events:
             event["suggestions"] = {
                 frame: newest_by_image[frame]
                 for frame in event["frames"]
                 if frame not in event["reviewed_frames"] and frame in newest_by_image
             }
+            proposals = list(event["suggestions"].values())
+            if proposals:
+                best = max(
+                    proposals,
+                    key=lambda proposal: (
+                        proposal.get("best_in_burst", False),
+                        proposal["confidence"],
+                    ),
+                )
+                event["best_suggestion_image"] = best["image"]
+                labels = {proposal["label"] for proposal in proposals}
+                event["suggestion_priority"] = round(
+                    (1 - best["confidence"])
+                    + (0.5 if len(labels) > 1 else 0)
+                    + (0.25 if not best.get("best_in_burst") else 0)
+                    + (0.25 / predicted_labels[best["label"]]),
+                    3,
+                )
+            else:
+                event["best_suggestion_image"] = None
+                event["suggestion_priority"] = -1
+        events.sort(key=lambda event: event["suggestion_priority"], reverse=True)
         return events
 
     @app.context_processor
