@@ -1,66 +1,84 @@
 # Lokales YOLO-Training
 
-Dieser Ordner enthält bewusst **manuell gestartete** Werkzeuge für den Windows-PC. Sie greifen auf den gleichen, versionierten YOLO-Export zu wie die Weboberfläche, verändern aber weder die Pi-Kamera noch den laufenden Monitor.
+Dieser Ordner enthält manuell gestartete Werkzeuge für den Windows-PC. Sie verwenden dieselben versionierten YOLO-Exporte wie die Weboberfläche, verändern aber weder die Pi-Kamera noch den laufenden Monitor.
 
 ## Einmalige Einrichtung auf Windows
 
-Im Projektordner reicht `uv`; eine zusätzliche virtuelle Umgebung oder `pip`-Installation ist nicht nötig:
+Die normale Projektumgebung wird für Export und Tests verwendet. Für eine NVIDIA-GPU wird zusätzlich eine getrennte lokale Trainingsumgebung angelegt. So bleibt der für den Raspberry Pi gelockte CPU-Abhängigkeitsbestand unverändert.
 
-```powershell
+~~~powershell
 irm https://astral.sh/uv/install.ps1 | iex
 uv sync --locked
-uv run python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
-```
+~~~
 
-Bei einer NVIDIA-Grafikkarte sollte zusätzlich `nvidia-smi` funktionieren. `True` in der letzten Zeile bedeutet, dass das Skript mit `--device auto` die GPU verwendet. Bei `False` funktioniert das Training auf der CPU, dauert aber deutlich länger.
+Bei einer NVIDIA-Grafikkarte zuerst den Treiber prüfen:
+
+~~~powershell
+nvidia-smi
+~~~
+
+Dann die GPU-Trainingsumgebung erzeugen. Der Parameter --torch-backend=auto wählt passend zum installierten NVIDIA-Treiber ein CUDA-PyTorch-Paket aus:
+
+~~~powershell
+uv venv .venv-gpu
+uv pip install --python .venv-gpu\Scripts\python.exe ultralytics torch torchvision --torch-backend=auto
+~~~
+
+Die GPU-Nutzung prüfen:
+
+~~~powershell
+.\.venv-gpu\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+~~~
+
+Bei einer RTX 4070 müssen torch.cuda.is_available() den Wert True und der Gerätename NVIDIA GeForce RTX 4070 ausgeben. Falls False erscheint, zuerst mit nvidia-smi auf einen fehlenden oder zu alten NVIDIA-Treiber prüfen. Ein separates CUDA Toolkit ist normalerweise nicht erforderlich.
 
 ## Daten vom Pi übernehmen
 
-Zuerst Ereignisbilder und Annotationen vom Pi in den lokalen Projektordner kopieren. Auf Windows PowerShell beispielsweise:
+Zuerst Ereignisbilder und Annotationen vom Pi in den lokalen Projektordner kopieren:
 
-```powershell
+~~~powershell
 scp -r hornet@hornet.local:~/svgAsiaHornetMonitor/data/events .\data\
 scp hornet@hornet.local:~/svgAsiaHornetMonitor/data/annotations.jsonl .\data\
-```
+~~~
 
-Alternativ kann das Backup aus **Systemstatus** auf dem Pi heruntergeladen und lokal entpackt werden. Die Dateien `data/events/` und `data/annotations.jsonl` sind Laufzeitdaten und bleiben daher absichtlich außerhalb von Git.
+Alternativ kann das Backup aus der Seite **Systemstatus** auf dem Pi heruntergeladen und lokal entpackt werden. Die Dateien unter data/events und data/annotations.jsonl sind Laufzeitdaten und bleiben absichtlich außerhalb von Git.
 
 ## 1. YOLO-Datensatz exportieren
 
-Nur geprüfte Boxen der Klassen `vespa_velutina`, `vespa_crabro`, `wasp`, `bee`, `other`, `goldfly` und `fleshfly` werden exportiert. `empty` wird als Bild ohne Label-Datei aufgenommen. Der Split ist stabil: 70 % Training, 20 % Validierung, 10 % Test.
+Nur geprüfte Boxen der Klassen vespa_velutina, vespa_crabro, wasp, bee, other, goldfly und fleshfly werden exportiert. empty wird als Bild ohne Label-Datei aufgenommen. Der Split ist stabil: 70 % Training, 20 % Validierung, 10 % Test.
 
-```powershell
+~~~powershell
 uv run python training/export_yolo.py
-```
+~~~
 
-Das Ergebnis ist ein neuer Ordner unter `data/datasets/<Zeitstempel>/`. Die Ausgabe nennt den vollständigen Pfad zur `dataset.yaml`. Der Export kann ohne Risiko wiederholt werden und startet kein Training.
+Das Ergebnis ist ein neuer Ordner unter data/datasets/Zeitstempel. Die Ausgabe nennt den vollständigen Pfad zur dataset.yaml. Der Export kann gefahrlos wiederholt werden und startet kein Training.
 
 ## 2. Lokal trainieren
 
-Das folgende Beispiel verwendet automatisch die neueste lokale `dataset.yaml`, das kleine vortrainierte Modell `yolo11n.pt` und wählt GPU oder CPU automatisch:
+Das folgende Beispiel verwendet automatisch die neueste lokale dataset.yaml, das kleine vortrainierte Modell yolo11n.pt und die GPU:
 
-```powershell
-uv run python training/train_local.py --epochs 50 --image-size 640
-```
+~~~powershell
+.\.venv-gpu\Scripts\python.exe training\train_local.py --epochs 50 --image-size 640 --device 0
+~~~
 
 Für einen bestimmten, reproduzierbaren Export:
 
-```powershell
-uv run python training/train_local.py --dataset data/datasets/20260901_220000/dataset.yaml --epochs 50 --device 0
-```
+~~~powershell
+.\.venv-gpu\Scripts\python.exe training\train_local.py --dataset data/datasets/20260901_220000/dataset.yaml --epochs 50 --device 0
+~~~
 
-Die Ergebnisse liegen getrennt vom Pi-Modellbestand unter `data/models/local-experiments/<Laufname>/`; wichtig ist `weights/best.pt`. Für Windows bleibt `--workers 0` der zuverlässige Standard. Bei knappen GPU-Speicher `--batch 1` verwenden.
+Die Ergebnisse liegen getrennt vom Pi-Modellbestand unter data/models/local-experiments/Laufname; wichtig ist weights/best.pt. Für Windows bleibt --workers 0 der zuverlässige Standard. Bei knappem GPU-Speicher --batch 1 verwenden.
 
 ## 3. Modell auswerten
 
-```powershell
-uv run python training/evaluate_model.py data/models/local-experiments/local_20260901_220000/weights/best.pt
-```
+~~~powershell
+.\.venv-gpu\Scripts\python.exe training\evaluate_model.py data/models/local-experiments/local_20260901_220000/weights/best.pt --device 0
+~~~
 
-Standardmäßig wird die Validierungsmenge (`val`) ausgewertet. Für die einmalige Schlussprüfung `--split test` verwenden. Ein Test-Split kann bei sehr wenigen Bildern leer sein; dann zuerst mehr unterschiedliche, geprüfte Events sammeln.
+Standardmäßig wird die Validierungsmenge ausgewertet. Für die einmalige Schlussprüfung --split test verwenden. Ein Test-Split kann bei sehr wenigen Bildern leer sein; dann zuerst mehr unterschiedliche, geprüfte Events sammeln.
 
 ## Übernahme auf den Pi
 
-Erst ein Modell übernehmen, wenn die Validierung plausibel ist und die Bilder manuell geprüft wurden. Kopiere `best.pt` nach `data/models/<version>/weights/best.pt` auf dem Pi und lege die zugehörige `model.json` mit Datensatz- und Evaluationsdaten an, oder nutze einen künftig vorgesehenen Import im UI. Das bestehende Pi-Training erzeugt diese Metadaten automatisch; diese lokalen Skripte überschreiben niemals ein aktives Pi-Modell.
+Ein Modell erst übernehmen, wenn die Validierung plausibel ist und die Bilder manuell geprüft wurden. Kopiere best.pt nach data/models/Version/weights/best.pt auf dem Pi und lege die zugehörige model.json mit Datensatz- und Evaluationsdaten an. Das bestehende Pi-Training erzeugt diese Metadaten automatisch; diese lokalen Skripte überschreiben niemals ein aktives Pi-Modell.
 
 > Mit 5–10 Bildern nicht auf Kennzahlen vertrauen: Die ersten Durchläufe dienen vor allem dazu, Export, Boxen und Bildqualität zu kontrollieren. Für robuste Erkennung sind viele unterschiedliche lokale Ereignisse, Perspektiven und Lichtbedingungen nötig.
