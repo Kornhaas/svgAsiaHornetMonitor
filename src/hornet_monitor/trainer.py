@@ -129,9 +129,15 @@ class TrainingManager:
         versions = []
         for manifest in sorted(self.models_directory.glob("*/model.json"), reverse=True):
             try:
-                versions.append(json.loads(manifest.read_text(encoding="utf-8")))
+                model = json.loads(manifest.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 continue
+            if not isinstance(model, dict):
+                continue
+            # Locally imported models have no Pi-side results.csv. Keep their
+            # version selectable and render missing metrics as unavailable.
+            model.setdefault("evaluation", {})
+            versions.append(model)
         return versions
 
     def latest_model_path(self) -> Path | None:

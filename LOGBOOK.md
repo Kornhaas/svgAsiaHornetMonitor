@@ -204,3 +204,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Safer gallery default
 
 - The image-gallery class selector now defaults to **Empty**, preventing accidental Asian-hornet annotations on blank event images.
+
+## 2026-09-01 — Imported-model status resilience
+
+- Made the model-and-training page tolerate locally imported model manifests that do not yet contain Pi-side evaluation metrics.

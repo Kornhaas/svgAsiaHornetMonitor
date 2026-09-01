@@ -137,6 +137,37 @@ def test_roi_settings_and_training_pages_are_available():
     assert "Trainingsstatus" in training_page.get_data(as_text=True)
 
 
+def test_training_page_renders_imported_model_without_evaluation():
+    training = type(
+        "Training",
+        (),
+        {
+            "overview": lambda self: {
+                "message": "Imported model is ready.",
+                "state": "idle",
+                "reviewed_images": 0,
+                "annotations": 0,
+                "minimum_annotations": 50,
+                "ready": False,
+                "labels": {},
+                "dataset": {"splits": {"train": 0, "val": 0, "test": 0}},
+                "models": [{"version": "20260901_145318", "evaluation": {}}],
+                "run": {},
+                "schedule": {"start_hour": 21, "stop_hour": 6},
+            }
+        },
+    )()
+
+    response = (
+        create_app(camera=None, status=lambda: {}, training_status=training)
+        .test_client()
+        .get("/training")
+    )
+
+    assert response.status_code == 200
+    assert b"20260901_145318" in response.data
+
+
 def test_application_pages_share_the_primary_navigation():
     app = create_app(camera=None, status=lambda: {})
     client = app.test_client()
