@@ -15,6 +15,13 @@ from .dataset import DatasetExporter
 
 def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None:
     from ultralytics import YOLO
+    from ultralytics.models.yolo.detect.train import DetectionTrainer
+
+    class PiDetectionTrainer(DetectionTrainer):
+        """Avoid model profiling, which is unsafe in the target ARM wheel."""
+
+        def get_model(self, cfg=None, weights=None, verbose=True):
+            return super().get_model(cfg=cfg, weights=weights, verbose=False)
 
     YOLO(settings["model_name"]).train(
         data=dataset_yaml,
@@ -31,6 +38,7 @@ def _train(dataset_yaml: str, settings: dict, output: str, version: str) -> None
         # which is not stable with the ARM PyTorch build used on the Pi. Training
         # is CPU-only here, so AMP offers no benefit and must stay disabled.
         amp=False,
+        trainer=PiDetectionTrainer,
     )
 
 

@@ -261,3 +261,4 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Pi-safe YOLO training setup
 
 - Disabled Ultralytics automatic mixed-precision validation for Pi CPU training. The check uses the same high-level inference route that is unstable on the target ARM build, while AMP provides no benefit for CPU-only runs.
+- The Pi training worker now also suppresses Ultralytics model profiling during its internal model rebuild; a direct eight-class model build is verified on the Pi, while the profiling-enabled route terminates with `SIGILL` before training begins.

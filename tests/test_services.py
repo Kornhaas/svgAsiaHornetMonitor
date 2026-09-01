@@ -1,8 +1,8 @@
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
-from types import SimpleNamespace
+
+import ultralytics
 
 import hornet_monitor.predictor as predictor_module
 import hornet_monitor.trainer as trainer_module
@@ -171,7 +171,7 @@ def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
         def train(self, **kwargs):
             options.update(kwargs)
 
-    monkeypatch.setitem(sys.modules, "ultralytics", SimpleNamespace(YOLO=lambda _: Model()))
+    monkeypatch.setattr(ultralytics, "YOLO", lambda _: Model())
 
     trainer_module._train(
         "dataset.yaml",
@@ -182,6 +182,7 @@ def test_pi_training_disables_the_unsafe_automatic_amp_check(monkeypatch):
 
     assert options["device"] == "cpu"
     assert options["amp"] is False
+    assert options["trainer"].__name__ == "PiDetectionTrainer"
 
 
 def test_training_manager_only_schedules_inside_the_overnight_window(tmp_path):
