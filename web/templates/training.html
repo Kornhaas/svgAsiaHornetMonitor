@@ -1,6 +1,66 @@
 {% extends "base.html" %}
 {% block title %}Model & training · Asia Hornet Monitor{% endblock %}
 {% block content %}
-<h1 class="h2">Model &amp; training</h1><section class="card card-body"><h2 class="h5">Training status</h2><p><strong>{{ overview.state }}</strong> — {{ overview.message }}</p><p>Reviewed images: {{ overview.reviewed_images }} · labelled boxes: {{ overview.annotations }} / {{ overview.minimum_annotations }}</p><p>Schedule: {{ overview.schedule.start_hour }}:00–{{ overview.schedule.stop_hour }}:00. Training starts only during this dark-time window.</p>{% if overview.run.deadline %}<p>Deadline: {{ overview.run.deadline }}</p>{% endif %}{% if overview.run.progress %}<p>Progress: {{ overview.run.progress.epochs_completed }} / {{ overview.run.progress.epochs_total }} epochs ({{ overview.run.progress.percent }}%)</p>{% endif %}<button id="start" class="btn btn-warning">Start training now</button><span id="result" class="ms-2" aria-live="polite"></span></section><section class="card card-body mt-3"><h2 class="h5">YOLO dataset export</h2><p>Export reviewed animal boxes as a versioned local YOLO dataset with train, validation, and test splits. The export does not start training.</p><p>Current split estimate: train {{ overview.dataset.splits.train|default(0) }}, validation {{ overview.dataset.splits.val|default(0) }}, test {{ overview.dataset.splits.test|default(0) }}.</p><button id="export" class="btn btn-outline-info">Export YOLO dataset</button><p id="export-result" class="mt-2 mb-0" aria-live="polite"></p></section><section class="card card-body mt-3"><h2 class="h5">Model versions and evaluation</h2><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Version</th><th>mAP50</th><th>mAP50-95</th><th>Precision</th><th>Recall</th><th>Use</th></tr></thead><tbody>{% for model in overview.models %}<tr><td>{{ model.version }}</td><td>{{ model.evaluation.map50|default("—") }}</td><td>{{ model.evaluation.map50_95|default("—") }}</td><td>{{ model.evaluation.precision|default("—") }}</td><td>{{ model.evaluation.recall|default("—") }}</td><td><button class="btn btn-sm btn-outline-info activate-model" data-version="{{ model.version }}">Use model</button></td></tr>{% else %}<tr><td colspan="6">No trained model yet.</td></tr>{% endfor %}</tbody></table></div></section><section class="card card-body mt-3"><h2 class="h5">Recent predictions</h2><ul id="predictions" class="mb-0"><li>Loading…</li></ul></section><section class="card card-body mt-3"><h2 class="h5">Class distribution</h2>{% for label, count in overview.labels.items() %}<span class="badge text-bg-secondary">{{ label }}: {{ count }}</span>{% else %}<p>No labelled boxes yet.</p>{% endfor %}</section>
+<h1 class="h2">Model &amp; training</h1>
+<section class="card card-body">
+  <h2 class="h5">Training status</h2>
+  <p><strong>{{ overview.state }}</strong> — {{ overview.message }}</p>
+  <p>Active model: <strong>{{ overview.active_model|default("None", true) }}</strong></p>
+  <p>Reviewed images: {{ overview.reviewed_images }} · labelled boxes: {{ overview.annotations }} / {{ overview.minimum_annotations }}</p>
+  <p>Schedule: {{ overview.schedule.start_hour }}:00–{{ overview.schedule.stop_hour }}:00. Training starts only during this dark-time window.</p>
+  {% if overview.run.deadline %}<p>Deadline: {{ overview.run.deadline }}</p>{% endif %}
+  {% if overview.run.progress %}<p>Progress: {{ overview.run.progress.epochs_completed }} / {{ overview.run.progress.epochs_total }} epochs ({{ overview.run.progress.percent }}%)</p>{% endif %}
+  <button id="start" class="btn btn-warning">Start training now</button>
+  <span id="result" class="ms-2" aria-live="polite"></span>
+</section>
+<section class="card card-body mt-3">
+  <h2 class="h5">YOLO dataset export</h2>
+  <p>Export reviewed animal boxes as a versioned local YOLO dataset with train, validation, and test splits. The export does not start training.</p>
+  <p>Current split estimate: train {{ overview.dataset.splits.train|default(0) }}, validation {{ overview.dataset.splits.val|default(0) }}, test {{ overview.dataset.splits.test|default(0) }}.</p>
+  <button id="export" class="btn btn-outline-info">Export YOLO dataset</button>
+  <p id="export-result" class="mt-2 mb-0" aria-live="polite"></p>
+</section>
+<section class="card card-body mt-3">
+  <h2 class="h5">Model versions and evaluation</h2>
+  <div class="table-responsive"><table class="table table-sm">
+    <thead><tr><th>Version</th><th>mAP50</th><th>mAP50-95</th><th>Precision</th><th>Recall</th><th>Use</th></tr></thead>
+    <tbody>{% for model in overview.models %}<tr>
+      <td>{{ model.version }}</td>
+      <td>{{ model.evaluation.map50|default("—") }}</td>
+      <td>{{ model.evaluation.map50_95|default("—") }}</td>
+      <td>{{ model.evaluation.precision|default("—") }}</td>
+      <td>{{ model.evaluation.recall|default("—") }}</td>
+      <td>{% if model.active %}<span class="badge text-bg-success">Active</span>{% else %}<button class="btn btn-sm btn-outline-info activate-model" data-version="{{ model.version }}">Use model</button>{% endif %}</td>
+    </tr>{% else %}<tr><td colspan="6">No trained model yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p id="model-result" class="mt-2 mb-0" aria-live="polite"></p>
+</section>
+<section class="card card-body mt-3"><h2 class="h5">Recent predictions</h2><ul id="predictions" class="mb-0"><li>Loading…</li></ul></section>
+<section class="card card-body mt-3"><h2 class="h5">Class distribution</h2>{% for label, count in overview.labels.items() %}<span class="badge text-bg-secondary">{{ label }}: {{ count }}</span>{% else %}<p>No labelled boxes yet.</p>{% endfor %}</section>
 {% endblock %}
-{% block scripts %}<script>async function action(url,target){const response=await fetch(url,{method:'POST'}),value=await response.json();document.querySelector(target).textContent=value.message||value.error||(value.dataset?`Exported ${value.dataset.boxes} boxes to ${value.dataset.directory}.`:"");return response.ok}document.querySelector('#start').onclick=async()=>{if(await action('/api/training/start','#result'))setTimeout(()=>location.reload(),1000)};document.querySelector('#export').onclick=()=>action('/api/dataset/export','#export-result');document.querySelectorAll('.activate-model').forEach(button=>{button.onclick=async()=>{const response=await fetch(`/api/models/${button.dataset.version}/activate`,{method:'POST'});if(response.ok)location.reload()}});fetch('/api/predictions').then(response=>response.json()).then(items=>{const list=document.querySelector('#predictions');list.replaceChildren(...items.map(item=>{const row=document.createElement('li');row.textContent=`${item.timestamp}: ${item.label} (${Math.round(item.confidence*100)}%)`;return row}));if(!items.length)list.textContent='No predictions yet.'});</script>{% endblock %}
+{% block scripts %}<script>
+async function action(url, target) {
+  const response = await fetch(url, {method: 'POST'});
+  const value = await response.json();
+  document.querySelector(target).textContent = value.message || value.error || (value.dataset ? `Exported ${value.dataset.boxes} boxes to ${value.dataset.directory}.` : '');
+  return response.ok;
+}
+document.querySelector('#start').onclick = async () => { if (await action('/api/training/start', '#result')) setTimeout(() => location.reload(), 1000); };
+document.querySelector('#export').onclick = () => action('/api/dataset/export', '#export-result');
+document.querySelectorAll('.activate-model').forEach((button) => {
+  button.onclick = async () => {
+    const response = await fetch(`/api/models/${button.dataset.version}/activate`, {method: 'POST'});
+    if (response.ok) location.reload();
+    else document.querySelector('#model-result').textContent = (await response.json()).error || 'Model activation failed.';
+  };
+});
+fetch('/api/predictions').then((response) => response.json()).then((items) => {
+  const list = document.querySelector('#predictions');
+  list.replaceChildren(...items.map((item) => {
+    const row = document.createElement('li');
+    row.textContent = `${item.timestamp}: ${item.label} (${Math.round(item.confidence * 100)}%)`;
+    return row;
+  }));
+  if (!items.length) list.textContent = 'No predictions yet.';
+});
+</script>{% endblock %}

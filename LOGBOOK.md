@@ -208,3 +208,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-01 — Imported-model status resilience
 
 - Made the model-and-training page tolerate locally imported model manifests that do not yet contain Pi-side evaluation metrics.
+
+## 2026-09-01 — Active model visibility
+
+- The training page now identifies the active model version and marks it clearly in the version table.

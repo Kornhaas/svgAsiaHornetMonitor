@@ -42,6 +42,7 @@ class TrainingStatus:
             },
             "run": training,
             "models": self.trainer.model_versions() if self.trainer else [],
+            "active_model": self.trainer.active_version() if self.trainer else None,
         }
 
     def _annotations(self) -> list[dict[str, Any]]:

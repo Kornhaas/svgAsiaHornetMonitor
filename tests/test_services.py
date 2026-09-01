@@ -115,6 +115,9 @@ def test_training_manager_activates_a_versioned_model_and_reports_progress(tmp_p
     activated = manager.activate(version)
 
     assert activated["version"] == version
+    assert manager.active_version() == version
     assert manager.latest_model_path() == model
-    assert manager.model_versions() == [{"version": version, "model": str(model), "evaluation": {}}]
+    assert manager.model_versions() == [
+        {"version": version, "model": str(model), "evaluation": {}, "active": True}
+    ]
     assert manager._progress(version) == {"epochs_completed": 2, "epochs_total": 4, "percent": 50}

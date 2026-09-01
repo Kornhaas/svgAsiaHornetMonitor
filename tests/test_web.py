@@ -152,6 +152,7 @@ def test_training_page_renders_imported_model_without_evaluation():
                 "labels": {},
                 "dataset": {"splits": {"train": 0, "val": 0, "test": 0}},
                 "models": [{"version": "20260901_145318", "evaluation": {}}],
+                "active_model": "20260901_145318",
                 "run": {},
                 "schedule": {"start_hour": 21, "stop_hour": 6},
             }
@@ -166,6 +167,7 @@ def test_training_page_renders_imported_model_without_evaluation():
 
     assert response.status_code == 200
     assert b"20260901_145318" in response.data
+    assert b"Active model:" in response.data
 
 
 def test_application_pages_share_the_primary_navigation():

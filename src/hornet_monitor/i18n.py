@@ -82,6 +82,8 @@ GERMAN = {
     "Recent predictions": "Aktuelle Erkennungen",
     "No trained model yet.": "Noch kein trainiertes Modell.",
     "Use model": "Modell verwenden",
+    "Active model:": "Aktives Modell:",
+    "Active": "Aktiv",
     "Loading…": "Wird geladen…",
     "No predictions yet.": "Noch keine Erkennungen.",
     "Training starts only during this dark-time window.": (
