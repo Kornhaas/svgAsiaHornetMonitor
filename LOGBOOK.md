@@ -265,3 +265,8 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Fatal-signal tracing is enabled only in the isolated training process, so any remaining native `SIGILL` failure records its Python call site in the systemd journal without affecting the monitor process or web UI.
 - The training worker now uses multiprocessing `spawn` rather than Linux `fork`. This starts PyTorch in a clean interpreter instead of inheriting the monitor's active threads, matching the already stable isolated prediction architecture.
 - The spawned training worker now limits OpenMP and PyTorch CPU execution to one thread before creating the model, matching the proven isolated prediction worker and avoiding unsupported native multi-thread kernels on the Pi.
+
+## 2026-09-01 — Debian CPU PyTorch runtime for Pi training
+
+- Raspberry Pi installation and update paths now retain Debian Trixie's arm64 CPU-only PyTorch and Torchvision packages inside a system-site project environment, instead of the incompatible PyPI Torch wheel.
+- The production service starts with `uv run --no-sync`, so ordinary service restarts cannot silently restore the incompatible wheel; Windows development and GPU training retain the regular uv workflow.

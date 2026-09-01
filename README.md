@@ -33,20 +33,24 @@ On Raspberry Pi OS Lite 64-bit:
 
 ```bash
 sudo apt update
-sudo apt install -y ca-certificates curl git libgl1 libglib2.0-0 libgomp1 v4l-utils
+sudo apt install -y ca-certificates curl git libgl1 libglib2.0-0 libgomp1 v4l-utils python3-torch python3-torchvision
 sudo usermod -aG video "$USER"
 git clone https://github.com/Kornhaas/svgAsiaHornetMonitor.git
 cd svgAsiaHornetMonitor
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
-uv sync --locked --no-dev
+bash scripts/install-service.sh
 ```
 
-`uv sync --locked --no-dev` installs every Python package required by the
-monitor from the checked-in lockfile. The system packages provide USB-camera
-diagnostics and the shared libraries used by OpenCV. The appliance setup script
-also adds the `hornet` user to the `video` group, then enables and starts
-`hornet-monitor.service`; it will start automatically after every reboot.
+`uv sync --locked --no-dev` is the normal project command on development
+machines. On a Raspberry Pi, run the appliance installer shown above instead:
+it additionally uses Debian's
+CPU-only `python3-torch` and `python3-torchvision` packages. Their arm64 build
+is required for stable local overnight training; the installer creates a
+system-site project environment and removes only the incompatible PyPI Torch
+wheels afterwards. The appliance setup script also adds the `hornet` user to the
+`video` group, then enables and starts `hornet-monitor.service`; it will start
+automatically after every reboot.
 
 `libatlas-base-dev` is deliberately not required. It is unavailable on current Raspberry Pi OS Trixie installations, and the project uses the OpenCV wheel installed by uv. YOLO/PyTorch are installed for local training and require substantial disk space and time on a Pi 4. The `export PATH=...` command makes the just-installed uv executable available in the current shell.
 
@@ -108,10 +112,16 @@ curl -LsSf https://raw.githubusercontent.com/Kornhaas/svgAsiaHornetMonitor/main/
 For an already-cloned project, install the service once from the project root instead:
 
 ```bash
+sudo apt install -y python3-torch python3-torchvision
 bash scripts/install-service.sh
 ```
 
 The installer asks once for a web password, enables service autostart, and configures the browser update button. After that, sign in at `http://hornet.local:8000` to operate the monitor, check for updates, and install updates. The update action uses fast-forward-only Git pulls, installs the locked runtime dependencies, records the result in the activity log, and restarts the service.
+
+If the monitor was installed before the Debian-PyTorch change, run the preceding
+two commands once after installing the current update. This replaces the systemd
+unit with the Pi-safe start command. Subsequent browser updates perform the same
+runtime preparation automatically.
 
 The installer is intentionally limited to `/home/hornet/svgAsiaHornetMonitor` and only grants the `hornet` user permission to restart this one service. Do not expose the monitor directly to the internet.
 

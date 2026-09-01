@@ -8,7 +8,7 @@ Type=simple
 User=hornet
 WorkingDirectory=/home/hornet/svgAsiaHornetMonitor
 Environment=PATH=/home/hornet/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStart=/home/hornet/.local/bin/uv run --locked --no-dev hornet-monitor
+ExecStart=/home/hornet/.local/bin/uv run --no-sync hornet-monitor
 Restart=always
 RestartSec=5
 

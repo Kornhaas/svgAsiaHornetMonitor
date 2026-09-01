@@ -65,7 +65,7 @@ The browser UI uses Bootstrap 5 for responsive layout and accessible controls, w
 
 ## Operations and updates
 
-Appliance mode uses `hornet-monitor.service` under systemd. The web UI is password-protected after `scripts/install-service.sh` has configured ignored local credentials. The updater accepts no user-supplied Git URL, command, path, or service name: it updates only the configured repository by `git pull --ff-only`, runs `uv sync --locked --no-dev`, then restarts only `hornet-monitor.service` through a narrowly scoped sudo rule.
+Appliance mode uses `hornet-monitor.service` under systemd. The web UI is password-protected after `scripts/install-service.sh` has configured ignored local credentials. The updater accepts no user-supplied Git URL, command, path, or service name: it updates only the configured repository by `git pull --ff-only`, runs the fixed Pi-runtime sync script, then restarts only `hornet-monitor.service` through a narrowly scoped sudo rule. The Pi runtime uses Debian's CPU-only arm64 PyTorch packages through a system-site virtual environment; PyPI Torch wheels are removed after each sync because their CPU kernels are not reliable on the target hardware.
 
 `scripts/setup-pi.sh` is the one-time bootstrap for a new Pi. It is deliberately fixed to the `hornet` user and this repository; it does not accept remote URLs or arbitrary installation paths.
 

@@ -51,8 +51,12 @@ class UpdateManager:
             self.activity_log.record("update_started", "Web update started")
             try:
                 subprocess.run(["git", "pull", "--ff-only"], cwd=self.repository, check=True)
+                runtime_sync = (self.repository / "scripts" / "sync-pi-runtime.sh").resolve()
+                scripts_directory = (self.repository / "scripts").resolve()
+                if runtime_sync.parent != scripts_directory or not runtime_sync.is_file():
+                    raise OSError("Pi runtime sync script is unavailable.")
                 subprocess.run(
-                    [self.settings["uv_binary"], "sync", "--locked", "--no-dev"],
+                    ["bash", str(runtime_sync)],
                     cwd=self.repository,
                     check=True,
                 )

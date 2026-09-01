@@ -7,7 +7,8 @@ if [[ "$project_dir" != "/home/hornet/svgAsiaHornetMonitor" ]]; then
   exit 1
 fi
 
-uv run hornet-monitor --setup-auth
+bash scripts/sync-pi-runtime.sh
+uv run --no-sync hornet-monitor --setup-auth
 sudo install -m 0644 deploy/hornet-monitor.service /etc/systemd/system/hornet-monitor.service
 sudo install -m 0440 deploy/hornet-monitor-sudoers /etc/sudoers.d/hornet-monitor
 sudo systemctl daemon-reload
