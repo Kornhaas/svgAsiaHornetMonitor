@@ -176,26 +176,58 @@ async function reloadSelectedEvent() {
   render();
 }
 
-canvas.onpointerdown = (event) => {
+let drawing = null;
+
+function imageCoordinates(event, bounds) {
+  return {
+    x: Math.max(0, Math.min(bounds.width, event.clientX - bounds.left)),
+    y: Math.max(0, Math.min(bounds.height, event.clientY - bounds.top)),
+  };
+}
+
+function finishDrawing(event) {
+  if (!drawing || event.pointerId !== drawing.pointerId) return;
+  const wasDragged = drawing.dragged;
+  drawing = null;
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+  if (!wasDragged) {
+    box = null;
+    overlay.style.display = "none";
+    annotationMessage.textContent = "Drag to draw a rectangle.";
+  }
+}
+
+canvas.addEventListener("pointerdown", (event) => {
   if (!selectedFrame || !image.naturalWidth) return;
+  event.preventDefault();
   const bounds = image.getBoundingClientRect();
-  const start = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+  const start = imageCoordinates(event, bounds);
+  drawing = { pointerId: event.pointerId, bounds, start, dragged: false };
   canvas.setPointerCapture(event.pointerId);
-  canvas.onpointermove = (move) => {
-    const x = Math.max(0, Math.min(bounds.width, move.clientX - bounds.left));
-    const y = Math.max(0, Math.min(bounds.height, move.clientY - bounds.top));
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (!drawing || event.pointerId !== drawing.pointerId) return;
+  event.preventDefault();
+  const point = imageCoordinates(event, drawing.bounds);
+  const moved = Math.abs(point.x - drawing.start.x) > 3 || Math.abs(point.y - drawing.start.y) > 3;
+  if (!moved && !drawing.dragged) return;
+  drawing.dragged = true;
+  const { bounds, start } = drawing;
     box = {
-      x: Math.round((Math.min(start.x, x) / bounds.width) * image.naturalWidth),
-      y: Math.round((Math.min(start.y, y) / bounds.height) * image.naturalHeight),
-      width: Math.max(1, Math.round((Math.abs(x - start.x) / bounds.width) * image.naturalWidth)),
-      height: Math.max(1, Math.round((Math.abs(y - start.y) / bounds.height) * image.naturalHeight)),
+    x: Math.round((Math.min(start.x, point.x) / bounds.width) * image.naturalWidth),
+    y: Math.round((Math.min(start.y, point.y) / bounds.height) * image.naturalHeight),
+    width: Math.max(1, Math.round((Math.abs(point.x - start.x) / bounds.width) * image.naturalWidth)),
+    height: Math.max(1, Math.round((Math.abs(point.y - start.y) / bounds.height) * image.naturalHeight)),
     };
     showBox();
-  };
-  canvas.onpointerup = () => {
-    canvas.onpointermove = null;
-  };
-};
+});
+
+canvas.addEventListener("pointerup", finishDrawing);
+canvas.addEventListener("pointercancel", finishDrawing);
+canvas.addEventListener("lostpointercapture", finishDrawing);
 
 document.querySelector("#add-box").onclick = () => {
   const label = document.querySelector("#annotation-label").value;
