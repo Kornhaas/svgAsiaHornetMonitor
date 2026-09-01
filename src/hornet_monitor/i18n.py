@@ -31,6 +31,7 @@ GERMAN = {
     "Wasp": "Wespe",
     "Bee": "Biene",
     "Other": "Andere",
+    "Goldfly": "Goldfliege",
     "Empty": "Leer",
     "Uncertain": "Unsicher",
     "Add box": "Box hinzufügen",

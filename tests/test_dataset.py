@@ -35,3 +35,4 @@ def test_dataset_export_writes_yolo_labels_and_ignores_empty_entries(tmp_path):
     assert sum(exported["export_splits"].values()) == 1
     labels = list((tmp_path / "datasets" / exported["version"] / "labels").rglob("*.txt"))
     assert labels[0].read_text().startswith("3 0.200000 0.200000 0.200000 0.200000")
+    assert "goldfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()

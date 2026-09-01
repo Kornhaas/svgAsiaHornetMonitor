@@ -82,7 +82,16 @@ class Gallery:
         )
 
     def _validate(self, image: Path, label: str | None, box: dict[str, int] | None):
-        labels = {"vespa_velutina", "vespa_crabro", "wasp", "bee", "other", "empty", "uncertain"}
+        labels = {
+            "vespa_velutina",
+            "vespa_crabro",
+            "wasp",
+            "bee",
+            "other",
+            "goldfly",
+            "empty",
+            "uncertain",
+        }
         if label not in labels:
             raise ValueError("Unknown label.")
         if label == "empty" and box is None:

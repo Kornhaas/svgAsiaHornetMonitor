@@ -23,6 +23,14 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         {"image": "2026-08-31/123000_000001/frame_000.jpg", "label": "empty", "box": None}
     )
     assert empty["box"] is None
+    goldfly = gallery.annotate(
+        {
+            "image": "2026-08-31/123000_000001/frame_000.jpg",
+            "label": "goldfly",
+            "box": {"x": 5, "y": 6, "width": 7, "height": 8},
+        }
+    )
+    assert goldfly["label"] == "goldfly"
     assert gallery.events()[0]["reviewed"]
     gallery.delete_event("2026-08-31/123000_000001")
     assert gallery.events() == []
