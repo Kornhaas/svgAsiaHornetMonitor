@@ -54,6 +54,9 @@ class TrainingManager:
         self.models_directory = Path(settings["models_directory"]).resolve()
         self.state_file = self.models_directory / "status.json"
         self.latest_file = self.models_directory / "latest.json"
+        # PyTorch cannot safely initialize CPU kernels in a forked child of the
+        # multi-threaded monitor. Use a clean interpreter, like Predictor does.
+        self.process_context = multiprocessing.get_context("spawn")
         self.process: multiprocessing.Process | None = None
         self.deadline: datetime | None = None
         self._automatic_window_date = None
@@ -120,7 +123,7 @@ class TrainingManager:
         version = now.strftime("%Y%m%d_%H%M%S")
         stop = now.replace(hour=self.settings["stop_hour"], minute=0, second=0, microsecond=0)
         self.deadline = stop if stop > now else stop + timedelta(days=1)
-        self.process = multiprocessing.Process(
+        self.process = self.process_context.Process(
             target=_train,
             args=(
                 str(Path(dataset["directory"]) / "dataset.yaml"),

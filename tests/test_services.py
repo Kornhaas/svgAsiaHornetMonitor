@@ -142,6 +142,51 @@ def test_training_manager_waits_for_enough_labelled_boxes(tmp_path):
     assert manager.status()["state"] == "waiting"
 
 
+def test_training_manager_uses_a_clean_spawned_worker(tmp_path, monkeypatch):
+    captured = {}
+    contexts = []
+
+    class Exporter:
+        def summary(self):
+            return {"boxes": 1}
+
+        def export(self):
+            return {"directory": str(tmp_path / "dataset")}
+
+    class Process:
+        exitcode = None
+
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def start(self):
+            return None
+
+        def is_alive(self):
+            return True
+
+    class Context:
+        def Process(self, **kwargs):
+            return Process(**kwargs)
+
+    monkeypatch.setattr(
+        trainer_module.multiprocessing,
+        "get_context",
+        lambda name: contexts.append(name) or Context(),
+    )
+    manager = TrainingManager(
+        Exporter(),
+        {"models_directory": str(tmp_path / "models"), "minimum_annotations": 1, "stop_hour": 6},
+    )
+
+    state = manager.start(datetime(2026, 9, 1, 21))
+
+    assert state["state"] == "running"
+    assert contexts == ["spawn"]
+    assert captured["target"] is trainer_module._train
+    assert captured["daemon"] is True
+
+
 def test_training_manager_reports_a_native_worker_signal(tmp_path):
     exporter = DatasetExporter(
         str(tmp_path / "events"),
