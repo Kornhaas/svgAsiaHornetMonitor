@@ -36,3 +36,5 @@ def test_windows_training_helpers_are_available_and_keep_activation_manual():
     assert "evaluate_model.py" in runner
     assert "latest.json" not in importer
     assert "model.json" in importer
+    assert "results.csv" in importer
+    assert "metrics/mAP50(B)" in importer

@@ -97,7 +97,7 @@ Für einen bestimmten, reproduzierbaren Export:
 .\.venv-gpu\Scripts\python.exe training\train_local.py --dataset data/datasets/20260901_220000/dataset.yaml --epochs 50 --device 0
 ~~~
 
-Die Ergebnisse liegen getrennt vom Pi-Modellbestand unter data/models/local-experiments/Laufname; wichtig ist weights/best.pt. Für Windows bleibt --workers 0 der zuverlässige Standard. Bei knappem GPU-Speicher --batch 1 verwenden.
+Die Ergebnisse liegen getrennt vom Pi-Modellbestand unter data/models/local-experiments/Laufname; wichtig ist weights/best.pt. Für Windows bleibt --workers 0 der zuverlässige Standard. Bei knappem GPU-Speicher --batch 1 verwenden. Die neben `weights/` liegende `results.csv` enthält die Validierungskennzahlen und wird beim Modellimport automatisch als mAP, Precision und Recall in die Pi-Modellversion übernommen.
 
 ## 3. Modell auswerten
 
@@ -118,5 +118,7 @@ Ein Modell erst übernehmen, wenn die Validierung plausibel ist und die Bilder m
 ~~~
 
 Nach erfolgreichem Import auf dem Pi im Menü **Modell & Training** die neue Version prüfen und erst mit **Modell verwenden** aktivieren. Das Importskript schreibt absichtlich keine latest.json und startet den Monitor nicht neu; ein ungeprüftes Modell kann dadurch nie automatisch die Erkennung übernehmen.
+
+Wurde ein Modell bereits ohne Kennzahlen importiert, denselben Importbefehl mit identischer `-Version` nochmals ausführen. Das Skript aktualisiert dann die `model.json` auf dem Pi mit den Werten aus der lokalen `results.csv`; danach die Seite **Modell & Training** neu laden.
 
 > Mit 5–10 Bildern nicht auf Kennzahlen vertrauen: Die ersten Durchläufe dienen vor allem dazu, Export, Boxen und Bildqualität zu kontrollieren. Für robuste Erkennung sind viele unterschiedliche lokale Ereignisse, Perspektiven und Lichtbedingungen nötig.
