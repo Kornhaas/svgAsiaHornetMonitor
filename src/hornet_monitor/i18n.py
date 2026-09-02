@@ -207,6 +207,16 @@ GERMAN.update(
         "Please wait for the event cooldown before capturing again.": (
             "Bitte warte die Ereignis-Sperrzeit ab, bevor du erneut aufnimmst."
         ),
+        "Accept and save suggestion": "Vorschlag übernehmen und speichern",
+        "Saving accepted model suggestion…": "Übernommener Modellvorschlag wird gespeichert…",
+        "Model suggestion accepted and saved.": "Modellvorschlag übernommen und gespeichert.",
+        (
+            "Confirm only if the animal and box are correct. The frame is saved as reviewed "
+            "immediately; you can correct it later in the reviewed gallery."
+        ): (
+            "Bitte nur übernehmen, wenn Tier und Box stimmen. Das Bild wird sofort als bewertet "
+            "gespeichert und kann später in der bewerteten Galerie korrigiert werden."
+        ),
     }
 )
 

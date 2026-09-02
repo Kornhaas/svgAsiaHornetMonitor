@@ -278,3 +278,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-02 — Manual live-event capture
 
 - The live monitor now provides a protected manual capture action for operational testing and exceptional observations. It writes the standard burst, invokes the normal asynchronous prediction flow, records a distinct `manual_event`, and reports camera, night-mode, or cooldown availability clearly in the UI.
+
+## 2026-09-02 - One-click model-suggestion confirmation
+
+- Accepting a model suggestion now saves its `model_confirmed` annotation immediately and refreshes the gallery state, so the accepted burst frame is visibly marked as reviewed without a second save action.

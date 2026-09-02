@@ -324,20 +324,8 @@ document.querySelector("#suggest-boxes").onclick = async () => {
     : "No suggestions; update the background first.";
 };
 
-acceptSuggestion.onclick = () => {
-  if (!currentSuggestion || items.length) return;
-  items = [{ label: currentSuggestion.label, box: currentSuggestion.box }];
-  annotationSource = "model_confirmed";
-  box = null;
-  overlay.style.display = "none";
-  annotationMessage.textContent = "Model suggestion accepted. Save to confirm it for training.";
-  renderRows();
-  renderSavedBoxes();
-};
-
-document.querySelector("#annotation-form").onsubmit = async (event) => {
-  event.preventDefault();
-  if (!selectedFrame) return;
+async function saveAnnotations() {
+  if (!selectedFrame) return false;
   const label = document.querySelector("#annotation-label").value;
   let savedEmpty = false;
   if (box && label !== "empty") {
@@ -352,7 +340,7 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
   }
   if (!items.length) {
     annotationMessage.textContent = "Draw a box, or choose Empty.";
-    return;
+    return false;
   }
   const response = await fetch("/api/annotations", {
     method: "POST",
@@ -366,18 +354,41 @@ document.querySelector("#annotation-form").onsubmit = async (event) => {
     }),
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
-  if (response.ok) {
-    savedEmpty = items.length === 1 && items[0].label === "empty" && items[0].box === null;
-    if (savedEmpty) {
-      const emptyFrames = await fetch("/api/events/" + selected.id + "/mark-empty", {
-        method: "POST",
-      });
-      if (emptyFrames.ok) {
-        annotationMessage.textContent = "Saved and marked unannotated frames as empty.";
-      }
+  if (!response.ok) return false;
+  savedEmpty = items.length === 1 && items[0].label === "empty" && items[0].box === null;
+  if (savedEmpty) {
+    const emptyFrames = await fetch("/api/events/" + selected.id + "/mark-empty", {
+      method: "POST",
+    });
+    if (emptyFrames.ok) {
+      annotationMessage.textContent = "Saved and marked unannotated frames as empty.";
     }
-    await reloadSelectedEvent();
   }
+  await reloadSelectedEvent();
+  return true;
+}
+
+acceptSuggestion.onclick = async () => {
+  if (!currentSuggestion || items.length) return;
+  items = [{ label: currentSuggestion.label, box: currentSuggestion.box }];
+  annotationSource = "model_confirmed";
+  document.querySelector("#annotation-label").value = currentSuggestion.label;
+  box = null;
+  overlay.style.display = "none";
+  renderRows();
+  renderSavedBoxes();
+  acceptSuggestion.disabled = true;
+  annotationMessage.textContent = "Saving accepted model suggestion…";
+  if (await saveAnnotations()) {
+    annotationMessage.textContent = "Model suggestion accepted and saved.";
+  } else {
+    acceptSuggestion.disabled = false;
+  }
+};
+
+document.querySelector("#annotation-form").onsubmit = async (event) => {
+  event.preventDefault();
+  await saveAnnotations();
 };
 
 document.querySelector("#delete-event").onclick = async () => {
