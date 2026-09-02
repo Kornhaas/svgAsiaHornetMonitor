@@ -196,6 +196,8 @@ def test_roi_settings_and_training_pages_are_available():
     assert "await saveAnnotations()" in gallery_script.read_text(encoding="utf-8")
     assert "removeConfirmedProposalDuplicates" in gallery_script.read_text(encoding="utf-8")
     assert "intersection / union >= 0.5" in gallery_script.read_text(encoding="utf-8")
+    assert "classifySingleProposal(label)" in gallery_script.read_text(encoding="utf-8")
+    assert "uncertain.length !== 1" in gallery_script.read_text(encoding="utf-8")
     assert b"Accept and save suggestion" in client.get("/gallery").data
     training_page = client.get("/training")
     assert training_page.status_code == 200

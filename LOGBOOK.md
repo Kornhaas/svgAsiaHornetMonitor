@@ -286,3 +286,4 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-02 - Confirmed background proposals no longer remain uncertain
 
 - Saving a manually classified box now removes a matching OpenCV `uncertain` proposal, so one animal is stored as one confirmed annotation rather than as an uncertain duplicate.
+- When an event has exactly one proposed box, selecting a class and saving now promotes that proposal directly to the chosen confirmed class.

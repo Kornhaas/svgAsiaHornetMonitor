@@ -183,7 +183,7 @@ See [TODO.md](TODO.md) for the maintained production-readiness checklist and req
 
 ## Background reference and multiple animals
 
-Use the **System status** page at `/system` to capture a background reference while the ROI is empty. The reference is local and excluded from Git. In the gallery, draw and add one box per animal, then save all boxes together. **Suggest objects** compares an event to the reference with OpenCV and adds conservative `uncertain` proposals; always review, correct, or remove them before saving. When a manually confirmed box overlaps a proposal, saving removes that matching `uncertain` proposal rather than retaining a duplicate. Update the reference after moving the camera, changing the ROI, or a substantial lighting/background change.
+Use the **System status** page at `/system` to capture a background reference while the ROI is empty. The reference is local and excluded from Git. In the gallery, draw and add one box per animal, then save all boxes together. **Suggest objects** compares an event to the reference with OpenCV and adds conservative `uncertain` proposals; always review, correct, or remove them before saving. If there is exactly one proposal, select the animal class and choose **Save all** to turn it directly into that confirmed label. When a manually confirmed box overlaps a proposal, saving removes that matching `uncertain` proposal rather than retaining a duplicate. Update the reference after moving the camera, changing the ROI, or a substantial lighting/background change.
 
 **Delete event** asks for confirmation, then removes the selected event and all of its burst images. This is appropriate for test captures such as a hand in front of the camera and avoids keeping partial event bursts.
 

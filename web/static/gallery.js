@@ -331,6 +331,15 @@ function removeConfirmedProposalDuplicates() {
   );
 }
 
+function classifySingleProposal(label) {
+  const uncertain = items.filter((item) => item.label === "uncertain" && item.box);
+  if (uncertain.length !== 1 || label === "empty" || label === "uncertain") return;
+  uncertain[0].label = label;
+  annotationSource = "manual";
+  renderRows();
+  renderSavedBoxes();
+}
+
 document.querySelector("#suggest-boxes").onclick = async () => {
   if (!selectedFrame) return;
   annotationSource = "manual";
@@ -354,6 +363,7 @@ async function saveAnnotations() {
     renderRows();
     renderSavedBoxes();
   }
+  classifySingleProposal(label);
   removeConfirmedProposalDuplicates();
   if (!items.length && label === "empty") {
     items = [{ label: "empty", box: null }];
