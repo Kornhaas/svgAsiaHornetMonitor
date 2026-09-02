@@ -18,6 +18,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         "2026-08-31/123000_000001/frame_001.jpg",
     ]
     assert event["reviewed_frames"] == []
+    assert event["labels"] == []
     assert not event["reviewed"]
     saved = gallery.annotate(
         {
@@ -30,6 +31,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     assert saved["source"] == "manual"
     assert gallery.events()[0]["reviewed_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
     assert gallery.events()[0]["animal_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
+    assert gallery.events()[0]["labels"] == ["bee"]
     empty = gallery.annotate(
         {"image": "2026-08-31/123000_000001/frame_000.jpg", "label": "empty", "box": None}
     )

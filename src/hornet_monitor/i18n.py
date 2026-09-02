@@ -47,6 +47,7 @@ GERMAN = {
     "Reviewed events with animals": "Bewertete Ereignisse mit Tieren",
     "All reviewed events": "Alle bewerteten Ereignisse",
     "All events": "Alle Ereignisse",
+    "All classes": "Alle Klassen",
     "Burst frames": "Bildserie",
     "Choose the sharpest image for annotation.": (
         "Wähle das schärfste Bild für die Markierung aus."

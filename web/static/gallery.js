@@ -7,6 +7,7 @@ const message = document.querySelector("#gallery-message");
 const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
 const eventFilter = document.querySelector("#event-filter");
+const classFilter = document.querySelector("#class-filter");
 const eventFrames = document.querySelector("#event-frames");
 const suggestionPanel = document.querySelector("#model-suggestion");
 const suggestionDetails = document.querySelector("#model-suggestion-details");
@@ -21,17 +22,19 @@ let currentSuggestion = null;
 let annotationSource = "manual";
 
 function visibleEvents() {
+  let filtered = events;
   if (eventFilter.value === "animals") {
-    return events.filter((event) => event.animal_frames.length);
+    filtered = filtered.filter((event) => event.animal_frames.length);
+  } else if (eventFilter.value === "suggestions") {
+    filtered = filtered.filter((event) => Object.keys(event.suggestions || {}).length);
+  } else if (eventFilter.value === "reviewed") {
+    filtered = filtered.filter((event) => event.reviewed);
+  } else if (eventFilter.value !== "all") {
+    filtered = filtered.filter((event) => !event.reviewed);
   }
-  if (eventFilter.value === "suggestions") {
-    return events.filter((event) => Object.keys(event.suggestions || {}).length);
-  }
-  if (eventFilter.value === "reviewed") {
-    return events.filter((event) => event.reviewed);
-  }
-  if (eventFilter.value === "all") return events;
-  return events.filter((event) => !event.reviewed);
+  return classFilter.value === "all"
+    ? filtered
+    : filtered.filter((event) => (event.labels || []).includes(classFilter.value));
 }
 
 function clearSelection() {
@@ -431,6 +434,11 @@ document.querySelector("#annotation-label").onchange = () => { annotationSource 
 document.querySelector("#refresh-events").onclick = load;
 
 eventFilter.onchange = () => {
+  clearSelection();
+  render();
+};
+
+classFilter.onchange = () => {
   clearSelection();
   render();
 };

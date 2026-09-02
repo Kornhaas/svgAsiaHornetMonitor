@@ -42,18 +42,28 @@ class Gallery:
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
         annotations = self._annotations()
         reviewed_images = {annotation.get("image") for annotation in annotations}
+        labels_by_image: dict[str, set[str]] = {}
+        for annotation in annotations:
+            image = annotation.get("image")
+            label = annotation.get("label")
+            if isinstance(image, str) and isinstance(label, str) and label in VALID_LABELS:
+                labels_by_image.setdefault(image, set()).add(label)
         animal_images = {
             annotation.get("image")
             for annotation in annotations
             if annotation.get("label") in ANIMAL_LABELS
         }
-        return [self._event(image, reviewed_images, animal_images) for image in images[:limit]]
+        return [
+            self._event(image, reviewed_images, animal_images, labels_by_image)
+            for image in images[:limit]
+        ]
 
     def _event(
         self,
         image: Path,
         reviewed_images: set[str | None],
         animal_images: set[str | None],
+        labels_by_image: dict[str, set[str]],
     ) -> dict[str, Any]:
         frames = [
             frame.relative_to(self.events_directory).as_posix()
@@ -67,6 +77,9 @@ class Gallery:
             "image_count": len(frames),
             "reviewed_frames": [frame for frame in frames if frame in reviewed_images],
             "animal_frames": [frame for frame in frames if frame in animal_images],
+            "labels": sorted(
+                {label for frame in frames for label in labels_by_image.get(frame, set())}
+            ),
             "reviewed": any(frame in reviewed_images for frame in frames),
             "brightness": metadata.get("brightness"),
             "night_preview": metadata.get("night_preview", False),
