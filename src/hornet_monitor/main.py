@@ -412,6 +412,26 @@ def main() -> None:
         activity_log.record("telegram_updated", "Telegram settings saved; restarting monitor")
         subprocess.Popen(["sudo", "-n", "systemctl", "restart", config["updates"]["service"]])
 
+    def manual_trigger() -> dict[str, str]:
+        if night_mode.active:
+            return {
+                "state": "night_mode",
+                "message": "Manual event capture is unavailable while night mode is active.",
+            }
+        frame = event_frame()
+        if frame is None:
+            return {"state": "camera", "message": "No camera frame is available."}
+        if not writer.save_burst(frame, event="manual_event"):
+            return {
+                "state": "cooldown",
+                "message": "Please wait for the event cooldown before capturing again.",
+            }
+        return {
+            "state": "saved",
+            "message": "Manual event saved.",
+            "event": writer.last_event or "",
+        }
+
     app = create_app(
         camera,
         status,
@@ -435,6 +455,7 @@ def main() -> None:
         update_telegram,
         storage,
         predictor.history,
+        manual_trigger=manual_trigger,
     )
     app.run(
         host=config["web"]["host"],

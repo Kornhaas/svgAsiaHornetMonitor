@@ -23,7 +23,7 @@ class EventWriter:
         self.last_event: str | None = None
         self.activity_log = activity_log
 
-    def save_burst(self, frame) -> bool:
+    def save_burst(self, frame, event: str = "motion_event") -> bool:
         with self._lock:
             now = time.monotonic()
             if now - self._last_event < self.settings["cooldown_seconds"]:
@@ -49,7 +49,9 @@ class EventWriter:
         self.last_event = str(folder)
         if self.activity_log:
             self.activity_log.record(
-                "motion_event", "Motion event saved", details={"path": self.last_event}
+                event,
+                "Manual event saved" if event == "manual_event" else "Motion event saved",
+                details={"path": self.last_event},
             )
         threading.Thread(target=self._save_remaining, args=(folder,), daemon=True).start()
         return True

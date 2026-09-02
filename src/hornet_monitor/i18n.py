@@ -191,5 +191,25 @@ GERMAN = {
 }
 
 
+GERMAN.update(
+    {
+        "Capture event now": "Ereignis jetzt aufnehmen",
+        "Capturing event\u2026": "Ereignis wird aufgenommen\u2026",
+        "Manual event saved.": "Manuelles Ereignis gespeichert.",
+        "Manual event capture is unavailable.": (
+            "Manuelle Ereignisaufnahme ist nicht verf\u00fcgbar."
+        ),
+        "Manual event capture failed.": "Manuelle Ereignisaufnahme fehlgeschlagen.",
+        "Manual event capture is unavailable while night mode is active.": (
+            "Manuelle Ereignisaufnahme ist im aktiven Nachtmodus nicht verf\u00fcgbar."
+        ),
+        "No camera frame is available.": "Kein Kamerabild verf\u00fcgbar.",
+        "Please wait for the event cooldown before capturing again.": (
+            "Bitte warte die Ereignis-Sperrzeit ab, bevor du erneut aufnimmst."
+        ),
+    }
+)
+
+
 def translations(language: str) -> dict[str, str]:
     return GERMAN if language == "de" else {}

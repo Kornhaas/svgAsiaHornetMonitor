@@ -16,6 +16,7 @@ def test_index_and_status_are_available():
     assert b"Asia Hornet Monitor" in index.data
     assert b"favicon.svg" in index.data
     assert b'href="/system"' in index.data
+    assert b'id="manual-trigger"' in index.data
     assert status.get_json() == {"camera_error": None, "motion": False}
 
 
@@ -31,6 +32,39 @@ def test_roi_endpoint_validates_and_forwards_updates():
     assert response.status_code == 200
     assert response.get_json()["roi"] == {"height": 40, "width": 30, "x": 10, "y": 20}
     assert saved == [{"x": 10, "y": 20, "width": 30, "height": 40}]
+
+
+def test_manual_trigger_forwards_capture_and_reports_unavailable_states():
+    captured = []
+    client = create_app(
+        camera=None,
+        status=lambda: {},
+        manual_trigger=lambda: (
+            captured.append(True)
+            or {"state": "saved", "message": "Manual event saved.", "event": "event"}
+        ),
+    ).test_client()
+
+    response = client.post("/api/events/trigger")
+
+    assert response.status_code == 201
+    assert response.get_json()["event"] == "event"
+    assert captured == [True]
+    unavailable = (
+        create_app(camera=None, status=lambda: {}).test_client().post("/api/events/trigger")
+    )
+    assert unavailable.status_code == 503
+
+    cooldown = (
+        create_app(
+            camera=None,
+            status=lambda: {},
+            manual_trigger=lambda: {"state": "cooldown", "message": "Wait."},
+        )
+        .test_client()
+        .post("/api/events/trigger")
+    )
+    assert cooldown.status_code == 429
 
 
 def test_api_validation_does_not_expose_internal_exception_details():

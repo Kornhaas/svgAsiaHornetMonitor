@@ -41,3 +41,19 @@ def test_event_writer_marks_dark_preview_metadata():
     import numpy as np
 
     assert EventWriter._brightness(np.zeros((2, 2, 3), dtype=np.uint8)) == 0.0
+
+
+def test_event_writer_records_a_manual_capture(monkeypatch, tmp_path):
+    entries = []
+    monkeypatch.setattr("hornet_monitor.events.cv2.imwrite", lambda *_args: True)
+    monkeypatch.setattr("hornet_monitor.events.threading.Thread", _InlineThread)
+    monkeypatch.setattr("hornet_monitor.events.time.sleep", lambda _seconds: None)
+    writer = EventWriter(
+        {"directory": str(tmp_path), "cooldown_seconds": 1, "burst_frames": 1},
+        activity_log=type(
+            "Log", (), {"record": lambda _self, *args, **kwargs: entries.append(args)}
+        )(),
+    )
+
+    assert writer.save_burst("frame", event="manual_event")
+    assert entries[0][:2] == ("manual_event", "Manual event saved")

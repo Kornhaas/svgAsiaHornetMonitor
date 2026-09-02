@@ -45,6 +45,7 @@ def create_app(
     update_telegram=None,
     storage=None,
     prediction_history=None,
+    manual_trigger=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -405,6 +406,22 @@ def create_app(
     @require_login
     def get_status():
         return jsonify(status())
+
+    @app.post("/api/events/trigger")
+    @require_login
+    def trigger_event():
+        if manual_trigger is None:
+            return jsonify(error="Manual event capture is unavailable."), 503
+        try:
+            result = manual_trigger()
+        except (OSError, ValueError):
+            app.logger.exception("Manual event capture failed")
+            return jsonify(error="Manual event capture failed."), 500
+        if result["state"] == "saved":
+            return jsonify(result), 201
+        if result["state"] == "cooldown":
+            return jsonify(error=result["message"]), 429
+        return jsonify(error=result["message"]), 503
 
     @app.put("/roi")
     @require_login

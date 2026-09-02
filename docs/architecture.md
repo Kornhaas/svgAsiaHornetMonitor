@@ -55,7 +55,7 @@ The browser UI uses Bootstrap 5 for responsive layout and accessible controls, w
 1. `main.py` reads YAML configuration and starts one camera capture thread.
 2. The monitor loop obtains copies of the latest frame and asks `MotionDetector` to inspect only the configured ROI.
 3. A positive decision crops the saved frame to the current ROI when `events.crop_to_roi` is enabled, then asks `EventWriter` to save the first JPEG immediately and remaining ROI-cropped burst frames asynchronously. Cooldown prevents event floods. The live stream is always the original full camera frame.
-4. The live-monitor browser page consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. Only the explicit ROI settings page may update the ROI through `/roi`; `MotionDetector` validates it and resets its background model.
+4. The live-monitor browser page consumes the same latest frame and a read-only status snapshot. It never opens the camera itself. Its explicit manual-capture action reuses `EventWriter` and the normal burst/prediction path, while still enforcing camera availability, night mode, and the event cooldown. Only the explicit ROI settings page may update the ROI through `/roi`; `MotionDetector` validates it and resets its background model.
 5. The model-and-training page reads local annotation metadata through `TrainingStatus`. It does not start training, perform inference, or modify the capture pipeline.
 6. The user may explicitly capture a cropped ROI background frame. Gallery proposals use only a difference against this reference and remain `uncertain` until a user confirms their class.
 
