@@ -271,6 +271,10 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 - Raspberry Pi installation and update paths now retain Debian Trixie's arm64 CPU-only PyTorch and Torchvision packages inside a system-site project environment, instead of the incompatible PyPI Torch wheel.
 - The production service starts with `uv run --no-sync`, so ordinary service restarts cannot silently restore the incompatible wheel; Windows development and GPU training retain the regular uv workflow.
 
+## 2026-09-02 — One-command Windows training round-trip
+
+- Windows GPU training can now use a one-time SSH-key bootstrap, followed by one command that downloads Pi events and annotations, exports, trains, evaluates, and imports the model manifest plus weights back to the Pi. The Pi password is never stored and model activation remains an explicit web-UI decision.
+
 ## 2026-09-02 — Manual live-event capture
 
 - The live monitor now provides a protected manual capture action for operational testing and exceptional observations. It writes the standard burst, invokes the normal asynchronous prediction flow, records a distinct `manual_event`, and reports camera, night-mode, or cooldown availability clearly in the UI.

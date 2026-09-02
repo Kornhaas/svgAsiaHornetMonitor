@@ -2,6 +2,28 @@
 
 Dieser Ordner enthält manuell gestartete Werkzeuge für den Windows-PC. Sie verwenden dieselben versionierten YOLO-Exporte wie die Weboberfläche, verändern aber weder die Pi-Kamera noch den laufenden Monitor.
 
+## Vollautomatischer Schnellablauf
+
+Das Pi-Passwort wird nicht gespeichert. Einmalig einen eigenen SSH-Schluessel
+fuer den Trainings-PC einrichten; dabei fragt Windows das Pi-Passwort nur dieses
+eine Mal ab:
+
+~~~powershell
+.\training\initialize_pi_training_key.ps1
+~~~
+
+Danach fuehrt ein Befehl den ganzen sicheren Zyklus aus: Ereignisbilder und
+Annotationen vom Pi abrufen, YOLO-Datensatz exportieren, auf der GPU trainieren,
+auswerten und das Modell samt Kennzahlen zurueck auf den Pi importieren.
+
+~~~powershell
+.\training\run_local_training.ps1 -Epochs 50
+~~~
+
+Das neue Modell bleibt bewusst inaktiv. Nach dem Lauf auf dem Pi unter
+**Modell & Training** pruefen und erst dann mit **Modell verwenden** aktivieren.
+Mit `-SkipImport` kann der automatische Ruecktransfer ausgelassen werden.
+
 ## Einmalige Einrichtung auf Windows
 
 Die normale Projektumgebung wird für Export und Tests verwendet. Für eine NVIDIA-GPU wird zusätzlich eine getrennte lokale Trainingsumgebung angelegt. So bleibt der für den Raspberry Pi gelockte CPU-Abhängigkeitsbestand unverändert.

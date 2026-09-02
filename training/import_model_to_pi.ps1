@@ -6,7 +6,8 @@ param(
     [ValidatePattern("^\d{8}_\d{6}$")]
     [string]$Version,
     [string]$PiHost = "hornet@hornet.local",
-    [string]$PiProject = "/home/hornet/svgAsiaHornetMonitor"
+    [string]$PiProject = "/home/hornet/svgAsiaHornetMonitor",
+    [string]$IdentityFile
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,20 +42,25 @@ $manifest = @{
     evaluation = $evaluation
 } | ConvertTo-Json
 $temporaryManifest = Join-Path ([System.IO.Path]::GetTempPath()) "hornet-model-$Version.json"
+$sshOptions = @()
+if ($IdentityFile) {
+    $identityPath = (Resolve-Path -LiteralPath $IdentityFile).Path
+    $sshOptions = @("-i", $identityPath, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes")
+}
 
 try {
     [System.IO.File]::WriteAllText(
         $temporaryManifest, $manifest, [System.Text.UTF8Encoding]::new($false)
     )
-    & ssh $PiHost "mkdir -p '$remoteVersionDirectory/weights'"
+    & ssh @sshOptions $PiHost "mkdir -p '$remoteVersionDirectory/weights'"
     if ($LASTEXITCODE -ne 0) {
         throw "Creating the model directory on the Pi failed."
     }
-    & scp $modelFile "${PiHost}:$remoteModel"
+    & scp @sshOptions $modelFile "${PiHost}:$remoteModel"
     if ($LASTEXITCODE -ne 0) {
         throw "Copying best.pt to the Pi failed."
     }
-    & scp $temporaryManifest "${PiHost}:$remoteVersionDirectory/model.json"
+    & scp @sshOptions $temporaryManifest "${PiHost}:$remoteVersionDirectory/model.json"
     if ($LASTEXITCODE -ne 0) {
         throw "Copying model metadata to the Pi failed."
     }

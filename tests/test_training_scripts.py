@@ -30,6 +30,7 @@ def test_windows_training_helpers_are_available_and_keep_activation_manual():
     directory = Path(__file__).parents[1] / "training"
     runner = (directory / "run_local_training.ps1").read_text(encoding="utf-8")
     importer = (directory / "import_model_to_pi.ps1").read_text(encoding="utf-8")
+    key_setup = (directory / "initialize_pi_training_key.ps1").read_text(encoding="utf-8")
 
     assert "export_yolo.py" in runner
     assert "train_local.py" in runner
@@ -38,3 +39,10 @@ def test_windows_training_helpers_are_available_and_keep_activation_manual():
     assert "model.json" in importer
     assert "results.csv" in importer
     assert "metrics/mAP50(B)" in importer
+    assert "IdentityFile" in importer
+    assert "BatchMode=yes" in importer
+    assert "import_model_to_pi.ps1" in runner
+    assert "SkipImport" in runner
+    assert "BatchMode=yes" in runner
+    assert "ssh-keygen -t ed25519" in key_setup
+    assert "authorized_keys" in key_setup
