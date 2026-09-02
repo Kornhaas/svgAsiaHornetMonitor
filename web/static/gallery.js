@@ -312,6 +312,25 @@ document.querySelector("#add-box").onclick = () => {
   renderSavedBoxes();
 };
 
+function sameAnimalBox(first, second) {
+  const left = Math.max(first.x, second.x);
+  const top = Math.max(first.y, second.y);
+  const right = Math.min(first.x + first.width, second.x + second.width);
+  const bottom = Math.min(first.y + first.height, second.y + second.height);
+  const intersection = Math.max(0, right - left) * Math.max(0, bottom - top);
+  const union = first.width * first.height + second.width * second.height - intersection;
+  return union > 0 && intersection / union >= 0.5;
+}
+
+function removeConfirmedProposalDuplicates() {
+  const confirmed = items.filter((item) => item.label !== "uncertain" && item.label !== "empty" && item.box);
+  if (!confirmed.length) return;
+  items = items.filter(
+    (item) => item.label !== "uncertain" || !item.box
+      || !confirmed.some((animal) => sameAnimalBox(item.box, animal.box)),
+  );
+}
+
 document.querySelector("#suggest-boxes").onclick = async () => {
   if (!selectedFrame) return;
   annotationSource = "manual";
@@ -335,6 +354,7 @@ async function saveAnnotations() {
     renderRows();
     renderSavedBoxes();
   }
+  removeConfirmedProposalDuplicates();
   if (!items.length && label === "empty") {
     items = [{ label: "empty", box: null }];
   }

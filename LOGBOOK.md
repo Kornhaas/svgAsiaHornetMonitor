@@ -282,3 +282,7 @@ Added an AI-assisted engineering workflow and automated quality foundation.
 ## 2026-09-02 - One-click model-suggestion confirmation
 
 - Accepting a model suggestion now saves its `model_confirmed` annotation immediately and refreshes the gallery state, so the accepted burst frame is visibly marked as reviewed without a second save action.
+
+## 2026-09-02 - Confirmed background proposals no longer remain uncertain
+
+- Saving a manually classified box now removes a matching OpenCV `uncertain` proposal, so one animal is stored as one confirmed annotation rather than as an uncertain duplicate.
