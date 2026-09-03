@@ -16,6 +16,10 @@ This log records implementation milestones and decisions. Add a dated entry when
 
 - The gallery now applies a selected annotation-class filter before its normal recent-event limit, so older `uncertain` annotations remain reviewable without loading the entire event archive by default.
 
+## 2026-09-03 — Pending model-review inbox
+
+- Added an archive-wide gallery queue for pending model predictions, matching the active-learning feedback count and loading only when the operator explicitly selects it.
+
 ## 2026-09-01 — Complete Raspberry Pi bootstrap dependencies
 
 - Updated `scripts/setup-pi.sh` to install the required OS packages for camera diagnostics and OpenCV, add the service user to the `video` group, and install all locked production Python dependencies.

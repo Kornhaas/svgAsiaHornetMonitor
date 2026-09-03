@@ -39,7 +39,7 @@ class Gallery:
         self.annotations_file = Path(annotations_file)
         self._lock = threading.RLock()
 
-    def events(self, limit: int = 100, label: str | None = None) -> list[dict[str, Any]]:
+    def events(self, limit: int | None = 100, label: str | None = None) -> list[dict[str, Any]]:
         if label is not None and label not in VALID_LABELS:
             raise ValueError("Unknown annotation label.")
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
@@ -75,9 +75,10 @@ class Gallery:
                 )
             ]
         )
+        matching_images = matching_images if limit is None else matching_images[:limit]
         return [
             self._event(image, reviewed_images, animal_images, labels_by_image)
-            for image in matching_images[:limit]
+            for image in matching_images
         ]
 
     def _event(

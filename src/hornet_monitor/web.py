@@ -57,7 +57,9 @@ def create_app(
         )
     app.secret_key = auth.get("secret_key", "development-only-secret")
 
-    def gallery_events_with_suggestions(label: str | None = None) -> list[dict]:
+    def gallery_events_with_suggestions(
+        label: str | None = None, pending_only: bool = False
+    ) -> list[dict]:
         """Attach the newest actionable model proposal to each unreviewed event frame.
 
         Predictions remain separate from annotations until a person confirms them in the
@@ -65,9 +67,14 @@ def create_app(
         """
         if gallery is None:
             return []
-        events = gallery.events() if label is None else gallery.events(label=label)
+        event_options = {"limit": None} if pending_only else {}
+        events = (
+            gallery.events(**event_options)
+            if label is None
+            else gallery.events(label=label, **event_options)
+        )
         if prediction_history is None:
-            return events
+            return [] if pending_only else events
         newest_by_image: dict[str, dict] = {}
         for prediction in prediction_history():
             image = prediction.get("image")
@@ -114,7 +121,7 @@ def create_app(
                 event["best_suggestion_image"] = None
                 event["suggestion_priority"] = -1
         events.sort(key=lambda event: event["suggestion_priority"], reverse=True)
-        return events
+        return [event for event in events if event["suggestions"]] if pending_only else events
 
     @app.context_processor
     def inject_i18n():
@@ -322,8 +329,15 @@ def create_app(
     @app.get("/api/events")
     @require_login
     def events():
+        pending = request.args.get("pending")
+        if pending not in {None, "1"}:
+            return jsonify(error="Invalid pending filter."), 400
         try:
-            return jsonify(gallery_events_with_suggestions(request.args.get("label")))
+            return jsonify(
+                gallery_events_with_suggestions(
+                    request.args.get("label"), pending_only=pending == "1"
+                )
+            )
         except ValueError:
             return jsonify(error="Unknown annotation label."), 400
 

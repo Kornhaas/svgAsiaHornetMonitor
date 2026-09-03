@@ -114,6 +114,18 @@ def test_gallery_filters_annotation_class_before_applying_the_event_limit(tmp_pa
         gallery.events(label="not-a-class")
 
 
+def test_gallery_can_return_all_events_for_a_narrow_server_side_review_queue(tmp_path):
+    events = tmp_path / "events"
+    for number in range(3):
+        image = events / "2026-09-03" / f"12000{number}_000001" / "frame_000.jpg"
+        image.parent.mkdir(parents=True)
+        image.write_bytes(b"test")
+    gallery = Gallery(events, tmp_path / "annotations.jsonl")
+
+    assert len(gallery.events(limit=1)) == 1
+    assert len(gallery.events(limit=None)) == 3
+
+
 def test_gallery_records_confirmed_model_suggestions_as_auditable_annotations(tmp_path):
     image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
     image.parent.mkdir(parents=True)

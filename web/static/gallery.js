@@ -26,6 +26,8 @@ function visibleEvents() {
     filtered = filtered.filter((event) => event.animal_frames.length);
   } else if (eventFilter.value === "suggestions") {
     filtered = filtered.filter((event) => Object.keys(event.suggestions || {}).length);
+  } else if (eventFilter.value === "pending") {
+    filtered = filtered.filter((event) => Object.keys(event.suggestions || {}).length);
   } else if (eventFilter.value === "reviewed") {
     filtered = filtered.filter((event) => event.reviewed);
   } else if (eventFilter.value !== "all") {
@@ -234,9 +236,11 @@ function render() {
 }
 
 function eventsUrl() {
-  return classFilter.value === "all"
-    ? "/api/events"
-    : "/api/events?label=" + encodeURIComponent(classFilter.value);
+  const parameters = new URLSearchParams();
+  if (classFilter.value !== "all") parameters.set("label", classFilter.value);
+  if (eventFilter.value === "pending") parameters.set("pending", "1");
+  const query = parameters.toString();
+  return query ? "/api/events?" + query : "/api/events";
 }
 
 async function load() {
@@ -428,7 +432,7 @@ document.querySelector("#refresh-events").onclick = load;
 
 eventFilter.onchange = () => {
   clearSelection();
-  render();
+  load();
 };
 
 classFilter.onchange = () => {

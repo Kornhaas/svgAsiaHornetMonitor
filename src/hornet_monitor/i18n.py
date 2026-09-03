@@ -45,6 +45,7 @@ GERMAN = {
     "Show": "Anzeigen",
     "Unreviewed events": "Unbewertete Ereignisse",
     "Model suggestions": "Modellvorschläge",
+    "Pending model reviews": "Ausstehende Modellprüfungen",
     "Reviewed events with animals": "Bewertete Ereignisse mit Tieren",
     "All reviewed events": "Alle bewerteten Ereignisse",
     "All events": "Alle Ereignisse",

@@ -168,6 +168,38 @@ def test_events_endpoint_passes_a_requested_annotation_class_to_the_gallery():
     assert requested_labels == ["uncertain"]
 
 
+def test_events_endpoint_loads_the_complete_archive_for_pending_model_reviews():
+    requested_options = []
+    event = {
+        "id": "2026-09-01/123000_000001",
+        "image": "2026-09-01/123000_000001/frame_000.jpg",
+        "frames": ["2026-09-01/123000_000001/frame_000.jpg"],
+        "reviewed_frames": [],
+    }
+
+    class GalleryWithPendingQueue:
+        def events(self, **options):
+            requested_options.append(options)
+            return [event.copy()]
+
+    prediction = {
+        "image": event["image"],
+        "label": "fleshfly",
+        "confidence": 0.88,
+        "box": {"x": 10, "y": 20, "width": 30, "height": 40},
+    }
+    client = create_app(
+        camera=None,
+        status=lambda: {},
+        gallery=GalleryWithPendingQueue(),
+        prediction_history=lambda: [prediction],
+    ).test_client()
+
+    assert client.get("/api/events?pending=1").get_json()[0]["id"] == event["id"]
+    assert requested_options == [{"limit": None}]
+    assert client.get("/api/events?pending=no").status_code == 400
+
+
 def test_roi_settings_and_training_pages_are_available():
     training = type(
         "Training",
