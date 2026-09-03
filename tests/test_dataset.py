@@ -23,6 +23,13 @@ def test_dataset_export_writes_yolo_labels_and_ignores_empty_entries(tmp_path):
                     }
                 ),
                 json.dumps(
+                    {
+                        "image": "2026-01-01/event/frame_000.jpg",
+                        "label": "ant",
+                        "box": {"x": 60, "y": 30, "width": 20, "height": 10},
+                    }
+                ),
+                json.dumps(
                     {"image": "2026-01-01/event/frame_000.jpg", "label": "empty", "box": None}
                 ),
             ]
@@ -31,15 +38,19 @@ def test_dataset_export_writes_yolo_labels_and_ignores_empty_entries(tmp_path):
     )
     exported = DatasetExporter(str(events), str(annotations), str(tmp_path / "datasets")).export()
 
-    assert exported["boxes"] == 1
+    assert exported["boxes"] == 2
     assert sum(exported["export_splits"].values()) == 1
     labels = list((tmp_path / "datasets" / exported["version"] / "labels").rglob("*.txt"))
-    assert labels[0].read_text().startswith("3 0.200000 0.200000 0.200000 0.200000")
+    assert labels[0].read_text().splitlines() == [
+        "3 0.200000 0.200000 0.200000 0.200000",
+        "8 0.350000 0.350000 0.100000 0.100000",
+    ]
     assert "goldfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
     assert "fleshfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
     assert (
         "blue_blowfly" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
     )
+    assert "ant" in (tmp_path / "datasets" / exported["version"] / "dataset.yaml").read_text()
 
 
 def test_dataset_export_creates_manifest_when_annotated_images_are_missing(tmp_path):

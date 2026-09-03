@@ -21,6 +21,8 @@ CLASSES = [
     "goldfly",
     "fleshfly",
     "blue_blowfly",
+    # Append new classes so existing YOLO class IDs remain stable.
+    "ant",
 ]
 
 

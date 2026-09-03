@@ -2,6 +2,16 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-03 — Ant annotation class
+
+- Added the `ant` class to gallery validation, filtering, German UI translations, and YOLO dataset export for clearly identifiable ants.
+- Appended the class to the YOLO class list so IDs in already exported datasets and trained models remain unchanged.
+
+## 2026-09-03 — Per-box gallery review workflow
+
+- Gallery annotations are now editable box-by-box in a local draft, including OpenCV and model proposals; a single save persists the complete reviewed frame.
+- Added an explicit optional bulk action for assigning one chosen class to all uncertain proposals, without making any change persistent until the user saves.
+
 ## 2026-09-01 — Complete Raspberry Pi bootstrap dependencies
 
 - Updated `scripts/setup-pi.sh` to install the required OS packages for camera diagnostics and OpenCV, add the service user to the `video` group, and install all locked production Python dependencies.

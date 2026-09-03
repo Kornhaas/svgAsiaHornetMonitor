@@ -20,6 +20,7 @@
       <option value="vespa_crabro">European hornet</option>
       <option value="wasp">Wasp</option>
       <option value="bee">Bee</option>
+      <option value="ant">Ant</option>
       <option value="other">Other</option>
       <option value="goldfly">Goldfly</option>
       <option value="fleshfly">Flesh fly</option>
@@ -46,11 +47,6 @@
         </div>
         <div id="event-frames" class="event-frames"></div>
       </section>
-      <section id="model-suggestion" class="alert alert-info mt-3 d-none" aria-live="polite">
-        <strong>Model suggestion:</strong> <span id="model-suggestion-details"></span>
-        <button id="accept-suggestion" type="button" class="btn btn-sm btn-info ms-2">Accept and save suggestion</button>
-        <p class="small mb-0 mt-2">Confirm only if the animal and box are correct. The frame is saved as reviewed immediately; you can correct it later in the reviewed gallery.</p>
-      </section>
       <form id="annotation-form" class="mt-3">
         <label>Class
           <select id="annotation-label" class="form-select">
@@ -59,6 +55,7 @@
             <option value="vespa_crabro">European hornet</option>
             <option value="wasp">Wasp</option>
             <option value="bee">Bee</option>
+            <option value="ant">Ant</option>
             <option value="other">Other</option>
             <option value="goldfly">Goldfly</option>
             <option value="fleshfly">Flesh fly</option>
@@ -71,9 +68,26 @@
         <button class="btn btn-warning">Save all</button>
         <button id="delete-event" type="button" class="btn btn-outline-danger">Delete event</button>
         <ul id="annotation-list" class="list-group mt-3"></ul>
+        <div class="d-flex flex-wrap align-items-end gap-2 mt-3">
+          <label>All uncertain proposals as
+            <select id="bulk-label" class="form-select">
+              <option value="" selected>Choose class</option>
+              <option value="vespa_velutina">Asian hornet</option>
+              <option value="vespa_crabro">European hornet</option>
+              <option value="wasp">Wasp</option>
+              <option value="bee">Bee</option>
+              <option value="ant">Ant</option>
+              <option value="other">Other</option>
+              <option value="goldfly">Goldfly</option>
+              <option value="fleshfly">Flesh fly</option>
+              <option value="blue_blowfly">Blue blowfly</option>
+            </select>
+          </label>
+          <button id="classify-uncertain" type="button" class="btn btn-outline-info">Apply</button>
+        </div>
         <span id="annotation-message" class="ms-2" aria-live="polite"></span>
       </form>
-      <p class="small mt-3 mb-0">For an empty image, choose Empty and select Save all. For an animal, draw and add every box, then save all boxes together. Suggestions require review.</p>
+      <p class="small mt-3 mb-0">Each box has its own class. Changes stay local until Save all. For an empty image, choose Empty and select Save all.</p>
     </div>
   </section>
 </div>

@@ -201,11 +201,12 @@ def test_roi_settings_and_training_pages_are_available():
     )
     assert "async function saveAnnotations" in gallery_script.read_text(encoding="utf-8")
     assert "await saveAnnotations()" in gallery_script.read_text(encoding="utf-8")
-    assert "removeConfirmedProposalDuplicates" in gallery_script.read_text(encoding="utf-8")
-    assert "intersection / union >= 0.5" in gallery_script.read_text(encoding="utf-8")
-    assert "classifySingleProposal(label)" in gallery_script.read_text(encoding="utf-8")
-    assert "uncertain.length !== 1" in gallery_script.read_text(encoding="utf-8")
-    assert b"Accept and save suggestion" in client.get("/gallery").data
+    assert "function boxClassSelect(item)" in gallery_script.read_text(encoding="utf-8")
+    assert "function modelSuggestionUnchanged()" in gallery_script.read_text(encoding="utf-8")
+    assert 'document.querySelector("#classify-uncertain")' in gallery_script.read_text(
+        encoding="utf-8"
+    )
+    assert b'id="bulk-label"' in client.get("/gallery").data
     assert b'id="class-filter"' in client.get("/gallery").data
     training_page = client.get("/training")
     assert training_page.status_code == 200

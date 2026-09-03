@@ -97,7 +97,7 @@ Alternativ kann das Backup aus der Seite **Systemstatus** auf dem Pi heruntergel
 
 ## 1. YOLO-Datensatz exportieren
 
-Nur geprüfte Boxen der Klassen vespa_velutina, vespa_crabro, wasp, bee, other, goldfly, fleshfly und blue_blowfly werden exportiert. empty wird als Bild ohne Label-Datei aufgenommen. Der Split ist stabil: 70 % Training, 20 % Validierung, 10 % Test. Alle Bilder einer Ereignisserie bleiben dabei gemeinsam in genau einem Split, damit nahezu identische Burst-Frames die Validierung nicht verfälschen.
+Nur geprüfte Boxen der Klassen vespa_velutina, vespa_crabro, wasp, bee, ant, other, goldfly, fleshfly und blue_blowfly werden exportiert. empty wird als Bild ohne Label-Datei aufgenommen. Der Split ist stabil: 70 % Training, 20 % Validierung, 10 % Test. Alle Bilder einer Ereignisserie bleiben dabei gemeinsam in genau einem Split, damit nahezu identische Burst-Frames die Validierung nicht verfälschen.
 
 ~~~powershell
 uv run python training/export_yolo.py

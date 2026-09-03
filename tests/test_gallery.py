@@ -32,6 +32,14 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
     assert gallery.events()[0]["reviewed_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
     assert gallery.events()[0]["animal_frames"] == ["2026-08-31/123000_000001/frame_000.jpg"]
     assert gallery.events()[0]["labels"] == ["bee"]
+    ant = gallery.annotate(
+        {
+            "image": "2026-08-31/123000_000001/frame_000.jpg",
+            "label": "ant",
+            "box": {"x": 5, "y": 6, "width": 7, "height": 8},
+        }
+    )
+    assert ant["label"] == "ant"
     empty = gallery.annotate(
         {"image": "2026-08-31/123000_000001/frame_000.jpg", "label": "empty", "box": None}
     )
@@ -40,7 +48,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         {
             "image": "2026-08-31/123000_000001/frame_000.jpg",
             "label": "goldfly",
-            "box": {"x": 5, "y": 6, "width": 7, "height": 8},
+            "box": {"x": 8, "y": 9, "width": 10, "height": 11},
         }
     )
     assert goldfly["label"] == "goldfly"
@@ -48,7 +56,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         {
             "image": "2026-08-31/123000_000001/frame_000.jpg",
             "label": "fleshfly",
-            "box": {"x": 9, "y": 10, "width": 11, "height": 12},
+            "box": {"x": 12, "y": 13, "width": 14, "height": 15},
         }
     )
     assert fleshfly["label"] == "fleshfly"
@@ -56,7 +64,7 @@ def test_gallery_lists_event_and_persists_annotation(tmp_path):
         {
             "image": "2026-08-31/123000_000001/frame_000.jpg",
             "label": "blue_blowfly",
-            "box": {"x": 12, "y": 13, "width": 14, "height": 15},
+            "box": {"x": 16, "y": 17, "width": 18, "height": 19},
         }
     )
     assert blue_blowfly["label"] == "blue_blowfly"

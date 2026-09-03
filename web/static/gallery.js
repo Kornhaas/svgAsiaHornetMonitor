@@ -8,10 +8,9 @@ const annotationMessage = document.querySelector("#annotation-message");
 const rows = document.querySelector("#annotation-list");
 const eventFilter = document.querySelector("#event-filter");
 const classFilter = document.querySelector("#class-filter");
+const annotationLabel = document.querySelector("#annotation-label");
+const bulkLabel = document.querySelector("#bulk-label");
 const eventFrames = document.querySelector("#event-frames");
-const suggestionPanel = document.querySelector("#model-suggestion");
-const suggestionDetails = document.querySelector("#model-suggestion-details");
-const acceptSuggestion = document.querySelector("#accept-suggestion");
 
 let events = [];
 let selected = null;
@@ -48,7 +47,6 @@ function clearSelection() {
   rows.replaceChildren();
   eventFrames.replaceChildren();
   currentSuggestion = null;
-  suggestionPanel.classList.add("d-none");
 }
 
 function showBox() {
@@ -60,17 +58,36 @@ function showBox() {
   overlay.style.height = String((box.height / image.naturalHeight) * 100) + "%";
 }
 
+function boxClassSelect(item) {
+  const select = document.createElement("select");
+  select.className = "form-select form-select-sm w-auto";
+  for (const option of annotationLabel.options) {
+    if (option.value === "empty") continue;
+    select.add(new Option(option.text, option.value, false, option.value === item.label));
+  }
+  select.onchange = () => {
+    item.label = select.value;
+    item.model = false;
+    annotationSource = "manual";
+    renderSavedBoxes();
+  };
+  return select;
+}
+
 function renderRows() {
   rows.replaceChildren(
     ...items.map((item, index) => {
       const row = document.createElement("li");
-      row.className = "list-group-item d-flex justify-content-between align-items-center";
-      row.append("#" + (index + 1) + " · ");
-      row.append(
-        item.label + ": " + (item.box ? item.box.width + " × " + item.box.height : "empty"),
-      );
+      row.className = "list-group-item d-flex flex-wrap gap-2 align-items-center";
+      const number = document.createElement("span");
+      number.textContent = "#" + (index + 1);
+      row.append(number, boxClassSelect(item));
+      const dimensions = document.createElement("span");
+      dimensions.className = "text-body-secondary small";
+      dimensions.textContent = item.box ? item.box.width + " × " + item.box.height + " px" : "empty";
+      row.append(dimensions);
       const remove = document.createElement("button");
-      remove.className = "btn btn-sm btn-outline-danger";
+      remove.className = "btn btn-sm btn-outline-danger ms-auto";
       remove.type = "button";
       remove.textContent = "Remove";
       remove.onclick = () => {
@@ -86,13 +103,8 @@ function renderRows() {
 
 function renderSavedBoxes() {
   if (!image.naturalWidth || !image.naturalHeight) return;
-  const modelBoxes = currentSuggestion && !items.length ? [{
-    label: currentSuggestion.label,
-    box: currentSuggestion.box,
-    model: true,
-  }] : [];
   annotationBoxes.replaceChildren(
-    ...[...items, ...modelBoxes].flatMap((item, index) => {
+    ...items.flatMap((item, index) => {
       if (!item.box) return [];
       const itemBox = document.createElement("div");
       itemBox.className = "annotation-box";
@@ -162,14 +174,12 @@ async function selectFrame(frame, force = false) {
   items = await (await fetch("/api/annotations/" + frame)).json();
   annotationSource = "manual";
   currentSuggestion = (selected.suggestions || {})[frame] || null;
-  if (currentSuggestion) {
-    suggestionDetails.textContent = currentSuggestion.label + " · "
-      + Math.round(currentSuggestion.confidence * 100) + "%"
-      + (currentSuggestion.model_version ? " · " + currentSuggestion.model_version : "");
-    acceptSuggestion.disabled = items.length > 0;
-    suggestionPanel.classList.remove("d-none");
-  } else {
-    suggestionPanel.classList.add("d-none");
+  if (currentSuggestion && !items.length) {
+    items = [{
+      label: currentSuggestion.label,
+      box: currentSuggestion.box,
+      model: true,
+    }];
   }
   renderRows();
   renderSavedBoxes();
@@ -315,34 +325,6 @@ document.querySelector("#add-box").onclick = () => {
   renderSavedBoxes();
 };
 
-function sameAnimalBox(first, second) {
-  const left = Math.max(first.x, second.x);
-  const top = Math.max(first.y, second.y);
-  const right = Math.min(first.x + first.width, second.x + second.width);
-  const bottom = Math.min(first.y + first.height, second.y + second.height);
-  const intersection = Math.max(0, right - left) * Math.max(0, bottom - top);
-  const union = first.width * first.height + second.width * second.height - intersection;
-  return union > 0 && intersection / union >= 0.5;
-}
-
-function removeConfirmedProposalDuplicates() {
-  const confirmed = items.filter((item) => item.label !== "uncertain" && item.label !== "empty" && item.box);
-  if (!confirmed.length) return;
-  items = items.filter(
-    (item) => item.label !== "uncertain" || !item.box
-      || !confirmed.some((animal) => sameAnimalBox(item.box, animal.box)),
-  );
-}
-
-function classifySingleProposal(label) {
-  const uncertain = items.filter((item) => item.label === "uncertain" && item.box);
-  if (uncertain.length !== 1 || label === "empty" || label === "uncertain") return;
-  uncertain[0].label = label;
-  annotationSource = "manual";
-  renderRows();
-  renderSavedBoxes();
-}
-
 document.querySelector("#suggest-boxes").onclick = async () => {
   if (!selectedFrame) return;
   annotationSource = "manual";
@@ -355,9 +337,33 @@ document.querySelector("#suggest-boxes").onclick = async () => {
     : "No suggestions; update the background first.";
 };
 
+document.querySelector("#classify-uncertain").onclick = () => {
+  if (!bulkLabel.value) {
+    annotationMessage.textContent = "Choose a class first.";
+    return;
+  }
+  const uncertain = items.filter((item) => item.label === "uncertain" && item.box);
+  if (!uncertain.length) {
+    annotationMessage.textContent = "No uncertain proposals to classify.";
+    return;
+  }
+  uncertain.forEach((item) => {
+    item.label = bulkLabel.value;
+    item.model = false;
+  });
+  annotationSource = "manual";
+  renderRows();
+  renderSavedBoxes();
+  annotationMessage.textContent = "Uncertain proposals classified locally.";
+};
+
+function modelSuggestionUnchanged() {
+  return Boolean(currentSuggestion && items.length === 1 && items[0].model);
+}
+
 async function saveAnnotations() {
   if (!selectedFrame) return false;
-  const label = document.querySelector("#annotation-label").value;
+  const label = annotationLabel.value;
   let savedEmpty = false;
   if (box && label !== "empty") {
     items.push({ label, box });
@@ -366,8 +372,6 @@ async function saveAnnotations() {
     renderRows();
     renderSavedBoxes();
   }
-  classifySingleProposal(label);
-  removeConfirmedProposalDuplicates();
   if (!items.length && label === "empty") {
     items = [{ label: "empty", box: null }];
   }
@@ -375,15 +379,16 @@ async function saveAnnotations() {
     annotationMessage.textContent = "Draw a box, or choose Empty.";
     return false;
   }
+  const source = modelSuggestionUnchanged() ? "model_confirmed" : annotationSource;
   const response = await fetch("/api/annotations", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       image: selectedFrame,
       annotations: items,
-      source: annotationSource,
-      model_version: annotationSource === "model_confirmed" ? currentSuggestion.model_version : null,
-      prediction_id: annotationSource === "model_confirmed" ? currentSuggestion.id : null,
+      source,
+      model_version: source === "model_confirmed" ? currentSuggestion.model_version : null,
+      prediction_id: source === "model_confirmed" ? currentSuggestion.id : null,
     }),
   });
   annotationMessage.textContent = response.ok ? "Saved." : (await response.json()).error;
@@ -401,24 +406,6 @@ async function saveAnnotations() {
   return true;
 }
 
-acceptSuggestion.onclick = async () => {
-  if (!currentSuggestion || items.length) return;
-  items = [{ label: currentSuggestion.label, box: currentSuggestion.box }];
-  annotationSource = "model_confirmed";
-  document.querySelector("#annotation-label").value = currentSuggestion.label;
-  box = null;
-  overlay.style.display = "none";
-  renderRows();
-  renderSavedBoxes();
-  acceptSuggestion.disabled = true;
-  annotationMessage.textContent = "Saving accepted model suggestion…";
-  if (await saveAnnotations()) {
-    annotationMessage.textContent = "Model suggestion accepted and saved.";
-  } else {
-    acceptSuggestion.disabled = false;
-  }
-};
-
 document.querySelector("#annotation-form").onsubmit = async (event) => {
   event.preventDefault();
   await saveAnnotations();
@@ -430,7 +417,7 @@ document.querySelector("#delete-event").onclick = async () => {
   if (response.ok) await load();
 };
 
-document.querySelector("#annotation-label").onchange = () => { annotationSource = "manual"; };
+annotationLabel.onchange = () => { annotationSource = "manual"; };
 document.querySelector("#refresh-events").onclick = load;
 
 eventFilter.onchange = () => {

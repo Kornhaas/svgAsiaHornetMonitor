@@ -24,6 +24,7 @@ ANIMAL_LABELS = frozenset(
         "goldfly",
         "fleshfly",
         "blue_blowfly",
+        "ant",
     }
 )
 VALID_LABELS = ANIMAL_LABELS | {"empty", "uncertain"}

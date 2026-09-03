@@ -30,6 +30,7 @@ GERMAN = {
     "European hornet": "Europäische Hornisse",
     "Wasp": "Wespe",
     "Bee": "Biene",
+    "Ant": "Ameise",
     "Other": "Andere",
     "Goldfly": "Goldfliege",
     "Flesh fly": "Echte Fleischfliege",
@@ -48,6 +49,9 @@ GERMAN = {
     "All reviewed events": "Alle bewerteten Ereignisse",
     "All events": "Alle Ereignisse",
     "All classes": "Alle Klassen",
+    "All uncertain proposals as": "Alle unsicheren Vorschläge als",
+    "Choose class": "Klasse auswählen",
+    "Apply": "Übernehmen",
     "Burst frames": "Bildserie",
     "Choose the sharpest image for annotation.": (
         "Wähle das schärfste Bild für die Markierung aus."
@@ -167,6 +171,11 @@ GERMAN = {
         "zeichnen und hinzufügen, dann alle Boxen gemeinsam speichern. Vorschläge bitte prüfen."
     ),
     "Suggestions added as uncertain.": "Vorschläge als unsicher hinzugefügt.",
+    "Choose a class first.": "Bitte zuerst eine Klasse auswählen.",
+    "No uncertain proposals to classify.": (
+        "Keine unsicheren Vorschläge zum Klassifizieren vorhanden."
+    ),
+    "Uncertain proposals classified locally.": "Unsichere Vorschläge lokal klassifiziert.",
     "No suggestions; update the background first.": (
         "Keine Vorschläge; bitte zuerst Hintergrund aktualisieren."
     ),
