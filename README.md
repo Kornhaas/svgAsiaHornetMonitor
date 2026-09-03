@@ -155,7 +155,7 @@ Use `bash scripts/reset-runtime-data.sh --help` to see the optional complete rem
 
 ## Image gallery and manual labels
 
-Select **Open image gallery** in the web UI to review recent event images. It shows thumbnail previews and, by default, only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery automatically opens the next unreviewed event. Use **Show reviewed images** to inspect or correct previous annotations. Use the dedicated **Ant** class for clearly visible ants; combine the event filter with the **Class** filter to find a specific kind of reviewed annotation, including **Uncertain** proposals. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
+Select **Open image gallery** in the web UI to review recent event images. It shows thumbnail previews and, by default, only unreviewed events. Select an event, draw a box around the animal, choose a class, and save it; the gallery automatically opens the next unreviewed event. Use **Show reviewed images** to inspect or correct previous annotations. Use the dedicated **Ant** class for clearly visible ants; combine the event filter with the **Class** filter to find a specific kind of reviewed annotation, including **Uncertain** proposals. A selected class is searched across the complete event archive before the normal 100-event gallery limit is applied. Labels are stored locally in `data/annotations.jsonl`; they will form the future YOLO training dataset and are not committed to Git.
 
 ### Active-learning review workflow
 

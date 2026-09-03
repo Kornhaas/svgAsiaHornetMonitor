@@ -57,7 +57,7 @@ def create_app(
         )
     app.secret_key = auth.get("secret_key", "development-only-secret")
 
-    def gallery_events_with_suggestions() -> list[dict]:
+    def gallery_events_with_suggestions(label: str | None = None) -> list[dict]:
         """Attach the newest actionable model proposal to each unreviewed event frame.
 
         Predictions remain separate from annotations until a person confirms them in the
@@ -65,7 +65,7 @@ def create_app(
         """
         if gallery is None:
             return []
-        events = gallery.events()
+        events = gallery.events() if label is None else gallery.events(label=label)
         if prediction_history is None:
             return events
         newest_by_image: dict[str, dict] = {}
@@ -322,7 +322,10 @@ def create_app(
     @app.get("/api/events")
     @require_login
     def events():
-        return jsonify(gallery_events_with_suggestions())
+        try:
+            return jsonify(gallery_events_with_suggestions(request.args.get("label")))
+        except ValueError:
+            return jsonify(error="Unknown annotation label."), 400
 
     @app.get("/api/annotations/<path:image_id>")
     @require_login

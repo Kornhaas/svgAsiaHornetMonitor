@@ -39,24 +39,45 @@ class Gallery:
         self.annotations_file = Path(annotations_file)
         self._lock = threading.RLock()
 
-    def events(self, limit: int = 100) -> list[dict[str, Any]]:
+    def events(self, limit: int = 100, label: str | None = None) -> list[dict[str, Any]]:
+        if label is not None and label not in VALID_LABELS:
+            raise ValueError("Unknown annotation label.")
         images = sorted(self.events_directory.glob("*/*/frame_000.jpg"), reverse=True)
         annotations = self._annotations()
         reviewed_images = {annotation.get("image") for annotation in annotations}
         labels_by_image: dict[str, set[str]] = {}
+        labels_by_event: dict[str, set[str]] = {}
         for annotation in annotations:
             image = annotation.get("image")
-            label = annotation.get("label")
-            if isinstance(image, str) and isinstance(label, str) and label in VALID_LABELS:
-                labels_by_image.setdefault(image, set()).add(label)
+            annotation_label = annotation.get("label")
+            if (
+                isinstance(image, str)
+                and isinstance(annotation_label, str)
+                and annotation_label in VALID_LABELS
+            ):
+                labels_by_image.setdefault(image, set()).add(annotation_label)
+                event_id, _, _ = image.rpartition("/")
+                labels_by_event.setdefault(event_id, set()).add(annotation_label)
         animal_images = {
             annotation.get("image")
             for annotation in annotations
             if annotation.get("label") in ANIMAL_LABELS
         }
+        matching_images = (
+            images
+            if label is None
+            else [
+                image
+                for image in images
+                if label
+                in labels_by_event.get(
+                    image.parent.relative_to(self.events_directory).as_posix(), set()
+                )
+            ]
+        )
         return [
             self._event(image, reviewed_images, animal_images, labels_by_image)
-            for image in images[:limit]
+            for image in matching_images[:limit]
         ]
 
     def _event(

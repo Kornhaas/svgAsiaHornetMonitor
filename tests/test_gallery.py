@@ -92,6 +92,28 @@ def test_gallery_exposes_night_preview_metadata_without_reading_images(tmp_path)
     assert event["night_preview"] is True
 
 
+def test_gallery_filters_annotation_class_before_applying_the_event_limit(tmp_path):
+    events = tmp_path / "events"
+    newest = events / "2026-09-03" / "235959_000001" / "frame_000.jpg"
+    uncertain = events / "2026-09-02" / "000000_000001" / "frame_000.jpg"
+    newest.parent.mkdir(parents=True)
+    uncertain.parent.mkdir(parents=True)
+    newest.write_bytes(b"test")
+    uncertain.write_bytes(b"test")
+    gallery = Gallery(events, tmp_path / "annotations.jsonl")
+    gallery.annotate(
+        {
+            "image": "2026-09-02/000000_000001/frame_000.jpg",
+            "label": "uncertain",
+            "box": {"x": 1, "y": 2, "width": 3, "height": 4},
+        }
+    )
+
+    assert gallery.events(limit=1, label="uncertain")[0]["id"] == "2026-09-02/000000_000001"
+    with pytest.raises(ValueError, match="Unknown annotation label"):
+        gallery.events(label="not-a-class")
+
+
 def test_gallery_records_confirmed_model_suggestions_as_auditable_annotations(tmp_path):
     image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
     image.parent.mkdir(parents=True)

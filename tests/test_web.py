@@ -152,6 +152,22 @@ def test_events_endpoint_exposes_only_actionable_unreviewed_model_suggestions():
     assert client.get("/api/events").get_json()[0]["suggestions"] == {}
 
 
+def test_events_endpoint_passes_a_requested_annotation_class_to_the_gallery():
+    requested_labels = []
+
+    class GalleryWithClassFilter:
+        def events(self, *, label=None):
+            requested_labels.append(label)
+            return []
+
+    client = create_app(
+        camera=None, status=lambda: {}, gallery=GalleryWithClassFilter()
+    ).test_client()
+
+    assert client.get("/api/events?label=uncertain").get_json() == []
+    assert requested_labels == ["uncertain"]
+
+
 def test_roi_settings_and_training_pages_are_available():
     training = type(
         "Training",

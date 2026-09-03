@@ -12,6 +12,10 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Gallery annotations are now editable box-by-box in a local draft, including OpenCV and model proposals; a single save persists the complete reviewed frame.
 - Added an explicit optional bulk action for assigning one chosen class to all uncertain proposals, without making any change persistent until the user saves.
 
+## 2026-09-03 — Archive-wide gallery class filter
+
+- The gallery now applies a selected annotation-class filter before its normal recent-event limit, so older `uncertain` annotations remain reviewable without loading the entire event archive by default.
+
 ## 2026-09-01 — Complete Raspberry Pi bootstrap dependencies
 
 - Updated `scripts/setup-pi.sh` to install the required OS packages for camera diagnostics and OpenCV, add the service user to the `video` group, and install all locked production Python dependencies.

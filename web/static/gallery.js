@@ -233,15 +233,21 @@ function render() {
   }
 }
 
+function eventsUrl() {
+  return classFilter.value === "all"
+    ? "/api/events"
+    : "/api/events?label=" + encodeURIComponent(classFilter.value);
+}
+
 async function load() {
-  events = await (await fetch("/api/events")).json();
+  events = await (await fetch(eventsUrl())).json();
   render();
 }
 
 async function reloadSelectedEvent() {
   const selectedId = selected && selected.id;
   const previousFrame = selectedFrame;
-  events = await (await fetch("/api/events")).json();
+  events = await (await fetch(eventsUrl())).json();
   const refreshed = events.find((event) => event.id === selectedId);
   if (!refreshed) {
     clearSelection();
@@ -427,7 +433,7 @@ eventFilter.onchange = () => {
 
 classFilter.onchange = () => {
   clearSelection();
-  render();
+  load();
 };
 image.addEventListener("load", renderSavedBoxes);
 load();
