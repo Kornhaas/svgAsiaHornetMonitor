@@ -76,6 +76,15 @@ function boxClassSelect(item) {
   return select;
 }
 
+function suggestedItems(suggestion) {
+  const detections = Array.isArray(suggestion.detections) && suggestion.detections.length
+    ? suggestion.detections
+    : [suggestion];
+  return detections
+    .filter((detection) => detection && detection.label && detection.box)
+    .map((detection) => ({ label: detection.label, box: detection.box, model: true }));
+}
+
 function renderRows() {
   rows.replaceChildren(
     ...items.map((item, index) => {
@@ -94,6 +103,7 @@ function renderRows() {
       remove.textContent = "Remove";
       remove.onclick = () => {
         items.splice(index, 1);
+        annotationSource = "manual";
         renderRows();
         renderSavedBoxes();
       };
@@ -177,11 +187,7 @@ async function selectFrame(frame, force = false) {
   annotationSource = "manual";
   currentSuggestion = (selected.suggestions || {})[frame] || null;
   if (currentSuggestion && !items.length) {
-    items = [{
-      label: currentSuggestion.label,
-      box: currentSuggestion.box,
-      model: true,
-    }];
+    items = suggestedItems(currentSuggestion);
   }
   renderRows();
   renderSavedBoxes();
@@ -368,7 +374,16 @@ document.querySelector("#classify-proposals").onclick = () => {
 };
 
 function modelSuggestionUnchanged() {
-  return Boolean(currentSuggestion && items.length === 1 && items[0].model);
+  const suggested = currentSuggestion ? suggestedItems(currentSuggestion) : [];
+  return Boolean(
+    suggested.length
+      && items.length === suggested.length
+      && items.every(
+        (item, index) => item.model
+          && item.label === suggested[index].label
+          && JSON.stringify(item.box) === JSON.stringify(suggested[index].box),
+      ),
+  );
 }
 
 async function saveAnnotations() {
@@ -382,7 +397,7 @@ async function saveAnnotations() {
     renderRows();
     renderSavedBoxes();
   }
-  if (!items.length && label === "empty") {
+  if (!items.length && (label === "empty" || currentSuggestion)) {
     items = [{ label: "empty", box: null }];
   }
   if (!items.length) {

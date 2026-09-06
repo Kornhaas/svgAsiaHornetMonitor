@@ -2,6 +2,11 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 - Multi-animal AI review and rejection
+
+- Gallery model suggestions now render every detected YOLO box on a frame, rather than only the highest-confidence box.
+- Each AI box remains independently editable or removable. Saving after all AI boxes were removed records the frame as empty, so false detections no longer require a separate empty-label workaround.
+
 ## 2026-09-06 â€” Non-blocking inference queue
 
 - Completed image bursts now enter a bounded FIFO before low-priority isolated AI inference. Motion detection, event creation, and burst writing therefore continue while a prior model job runs.
