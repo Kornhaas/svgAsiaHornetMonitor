@@ -101,6 +101,15 @@ uv run hornet-monitor
 
 Open `http://<raspberry-pi-ip>:8000` from a device on the same network. Stop with `Ctrl+C`.
 
+## Read-only public observation page
+
+`http://<raspberry-pi-ip>:8000/public` is a deliberately minimal page that can be opened without
+the monitor login. It exposes only the shared live camera stream and the most recent completed
+model detection as a labelled box; it cannot change settings, view saved images, or access the
+gallery. It does not run additional live inference, so the normal event capture and asynchronous
+model queue remain unaffected. Keep this URL on a trusted local network only: it intentionally
+shares the camera image with anyone who can reach it.
+
 ## Appliance mode: browser-only operation
 
 For a new Raspberry Pi, run the one-time setup as the `hornet` user. It installs curl and Git, installs uv if needed, clones or updates this repository, creates the production environment, asks for one web password, and activates the service:

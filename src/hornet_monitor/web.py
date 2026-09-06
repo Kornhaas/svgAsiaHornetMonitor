@@ -124,6 +124,32 @@ def create_app(
         events.sort(key=lambda event: event["suggestion_priority"], reverse=True)
         return [event for event in events if event["suggestions"]] if pending_only else events
 
+    def public_prediction() -> dict | None:
+        """Return only display-safe data for the unauthenticated observation page."""
+        if prediction_history is None:
+            return None
+        for prediction in prediction_history():
+            detections = prediction.get("detections")
+            candidates = detections if isinstance(detections, list) else [prediction]
+            boxes = [
+                {"label": item["label"], "confidence": item["confidence"], "box": item["box"]}
+                for item in candidates
+                if isinstance(item, dict)
+                and item.get("label") in ANIMAL_LABELS
+                and isinstance(item.get("confidence"), (int, float))
+                and isinstance(item.get("box"), dict)
+                and all(
+                    isinstance(item["box"].get(key), int) for key in ("x", "y", "width", "height")
+                )
+                and item["box"]["x"] >= 0
+                and item["box"]["y"] >= 0
+                and item["box"]["width"] > 0
+                and item["box"]["height"] > 0
+            ]
+            if boxes:
+                return {"timestamp": prediction.get("timestamp"), "detections": boxes}
+        return None
+
     @app.context_processor
     def inject_i18n():
         language = session.get("language", "de")
@@ -186,6 +212,24 @@ def create_app(
     @require_login
     def index():
         return render_template("index.html", active_page="monitor")
+
+    @app.get("/public")
+    def public_monitor():
+        return render_template("public.html")
+
+    @app.get("/public/status")
+    def public_status():
+        current = status()
+        return jsonify(
+            {
+                "frame_width": current.get("frame_width", 0),
+                "frame_height": current.get("frame_height", 0),
+                "roi": current.get("roi"),
+                "event_crop": current.get("event_crop", True),
+                "camera_error": current.get("camera_error"),
+                "prediction": public_prediction(),
+            }
+        )
 
     @app.get("/gallery")
     @require_login
@@ -489,9 +533,7 @@ def create_app(
             app.logger.exception("Update installation request failed")
             return jsonify(error="Update installation is temporarily unavailable."), 503
 
-    @app.get("/stream.mjpg")
-    @require_login
-    def stream():
+    def stream_response():
         def generate():
             while True:
                 frame = camera.get_frame()
@@ -506,5 +548,14 @@ def create_app(
                 time.sleep(0.03)
 
         return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+    @app.get("/stream.mjpg")
+    @require_login
+    def stream():
+        return stream_response()
+
+    @app.get("/public/stream.mjpg")
+    def public_stream():
+        return stream_response()
 
     return app

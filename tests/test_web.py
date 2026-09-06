@@ -112,6 +112,55 @@ def test_enabled_auth_protects_monitor_and_accepts_valid_login():
     assert client.get("/status").status_code == 200
 
 
+def test_public_monitor_is_read_only_and_available_without_login():
+    auth = {
+        "enabled": True,
+        "username": "hornet",
+        "password_hash": generate_password_hash("secret"),
+        "secret_key": "test-secret",
+    }
+    prediction = {
+        "timestamp": "2026-09-06T12:00:00+02:00",
+        "label": "wasp",
+        "confidence": 0.9,
+        "box": {"x": 10, "y": 20, "width": 30, "height": 40},
+        "detections": [
+            {
+                "label": "wasp",
+                "confidence": 0.9,
+                "box": {"x": 10, "y": 20, "width": 30, "height": 40},
+            },
+            {
+                "label": "bee",
+                "confidence": 0.8,
+                "box": {"x": 50, "y": 60, "width": 70, "height": 80},
+            },
+        ],
+    }
+    client = create_app(
+        camera=None,
+        status=lambda: {
+            "frame_width": 1280,
+            "frame_height": 720,
+            "roi": {"x": 100, "y": 50},
+            "event_crop": True,
+            "camera_error": None,
+        },
+        auth=auth,
+        prediction_history=lambda: [prediction],
+    ).test_client()
+
+    page = client.get("/public")
+    public_status = client.get("/public/status")
+
+    assert page.status_code == 200
+    assert b'id="public-stream"' in page.data
+    assert b"Primary navigation" not in page.data
+    assert public_status.status_code == 200
+    assert public_status.get_json()["prediction"]["detections"] == prediction["detections"]
+    assert "image" not in public_status.get_json()["prediction"]
+
+
 def test_gallery_page_and_events_endpoint_are_available():
     gallery = type("Gallery", (), {"events": lambda self: [{"id": "event"}]})()
     app = create_app(camera=None, status=lambda: {}, gallery=gallery)

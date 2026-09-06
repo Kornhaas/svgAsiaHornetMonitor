@@ -2,6 +2,11 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 - Public read-only observation page
+
+- Added `/public`, an unauthenticated local-network view of the shared MJPEG stream with boxes from the latest completed model prediction.
+- The page has no navigation or write APIs and does not schedule any additional AI work, preserving capture and inference capacity.
+
 ## 2026-09-06 - Multi-animal AI review and rejection
 
 - Gallery model suggestions now render every detected YOLO box on a frame, rather than only the highest-confidence box.

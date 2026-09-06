@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wildlife observation · Asia Hornet Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+  <main class="container py-3 public-monitor">
+    <h1 class="h3">Wildlife observation</h1>
+    <p id="public-message" class="text-body-secondary">Connecting to camera…</p>
+    <div id="public-stream-container" class="stream-container rounded overflow-hidden">
+      <img id="public-stream" class="stream" src="{{ url_for('public_stream') }}" alt="Public live camera stream">
+      <div id="public-detections" aria-label="Latest animal detection"></div>
+    </div>
+    <p id="public-prediction" class="mt-2 mb-0" aria-live="polite">No completed model detection yet.</p>
+    <p class="text-body-secondary small">The marker shows the last completed event recognition; it does not run additional live AI.</p>
+  </main>
+  <script src="{{ url_for('static', filename='public.js') }}"></script>
+</body>
+</html>
