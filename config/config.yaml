@@ -91,6 +91,8 @@ web:
   host: 0.0.0.0
   port: 8000
   debug: false
+  # Public read-only live page: do not draw uncertain detections below this confidence.
+  public_min_confidence: 0.6
   auth:
     enabled: false
 

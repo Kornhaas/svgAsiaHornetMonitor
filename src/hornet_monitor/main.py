@@ -73,6 +73,9 @@ def validate_config(config: dict) -> None:
         raise ValueError("Active-learning thresholds are invalid.")
     if config.get("events", {}).get("prediction_queue_max_bursts", 24) < 1:
         raise ValueError("Prediction queue size must be positive.")
+    public_confidence = config.get("web", {}).get("public_min_confidence", 0.6)
+    if not isinstance(public_confidence, (int, float)) or not 0 <= public_confidence <= 1:
+        raise ValueError("Public prediction confidence must be between 0 and 1.")
 
 
 def merge_config(base: dict, override: dict) -> dict:
@@ -524,6 +527,7 @@ def main() -> None:
         predictor.history,
         manual_trigger=manual_trigger,
         rescan_unreviewed=rescan_unreviewed,
+        public_min_confidence=config["web"].get("public_min_confidence", 0.6),
     )
     app.run(
         host=config["web"]["host"],

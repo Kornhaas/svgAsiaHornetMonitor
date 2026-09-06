@@ -148,6 +148,7 @@ def test_public_monitor_is_read_only_and_available_without_login():
         },
         auth=auth,
         prediction_history=lambda: [prediction],
+        public_min_confidence=0.85,
     ).test_client()
 
     page = client.get("/public")
@@ -157,7 +158,7 @@ def test_public_monitor_is_read_only_and_available_without_login():
     assert b'id="public-stream"' in page.data
     assert b"Primary navigation" not in page.data
     assert public_status.status_code == 200
-    assert public_status.get_json()["prediction"]["detections"] == prediction["detections"]
+    assert public_status.get_json()["prediction"]["detections"] == [prediction["detections"][0]]
     assert "image" not in public_status.get_json()["prediction"]
 
 

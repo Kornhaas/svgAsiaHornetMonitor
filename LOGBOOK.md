@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 - Public confidence threshold
+
+- The public observation overlay now hides model boxes below the configurable 60% confidence default, while retaining those predictions for review and training feedback.
+
 ## 2026-09-06 - Numbered AI detection boxes
 
 - Gallery overlays now label simultaneous model suggestions as `AI-1`, `AI-2`, and so on, making the corresponding review rows unambiguous.

@@ -110,6 +110,10 @@ gallery. It does not run additional live inference, so the normal event capture 
 model queue remain unaffected. Keep this URL on a trusted local network only: it intentionally
 shares the camera image with anyone who can reach it.
 
+Only public detections at or above `web.public_min_confidence` are drawn; the default is `0.6`
+(60%). This affects the public overlay only, not saved predictions, gallery suggestions, or training
+data.
+
 ## Appliance mode: browser-only operation
 
 For a new Raspberry Pi, run the one-time setup as the `hornet` user. It installs curl and Git, installs uv if needed, clones or updates this repository, creates the production environment, asks for one web password, and activates the service:

@@ -47,6 +47,7 @@ def create_app(
     prediction_history=None,
     manual_trigger=None,
     rescan_unreviewed=None,
+    public_min_confidence: float = 0.6,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -137,6 +138,7 @@ def create_app(
                 if isinstance(item, dict)
                 and item.get("label") in ANIMAL_LABELS
                 and isinstance(item.get("confidence"), (int, float))
+                and item["confidence"] >= public_min_confidence
                 and isinstance(item.get("box"), dict)
                 and all(
                     isinstance(item["box"].get(key), int) for key in ("x", "y", "width", "height")

@@ -30,6 +30,12 @@ def test_config_merge_validation_and_local_configuration_helpers(tmp_path):
         "other": 1,
     }
     validate_config(_config())
+    invalid = _config()
+    invalid["web"] = {"public_min_confidence": 1.1}
+    import pytest
+
+    with pytest.raises(ValueError, match="Public prediction confidence"):
+        validate_config(invalid)
     config = tmp_path / "config.yaml"
     config.write_text("{}\n", encoding="utf-8")
 
