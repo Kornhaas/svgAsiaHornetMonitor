@@ -46,6 +46,7 @@ def create_app(
     storage=None,
     prediction_history=None,
     manual_trigger=None,
+    rescan_unreviewed=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -268,6 +269,14 @@ def create_app(
         if training_manager is None:
             return jsonify(error="Training is unavailable."), 503
         return jsonify(training_manager.start()), 202
+
+    @app.post("/api/predictions/rescan-unreviewed")
+    @require_login
+    def rescan_predictions():
+        if rescan_unreviewed is None:
+            return jsonify(error="Prediction rescan is unavailable."), 503
+        result = rescan_unreviewed()
+        return jsonify(result), 202 if result.get("started") else 409
 
     @app.post("/api/models/<version>/activate")
     @require_login

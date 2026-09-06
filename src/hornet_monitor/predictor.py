@@ -172,25 +172,41 @@ class Predictor:
         self.notifier, self.activity_log = notifier, activity_log
         self._process: multiprocessing.Process | None = None
         self._lock = threading.Lock()
-        self._queue: deque[list[tuple[str, str | None]]] = deque()
+        self._live_queue: deque[list[tuple[str, str | None]]] = deque()
+        self._background_queue: deque[list[tuple[str, str | None]]] = deque()
         self._queue_limit = queue_limit
+        self._background_queue_limit = max(1, queue_limit - min(4, queue_limit - 1))
 
     def submit(self, image: str, image_id: str | None = None) -> bool:
         """Add one image to the bounded, non-blocking inference FIFO."""
         return self._submit([(image, image_id)])
 
-    def submit_burst(self, images: list[tuple[str, str]]) -> bool:
+    def submit_burst(
+        self,
+        images: list[tuple[str, str]],
+        *,
+        background: bool = False,
+        log_full: bool = True,
+    ) -> bool:
         """Add a completed event burst without delaying further event capture."""
-        return self._submit(images)
+        return self._submit(images, background=background, log_full=log_full)
 
-    def _submit(self, images: list[tuple[str, str | None]]) -> bool:
+    def _submit(
+        self,
+        images: list[tuple[str, str | None]],
+        *,
+        background: bool = False,
+        log_full: bool = True,
+    ) -> bool:
         if not images or self._model_path() is None:
             return False
         with self._lock:
             self._reap_locked()
             if self._process and self._process.is_alive():
-                if len(self._queue) >= self._queue_limit:
-                    if self.activity_log:
+                queue = self._background_queue if background else self._live_queue
+                limit = self._background_queue_limit if background else self._queue_limit
+                if len(queue) >= limit or self._queue_size_locked() >= self._queue_limit:
+                    if self.activity_log and log_full:
                         self.activity_log.record(
                             "prediction_queue_full",
                             "Inference queue full; event captured without a prediction.",
@@ -198,12 +214,12 @@ class Predictor:
                             details={"queue_limit": self._queue_limit},
                         )
                     return False
-                self._queue.append(images)
+                queue.append(images)
                 if self.activity_log:
                     self.activity_log.record(
                         "prediction_queued",
                         "Event queued for asynchronous model prediction.",
-                        details={"queued_bursts": len(self._queue)},
+                        details={"queued_bursts": self._queue_size_locked()},
                     )
                 return True
             self._start_locked(images)
@@ -243,17 +259,30 @@ class Predictor:
                 level="error",
                 details={"exit_code": exitcode},
             )
-        if self._queue:
-            self._start_locked(self._queue.popleft())
+        next_job = self._next_queued_job_locked()
+        if next_job:
+            self._start_locked(next_job)
+
+    def _next_queued_job_locked(self) -> list[tuple[str, str | None]] | None:
+        if self._live_queue:
+            return self._live_queue.popleft()
+        return self._background_queue.popleft() if self._background_queue else None
+
+    def _queue_size_locked(self) -> int:
+        return len(self._live_queue) + len(self._background_queue)
 
     def status(self) -> dict[str, int | bool]:
         """Return lightweight queue health for the monitor status endpoint."""
         with self._lock:
             return {
                 "running": self._process is not None and self._process.is_alive(),
-                "queued_bursts": len(self._queue),
+                "queued_bursts": self._queue_size_locked(),
                 "queue_limit": self._queue_limit,
             }
+
+    def active_model_path(self) -> Path | None:
+        """Return the current model path without exposing queue internals."""
+        return self._model_path()
 
     def _predict(self, image: str, image_id: str | None = None) -> None:
         _predict_image(

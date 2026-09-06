@@ -176,6 +176,8 @@ On **Model & training**, **Export YOLO dataset** creates a versioned local datas
 
 Every completed training run is stored in its own `data/models/<version>/` directory. The model page shows the available versions, evaluation metrics written by YOLO, recent predictions, and a **Use model** action to activate a previous successful version. During dark hours the automatic job starts only in the configured 21:00–06:00 window; it uses CPU with batch size 1 and stops at the morning deadline.
 
+After activating a newer model, **Re-evaluate unreviewed images** on the model page places old, unreviewed event bursts into the low-priority prediction queue. It never changes saved annotations and always leaves capacity for new live captures; a large archive can therefore take time to finish.
+
 The **System status** page warns when the configured free-space threshold is crossed and can create a ZIP backup containing events, annotations, the background reference, and model versions. Retention defaults to 30 days for reviewed events and 7 days for unreviewed events; change the values in `config/config.yaml` before deployment. Optional Telegram notifications also report camera loss, low storage, and failed overnight training without interrupting capture.
 
 Reopening an already reviewed gallery image loads its saved boxes into the editable list. Remove incorrect entries, add replacements, then save the complete list; this atomically replaces that image's annotations.

@@ -117,6 +117,14 @@ GERMAN = {
     "Storage:": "Speicher:",
     "Start training now": "Training jetzt starten",
     "Training running…": "Training läuft…",
+    "Re-evaluate unreviewed images": "Unbewertete Bilder neu bewerten",
+    (
+        "Queue all unreviewed event bursts for the active model. Capture remains prioritized "
+        "and existing annotations are unchanged."
+    ): (
+        "Alle unbewerteten Ereignis-Bursts für das aktive Modell einreihen. "
+        "Die Aufnahme bleibt priorisiert, vorhandene Bewertungen bleiben unverändert."
+    ),
     (
         "Export reviewed animal boxes as a versioned local YOLO dataset with train, "
         "validation, and test splits. The export does not start training."

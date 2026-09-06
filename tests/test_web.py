@@ -426,6 +426,30 @@ def test_prediction_history_and_model_activation_endpoints_are_available():
     assert activated == ["20260901_210000"]
 
 
+def test_unreviewed_prediction_rescan_endpoint_is_available():
+    calls = []
+    client = create_app(
+        camera=None,
+        status=lambda: {},
+        rescan_unreviewed=lambda: (
+            calls.append(True) or {"started": True, "message": "Re-evaluation started."}
+        ),
+    ).test_client()
+
+    response = client.post("/api/predictions/rescan-unreviewed")
+
+    assert response.status_code == 202
+    assert response.get_json()["started"]
+    assert calls == [True]
+    assert (
+        create_app(camera=None, status=lambda: {})
+        .test_client()
+        .post("/api/predictions/rescan-unreviewed")
+        .status_code
+        == 503
+    )
+
+
 def test_mark_event_empty_endpoint_forwards_only_the_event_id():
     marked = []
     gallery = type(

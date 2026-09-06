@@ -14,6 +14,12 @@
   <span id="result" class="ms-2" aria-live="polite"></span>
 </section>
 <section class="card card-body mt-3">
+  <h2 class="h5">Re-evaluate unreviewed images</h2>
+  <p>Queue all unreviewed event bursts for the active model. Capture remains prioritized and existing annotations are unchanged.</p>
+  <button id="rescan" class="btn btn-outline-info">Re-evaluate unreviewed images</button>
+  <span id="rescan-result" class="ms-2" aria-live="polite"></span>
+</section>
+<section class="card card-body mt-3">
   <h2 class="h5">YOLO dataset export</h2>
   <p>Export reviewed animal boxes as a versioned local YOLO dataset with train, validation, and test splits. The export does not start training.</p>
   <p>Current split estimate: train {{ overview.dataset.splits.train|default(0) }}, validation {{ overview.dataset.splits.val|default(0) }}, test {{ overview.dataset.splits.test|default(0) }}.</p>
@@ -72,6 +78,7 @@ startButton.onclick = async () => {
 };
 if (startButton.disabled) setTimeout(() => location.reload(), 5000);
 document.querySelector('#export').onclick = () => action('/api/dataset/export', '#export-result');
+document.querySelector('#rescan').onclick = () => action('/api/predictions/rescan-unreviewed', '#rescan-result');
 document.querySelectorAll('.activate-model').forEach((button) => {
   button.onclick = async () => {
     const response = await fetch(`/api/models/${button.dataset.version}/activate`, {method: 'POST'});

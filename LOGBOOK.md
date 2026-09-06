@@ -11,6 +11,10 @@ This log records implementation milestones and decisions. Add a dated entry when
 
 - The gallery bulk-class action now covers both OpenCV `uncertain` boxes and model suggestions. An operator can therefore correct a model prediction such as `wasp` to `vespa_velutina` in one action before saving.
 
+## 2026-09-06 â€” Re-evaluate unreviewed event images
+
+- Added an explicit model-page action which feeds unreviewed historical bursts through the active model after an update. It uses the low-priority bounded prediction queue and reserves capacity for live captures.
+
 ## 2026-09-03 — Ant annotation class
 
 - Added the `ant` class to gallery validation, filtering, German UI translations, and YOLO dataset export for clearly identifiable ants.

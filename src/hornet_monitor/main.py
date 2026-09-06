@@ -232,6 +232,69 @@ def main() -> None:
         predictor.submit_burst(images)
 
     writer.burst_complete_callback = predict_completed_burst
+    rescan_lock = threading.Lock()
+    rescan_state = {"running": False, "total": 0, "queued": 0, "model": None}
+
+    def rescan_unreviewed() -> dict:
+        """Feed historical unreviewed frames slowly into the low-priority AI queue."""
+        model_path = predictor.active_model_path()
+        if model_path is None:
+            return {"started": False, "message": "No active model is available."}
+        with rescan_lock:
+            if rescan_state["running"]:
+                return {
+                    "started": False,
+                    "message": "Unreviewed-image rescan is already running.",
+                    **rescan_state,
+                }
+            if rescan_state["model"] == str(model_path):
+                return {
+                    "started": False,
+                    "message": "Unreviewed images were already queued for this active model.",
+                    **rescan_state,
+                }
+            event_root = Path(config["events"]["directory"])
+            bursts = []
+            for event in gallery.events(limit=None):
+                frames = [
+                    frame for frame in event["frames"] if frame not in event["reviewed_frames"]
+                ]
+                if frames:
+                    bursts.append([(str(event_root / frame), frame) for frame in frames])
+            rescan_state.update(running=True, total=len(bursts), queued=0)
+
+        def run_rescan() -> None:
+            try:
+                for burst in bursts:
+                    while not predictor.submit_burst(burst, background=True, log_full=False):
+                        if predictor.active_model_path() is None:
+                            return
+                        time.sleep(0.5)
+                    with rescan_lock:
+                        rescan_state["queued"] += 1
+                activity_log.record(
+                    "prediction_rescan_queued",
+                    "Unreviewed images queued for model prediction.",
+                    details={"bursts": len(bursts)},
+                )
+            finally:
+                with rescan_lock:
+                    rescan_state["running"] = False
+                    if rescan_state["queued"] == rescan_state["total"]:
+                        rescan_state["model"] = str(model_path)
+
+        threading.Thread(target=run_rescan, name="prediction-rescan", daemon=True).start()
+        activity_log.record(
+            "prediction_rescan_started",
+            "Re-evaluating unreviewed images with the active model.",
+            details={"bursts": len(bursts)},
+        )
+        return {
+            "started": True,
+            "message": f"Re-evaluation started for {len(bursts)} unreviewed event bursts.",
+            **rescan_state,
+        }
+
     state = {"motion": False, "largest_area": 0.0, "last_event": None}
     state_lock = threading.Lock()
     last_camera_error = None
@@ -460,6 +523,7 @@ def main() -> None:
         storage,
         predictor.history,
         manual_trigger=manual_trigger,
+        rescan_unreviewed=rescan_unreviewed,
     )
     app.run(
         host=config["web"]["host"],
