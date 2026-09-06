@@ -30,6 +30,8 @@ events:
   crop_to_roi: true
   burst_frames: 5
   burst_interval_seconds: 0.25
+  # Completed bursts wait here for low-priority AI processing; recording never waits for it.
+  prediction_queue_max_bursts: 24
 
 activity:
   file: data/activity.jsonl

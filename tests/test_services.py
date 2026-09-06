@@ -57,7 +57,7 @@ def test_predictor_returns_newest_prediction_history_first(tmp_path):
     assert [item["label"] for item in predictor.history()] == ["wasp", "bee"]
 
 
-def test_predictor_limits_native_inference_to_one_isolated_process(tmp_path, monkeypatch):
+def test_predictor_queues_completed_work_behind_one_isolated_process(tmp_path, monkeypatch):
     model = tmp_path / "models" / "version" / "weights" / "best.pt"
     model.parent.mkdir(parents=True)
     model.write_bytes(b"model")
@@ -103,16 +103,64 @@ def test_predictor_limits_native_inference_to_one_isolated_process(tmp_path, mon
     )
 
     assert predictor.submit("event.jpg", "2026-09-01/123000_000001/frame_000.jpg")
-    assert not predictor.submit("second-event.jpg")
+    assert predictor.submit("second-event.jpg")
     assert len(processes) == 1
-    assert processes[0].kwargs["args"][3] == "2026-09-01/123000_000001/frame_000.jpg"
-    assert records[-1][0][0] == "prediction_skipped"
+    assert processes[0].kwargs["args"][2] == [
+        ("event.jpg", "2026-09-01/123000_000001/frame_000.jpg")
+    ]
+    assert predictor.status() == {"running": True, "queued_bursts": 1, "queue_limit": 24}
+    assert records[-1][0][0] == "prediction_queued"
     processes[0].alive, processes[0].exitcode = False, -4
 
     predictor.reap()
 
     assert records[-1][0][0] == "prediction_failed"
     assert records[-1][1]["details"] == {"exit_code": -4}
+    assert len(processes) == 2
+    assert processes[1].kwargs["args"][2] == [("second-event.jpg", None)]
+
+
+def test_predictor_keeps_capture_non_blocking_when_prediction_queue_is_full(tmp_path, monkeypatch):
+    model = tmp_path / "models" / "version" / "weights" / "best.pt"
+    model.parent.mkdir(parents=True)
+    model.write_bytes(b"model")
+    (model.parents[2] / "latest.json").write_text(
+        json.dumps({"model": str(model)}), encoding="utf-8"
+    )
+    records = []
+
+    class Activity:
+        path = tmp_path / "activity.jsonl"
+
+        def record(self, *args, **kwargs):
+            records.append((args, kwargs))
+
+    class Process:
+        exitcode = None
+
+        def start(self):
+            return None
+
+        def is_alive(self):
+            return True
+
+    class Context:
+        def Process(self, **_kwargs):
+            return Process()
+
+    monkeypatch.setattr(predictor_module.multiprocessing, "get_context", lambda _name: Context())
+    predictor = Predictor(
+        str(model.parents[2]),
+        str(tmp_path / "predictions.jsonl"),
+        activity_log=Activity(),
+        queue_limit=1,
+    )
+
+    assert predictor.submit("first.jpg")
+    assert predictor.submit("second.jpg")
+    assert not predictor.submit("third.jpg")
+    assert predictor.status() == {"running": True, "queued_bursts": 1, "queue_limit": 1}
+    assert records[-1][0][0] == "prediction_queue_full"
 
 
 def test_predictor_limits_worker_cpu_use_on_the_pi():

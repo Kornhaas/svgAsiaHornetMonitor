@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import threading
 import uuid
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 
@@ -157,7 +158,12 @@ def _predict_image(
 
 class Predictor:
     def __init__(
-        self, models_directory: str, predictions_file: str, notifier=None, activity_log=None
+        self,
+        models_directory: str,
+        predictions_file: str,
+        notifier=None,
+        activity_log=None,
+        queue_limit: int = 24,
     ) -> None:
         self.models_directory, self.predictions_file = (
             Path(models_directory),
@@ -166,66 +172,64 @@ class Predictor:
         self.notifier, self.activity_log = notifier, activity_log
         self._process: multiprocessing.Process | None = None
         self._lock = threading.Lock()
+        self._queue: deque[list[tuple[str, str | None]]] = deque()
+        self._queue_limit = queue_limit
 
     def submit(self, image: str, image_id: str | None = None) -> bool:
-        """Queue one isolated inference; retain camera stability if native ML crashes."""
-        if self._model_path() is None:
-            return False
-        with self._lock:
-            self.reap()
-            if self._process and self._process.is_alive():
-                if self.activity_log:
-                    self.activity_log.record(
-                        "prediction_skipped",
-                        "Prediction skipped because another inference is still running.",
-                    )
-                return False
-            context = multiprocessing.get_context("spawn")
-            self._process = context.Process(
-                target=_predict_image,
-                args=(
-                    str(self.models_directory),
-                    str(self.predictions_file),
-                    image,
-                    image_id,
-                    self.notifier.settings if self.notifier else None,
-                    str(self.activity_log.path) if self.activity_log else None,
-                ),
-                daemon=True,
-            )
-            self._process.start()
-        return True
+        """Add one image to the bounded, non-blocking inference FIFO."""
+        return self._submit([(image, image_id)])
 
     def submit_burst(self, images: list[tuple[str, str]]) -> bool:
-        """Queue every completed burst frame in one isolated model-load cycle."""
+        """Add a completed event burst without delaying further event capture."""
+        return self._submit(images)
+
+    def _submit(self, images: list[tuple[str, str | None]]) -> bool:
         if not images or self._model_path() is None:
             return False
         with self._lock:
-            self.reap()
+            self._reap_locked()
             if self._process and self._process.is_alive():
+                if len(self._queue) >= self._queue_limit:
+                    if self.activity_log:
+                        self.activity_log.record(
+                            "prediction_queue_full",
+                            "Inference queue full; event captured without a prediction.",
+                            level="error",
+                            details={"queue_limit": self._queue_limit},
+                        )
+                    return False
+                self._queue.append(images)
                 if self.activity_log:
                     self.activity_log.record(
-                        "prediction_skipped",
-                        "Prediction skipped because another inference is still running.",
+                        "prediction_queued",
+                        "Event queued for asynchronous model prediction.",
+                        details={"queued_bursts": len(self._queue)},
                     )
-                return False
-            context = multiprocessing.get_context("spawn")
-            self._process = context.Process(
-                target=_predict_images,
-                args=(
-                    str(self.models_directory),
-                    str(self.predictions_file),
-                    images,
-                    self.notifier.settings if self.notifier else None,
-                    str(self.activity_log.path) if self.activity_log else None,
-                ),
-                daemon=True,
-            )
-            self._process.start()
-        return True
+                return True
+            self._start_locked(images)
+            return True
+
+    def _start_locked(self, images: list[tuple[str, str | None]]) -> None:
+        context = multiprocessing.get_context("spawn")
+        self._process = context.Process(
+            target=_predict_images,
+            args=(
+                str(self.models_directory),
+                str(self.predictions_file),
+                images,
+                self.notifier.settings if self.notifier else None,
+                str(self.activity_log.path) if self.activity_log else None,
+            ),
+            daemon=True,
+        )
+        self._process.start()
 
     def reap(self) -> None:
         """Record a failed child process without ever terminating the monitor."""
+        with self._lock:
+            self._reap_locked()
+
+    def _reap_locked(self) -> None:
         if self._process is None or self._process.is_alive():
             return
         self._process.join()
@@ -239,6 +243,17 @@ class Predictor:
                 level="error",
                 details={"exit_code": exitcode},
             )
+        if self._queue:
+            self._start_locked(self._queue.popleft())
+
+    def status(self) -> dict[str, int | bool]:
+        """Return lightweight queue health for the monitor status endpoint."""
+        with self._lock:
+            return {
+                "running": self._process is not None and self._process.is_alive(),
+                "queued_bursts": len(self._queue),
+                "queue_limit": self._queue_limit,
+            }
 
     def _predict(self, image: str, image_id: str | None = None) -> None:
         _predict_image(

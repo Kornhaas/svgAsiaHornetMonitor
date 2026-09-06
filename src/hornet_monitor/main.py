@@ -71,6 +71,8 @@ def validate_config(config: dict) -> None:
         or active["target_per_class"] < 1
     ):
         raise ValueError("Active-learning thresholds are invalid.")
+    if config.get("events", {}).get("prediction_queue_max_bursts", 24) < 1:
+        raise ValueError("Prediction queue size must be positive.")
 
 
 def merge_config(base: dict, override: dict) -> dict:
@@ -187,6 +189,7 @@ def main() -> None:
         config["annotations"]["predictions_file"],
         notifier,
         activity_log,
+        queue_limit=config["events"].get("prediction_queue_max_bursts", 24),
     )
     detector = MotionDetector(config["motion"])
     night_mode = NightMode(config["night_mode"])
@@ -358,6 +361,7 @@ def main() -> None:
                 "frame_width": config["camera"]["width"],
                 "frame_height": config["camera"]["height"],
                 "event_crop": config["events"].get("crop_to_roi", True),
+                "prediction_queue": predictor.status(),
                 "night_mode": night_mode.status(),
             }
 

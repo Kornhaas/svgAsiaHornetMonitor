@@ -2,6 +2,11 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 â€” Non-blocking inference queue
+
+- Completed image bursts now enter a bounded FIFO before low-priority isolated AI inference. Motion detection, event creation, and burst writing therefore continue while a prior model job runs.
+- A full queue never loses the captured event; it records a visible `prediction_queue_full` activity and omits only that optional prediction. Queue depth is available in the status snapshot.
+
 ## 2026-09-03 — Ant annotation class
 
 - Added the `ant` class to gallery validation, filtering, German UI translations, and YOLO dataset export for clearly identifiable ants.

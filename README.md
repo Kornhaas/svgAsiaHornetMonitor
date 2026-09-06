@@ -137,6 +137,9 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.
+- `events.prediction_queue_max_bursts` bounds completed bursts waiting for asynchronous AI
+  processing. Event capture and JPEG writing never wait for this queue; if it is full, the event
+  is still saved and an explicit `prediction_queue_full` activity is recorded.
 - `events.crop_to_roi` keeps saved gallery and training images limited to the ROI (enabled by default). The live stream remains full-frame so the ROI can still be adjusted comfortably.
 - `training.minimum_annotations` defines the initial dataset threshold displayed in the UI. `training.start_hour` and `stop_hour` reserve the intended future overnight training window; they do not start training yet.
 - `night_mode` estimates brightness from the saved ROI image. After `dark_seconds` below `dark_threshold`, motion capture pauses; it resumes only after `bright_threshold` is reached, avoiding rapid switching at dusk.
