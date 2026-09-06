@@ -222,6 +222,7 @@ def create_app(
     @app.get("/public/status")
     def public_status():
         current = status()
+        night_mode = current.get("night_mode")
         return jsonify(
             {
                 "frame_width": current.get("frame_width", 0),
@@ -229,6 +230,8 @@ def create_app(
                 "roi": current.get("roi"),
                 "event_crop": current.get("event_crop", True),
                 "camera_error": current.get("camera_error"),
+                "preview_disabled": isinstance(night_mode, dict)
+                and bool(night_mode.get("preview_disabled")),
                 "prediction": public_prediction(),
             }
         )

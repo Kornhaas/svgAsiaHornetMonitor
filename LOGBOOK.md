@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 - Public night-preview protection
+
+- The unauthenticated `/public` page now observes the same night-preview state as the main live monitor. It disconnects its MJPEG stream and hides detection overlays while night mode is active, without changing capture or queued recognition.
+
 ## 2026-09-06 - Public confidence threshold
 
 - The public observation overlay now hides model boxes below the configurable 60% confidence default, while retaining those predictions for review and training feedback.

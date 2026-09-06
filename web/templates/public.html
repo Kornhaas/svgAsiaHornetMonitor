@@ -14,6 +14,9 @@
     <div id="public-stream-container" class="stream-container rounded overflow-hidden">
       <img id="public-stream" class="stream" src="{{ url_for('public_stream') }}" alt="Public live camera stream">
       <div id="public-detections" aria-label="Latest animal detection"></div>
+      <div id="public-night-preview" class="public-night-preview d-none text-center text-body-secondary p-5" role="status">
+        Night mode active &middot; live preview disabled
+      </div>
     </div>
     <p id="public-prediction" class="mt-2 mb-0" aria-live="polite">No completed model detection yet.</p>
     <p class="text-body-secondary small">The marker shows the last completed event recognition; it does not run additional live AI.</p>

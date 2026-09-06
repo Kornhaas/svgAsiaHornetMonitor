@@ -145,6 +145,7 @@ def test_public_monitor_is_read_only_and_available_without_login():
             "roi": {"x": 100, "y": 50},
             "event_crop": True,
             "camera_error": None,
+            "night_mode": {"preview_disabled": True},
         },
         auth=auth,
         prediction_history=lambda: [prediction],
@@ -156,8 +157,10 @@ def test_public_monitor_is_read_only_and_available_without_login():
 
     assert page.status_code == 200
     assert b'id="public-stream"' in page.data
+    assert b'id="public-night-preview"' in page.data
     assert b"Primary navigation" not in page.data
     assert public_status.status_code == 200
+    assert public_status.get_json()["preview_disabled"] is True
     assert public_status.get_json()["prediction"]["detections"] == [prediction["detections"][0]]
     assert "image" not in public_status.get_json()["prediction"]
 

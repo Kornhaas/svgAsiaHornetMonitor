@@ -114,6 +114,10 @@ Only public detections at or above `web.public_min_confidence` are drawn; the de
 (60%). This affects the public overlay only, not saved predictions, gallery suggestions, or training
 data.
 
+When the monitor activates night mode, the public page also disconnects the camera stream and hides
+all detection boxes. Capture and queued recognition continue normally; only the browser preview is
+disabled.
+
 ## Appliance mode: browser-only operation
 
 For a new Raspberry Pi, run the one-time setup as the `hornet` user. It installs curl and Git, installs uv if needed, clones or updates this repository, creates the production environment, asks for one web password, and activates the service:

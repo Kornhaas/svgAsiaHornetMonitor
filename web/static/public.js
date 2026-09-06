@@ -2,9 +2,26 @@ const stream = document.querySelector("#public-stream");
 const detections = document.querySelector("#public-detections");
 const message = document.querySelector("#public-message");
 const predictionMessage = document.querySelector("#public-prediction");
+const nightPreview = document.querySelector("#public-night-preview");
 let reconnectTimer;
+let previewDisabled = false;
+
+function setPreviewDisabled(disabled) {
+  if (disabled === previewDisabled) return;
+  previewDisabled = disabled;
+  stream.classList.toggle("d-none", disabled);
+  detections.classList.toggle("d-none", disabled);
+  nightPreview.classList.toggle("d-none", !disabled);
+  if (disabled) {
+    stream.removeAttribute("src");
+    detections.replaceChildren();
+  } else {
+    stream.src = `/public/stream.mjpg?reconnect=${Date.now()}`;
+  }
+}
 
 function reconnectStream() {
+  if (previewDisabled) return;
   clearTimeout(reconnectTimer);
   reconnectTimer = setTimeout(() => {
     stream.src = `/public/stream.mjpg?reconnect=${Date.now()}`;
@@ -39,6 +56,12 @@ function drawDetections(state) {
 async function refresh() {
   try {
     const state = await (await fetch("/public/status", { cache: "no-store" })).json();
+    setPreviewDisabled(Boolean(state.preview_disabled));
+    if (previewDisabled) {
+      message.textContent = "Night mode active";
+      predictionMessage.textContent = "Live preview disabled during night mode.";
+      return;
+    }
     message.textContent = state.camera_error || "Live camera";
     drawDetections(state);
   } catch (_) {
