@@ -7,6 +7,10 @@ This log records implementation milestones and decisions. Add a dated entry when
 - Completed image bursts now enter a bounded FIFO before low-priority isolated AI inference. Motion detection, event creation, and burst writing therefore continue while a prior model job runs.
 - A full queue never loses the captured event; it records a visible `prediction_queue_full` activity and omits only that optional prediction. Queue depth is available in the status snapshot.
 
+## 2026-09-06 â€” Bulk correction of AI suggestions
+
+- The gallery bulk-class action now covers both OpenCV `uncertain` boxes and model suggestions. An operator can therefore correct a model prediction such as `wasp` to `vespa_velutina` in one action before saving.
+
 ## 2026-09-03 — Ant annotation class
 
 - Added the `ant` class to gallery validation, filtering, German UI translations, and YOLO dataset export for clearly identifiable ants.

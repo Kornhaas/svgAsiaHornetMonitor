@@ -50,7 +50,7 @@ GERMAN = {
     "All reviewed events": "Alle bewerteten Ereignisse",
     "All events": "Alle Ereignisse",
     "All classes": "Alle Klassen",
-    "All uncertain proposals as": "Alle unsicheren Vorschläge als",
+    "All proposals as": "Alle Vorschläge als",
     "Choose class": "Klasse auswählen",
     "Apply": "Übernehmen",
     "Burst frames": "Bildserie",
@@ -173,10 +173,8 @@ GERMAN = {
     ),
     "Suggestions added as uncertain.": "Vorschläge als unsicher hinzugefügt.",
     "Choose a class first.": "Bitte zuerst eine Klasse auswählen.",
-    "No uncertain proposals to classify.": (
-        "Keine unsicheren Vorschläge zum Klassifizieren vorhanden."
-    ),
-    "Uncertain proposals classified locally.": "Unsichere Vorschläge lokal klassifiziert.",
+    "No proposals to classify.": "Keine Vorschläge zum Klassifizieren vorhanden.",
+    "Proposals classified locally.": "Vorschläge lokal klassifiziert.",
     "No suggestions; update the background first.": (
         "Keine Vorschläge; bitte zuerst Hintergrund aktualisieren."
     ),

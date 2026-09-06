@@ -251,7 +251,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert "await saveAnnotations()" in gallery_script.read_text(encoding="utf-8")
     assert "function boxClassSelect(item)" in gallery_script.read_text(encoding="utf-8")
     assert "function modelSuggestionUnchanged()" in gallery_script.read_text(encoding="utf-8")
-    assert 'document.querySelector("#classify-uncertain")' in gallery_script.read_text(
+    assert 'document.querySelector("#classify-proposals")' in gallery_script.read_text(
         encoding="utf-8"
     )
     assert b'id="bulk-label"' in client.get("/gallery").data

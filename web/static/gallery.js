@@ -347,24 +347,24 @@ document.querySelector("#suggest-boxes").onclick = async () => {
     : "No suggestions; update the background first.";
 };
 
-document.querySelector("#classify-uncertain").onclick = () => {
+document.querySelector("#classify-proposals").onclick = () => {
   if (!bulkLabel.value) {
     annotationMessage.textContent = "Choose a class first.";
     return;
   }
-  const uncertain = items.filter((item) => item.label === "uncertain" && item.box);
-  if (!uncertain.length) {
-    annotationMessage.textContent = "No uncertain proposals to classify.";
+  const proposals = items.filter((item) => item.box && (item.label === "uncertain" || item.model));
+  if (!proposals.length) {
+    annotationMessage.textContent = "No proposals to classify.";
     return;
   }
-  uncertain.forEach((item) => {
+  proposals.forEach((item) => {
     item.label = bulkLabel.value;
     item.model = false;
   });
   annotationSource = "manual";
   renderRows();
   renderSavedBoxes();
-  annotationMessage.textContent = "Uncertain proposals classified locally.";
+  annotationMessage.textContent = "Proposals classified locally.";
 };
 
 function modelSuggestionUnchanged() {
