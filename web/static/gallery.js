@@ -131,7 +131,8 @@ function renderSavedBoxes() {
       }
       const number = document.createElement("span");
       number.className = "annotation-box-number";
-      number.textContent = item.model ? "AI" : String(index + 1);
+      const aiNumber = items.slice(0, index + 1).filter((candidate) => candidate.model).length;
+      number.textContent = item.model ? `AI-${aiNumber}` : String(index + 1);
       number.style.cssText = "display:grid;place-items:center;width:1.5rem;height:1.5rem;"
         + "margin:-3px 0 0 -3px;border-radius:0 0 .3rem 0;background:"
         + (item.label === "uncertain" || item.model ? "#0dcaf0" : "#ffc107")

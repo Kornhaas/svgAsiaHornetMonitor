@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-06 - Numbered AI detection boxes
+
+- Gallery overlays now label simultaneous model suggestions as `AI-1`, `AI-2`, and so on, making the corresponding review rows unambiguous.
+
 ## 2026-09-06 - Public read-only observation page
 
 - Added `/public`, an unauthenticated local-network view of the shared MJPEG stream with boxes from the latest completed model prediction.

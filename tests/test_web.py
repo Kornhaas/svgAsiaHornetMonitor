@@ -289,6 +289,7 @@ def test_roi_settings_and_training_pages_are_available():
     assert "Drag to draw a rectangle." in gallery_script.read_text(encoding="utf-8")
     assert "renderSavedBoxes" in gallery_script.read_text(encoding="utf-8")
     assert "annotation-box-number" in gallery_script.read_text(encoding="utf-8")
+    assert "item.model ? `AI-${aiNumber}`" in gallery_script.read_text(encoding="utf-8")
     assert (
         'const classFilter = document.querySelector("#class-filter")'
         in gallery_script.read_text(encoding="utf-8")
