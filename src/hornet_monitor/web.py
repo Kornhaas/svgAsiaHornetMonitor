@@ -48,6 +48,7 @@ def create_app(
     manual_trigger=None,
     rescan_unreviewed=None,
     public_min_confidence: float = 0.6,
+    job_status=None,
 ):
     app = Flask(__name__, template_folder="../../web/templates", static_folder="../../web/static")
     auth = auth or {"enabled": False}
@@ -342,6 +343,11 @@ def create_app(
     @require_login
     def system_page():
         return render_template("system.html", active_page="system")
+
+    @app.get("/api/jobs")
+    @require_login
+    def get_jobs():
+        return jsonify({"available": False} if job_status is None else job_status())
 
     @app.get("/api/system-status")
     @require_login

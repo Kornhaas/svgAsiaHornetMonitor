@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-07 - Background job status
+
+- Added active and queued model bursts, re-evaluation enqueue progress, and training status to the protected System status page. The view polls status only and cannot submit work.
+
 ## 2026-09-06 - Public night-preview protection
 
 - The unauthenticated `/public` page now observes the same night-preview state as the main live monitor. It disconnects its MJPEG stream and hides detection overlays while night mode is active, without changing capture or queued recognition.

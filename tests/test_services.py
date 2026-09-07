@@ -104,11 +104,33 @@ def test_predictor_queues_completed_work_behind_one_isolated_process(tmp_path, m
 
     assert predictor.submit("event.jpg", "2026-09-01/123000_000001/frame_000.jpg")
     assert predictor.submit("second-event.jpg")
+    assert predictor.submit_burst(
+        [("historical.jpg", "2026-08-31/123000_000001/frame_000.jpg")], background=True
+    )
     assert len(processes) == 1
     assert processes[0].kwargs["args"][2] == [
         ("event.jpg", "2026-09-01/123000_000001/frame_000.jpg")
     ]
-    assert predictor.status() == {"running": True, "queued_bursts": 1, "queue_limit": 24}
+    assert predictor.status() == {
+        "running": True,
+        "queued_bursts": 2,
+        "queue_limit": 24,
+        "live_queued_bursts": 1,
+        "background_queued_bursts": 1,
+        "active_job": {
+            "kind": "live_event",
+            "image": "2026-09-01/123000_000001/frame_000.jpg",
+            "frames": 1,
+        },
+        "queued_jobs": [
+            {"kind": "live_event", "image": None, "frames": 1},
+            {
+                "kind": "rescan",
+                "image": "2026-08-31/123000_000001/frame_000.jpg",
+                "frames": 1,
+            },
+        ],
+    }
     assert records[-1][0][0] == "prediction_queued"
     processes[0].alive, processes[0].exitcode = False, -4
 
@@ -159,7 +181,15 @@ def test_predictor_keeps_capture_non_blocking_when_prediction_queue_is_full(tmp_
     assert predictor.submit("first.jpg")
     assert predictor.submit("second.jpg")
     assert not predictor.submit("third.jpg")
-    assert predictor.status() == {"running": True, "queued_bursts": 1, "queue_limit": 1}
+    assert predictor.status() == {
+        "running": True,
+        "queued_bursts": 1,
+        "queue_limit": 1,
+        "live_queued_bursts": 1,
+        "background_queued_bursts": 0,
+        "active_job": {"kind": "live_event", "image": None, "frames": 1},
+        "queued_jobs": [{"kind": "live_event", "image": None, "frames": 1}],
+    }
     assert records[-1][0][0] == "prediction_queue_full"
 
 

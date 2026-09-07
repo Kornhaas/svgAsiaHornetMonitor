@@ -431,6 +431,16 @@ def main() -> None:
                 "night_mode": night_mode.status(),
             }
 
+    def job_status() -> dict:
+        """Expose existing background-job state without submitting any new work."""
+        with rescan_lock:
+            rescan = dict(rescan_state)
+        return {
+            "prediction_queue": predictor.status(),
+            "rescan": rescan,
+            "training": training_manager.status(),
+        }
+
     def update_roi(roi: dict[str, int]) -> dict[str, int]:
         if "trigger" in roi:
             updated_trigger = detector.update_trigger_roi(
@@ -528,6 +538,7 @@ def main() -> None:
         manual_trigger=manual_trigger,
         rescan_unreviewed=rescan_unreviewed,
         public_min_confidence=config["web"].get("public_min_confidence", 0.6),
+        job_status=job_status,
     )
     app.run(
         host=config["web"]["host"],

@@ -118,6 +118,13 @@ When the monitor activates night mode, the public page also disconnects the came
 all detection boxes. Capture and queued recognition continue normally; only the browser preview is
 disabled.
 
+## Background jobs
+
+The password-protected **System status** page shows the active model prediction, waiting live and
+historical bursts, progress while unreviewed events are being re-evaluated, and the current training
+state. It is read-only and polls lightweight in-memory status only; opening it does not start or slow
+down any job.
+
 ## Appliance mode: browser-only operation
 
 For a new Raspberry Pi, run the one-time setup as the `hornet` user. It installs curl and Git, installs uv if needed, clones or updates this repository, creates the production environment, asks for one web password, and activates the service:

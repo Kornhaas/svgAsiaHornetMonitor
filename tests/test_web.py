@@ -400,6 +400,38 @@ def test_application_pages_share_the_primary_navigation():
         assert b'href="/settings/camera"' in response.data
 
 
+def test_system_page_shows_read_only_background_job_status():
+    jobs = {
+        "prediction_queue": {
+            "running": True,
+            "queued_bursts": 2,
+            "queue_limit": 24,
+            "live_queued_bursts": 1,
+            "background_queued_bursts": 1,
+            "active_job": {
+                "kind": "rescan",
+                "image": "2026-09-07/event/frame_000.jpg",
+                "frames": 5,
+            },
+            "queued_jobs": [],
+        },
+        "rescan": {"running": True, "queued": 4, "total": 12, "model": None},
+        "training": {"state": "idle", "message": "Waiting for darkness."},
+    }
+    app = create_app(camera=None, status=lambda: {}, job_status=lambda: jobs)
+    client = app.test_client()
+
+    page = client.get("/system")
+    response = client.get("/api/jobs")
+
+    assert page.status_code == 200
+    assert b'id="queued-jobs"' in page.data
+    assert b"system.js" in page.data
+    assert response.get_json() == jobs
+    script = Path(app.static_folder) / "system.js"
+    assert 'fetch("/api/jobs"' in script.read_text(encoding="utf-8")
+
+
 def test_event_deletion_endpoint_forwards_the_event_id():
     deleted = []
     app = create_app(

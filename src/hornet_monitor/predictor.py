@@ -172,6 +172,7 @@ class Predictor:
         self.notifier, self.activity_log = notifier, activity_log
         self._process: multiprocessing.Process | None = None
         self._lock = threading.Lock()
+        self._active_job: dict | None = None
         self._live_queue: deque[list[tuple[str, str | None]]] = deque()
         self._background_queue: deque[list[tuple[str, str | None]]] = deque()
         self._queue_limit = queue_limit
@@ -222,10 +223,20 @@ class Predictor:
                         details={"queued_bursts": self._queue_size_locked()},
                     )
                 return True
-            self._start_locked(images)
+            self._start_locked(images, background=background)
             return True
 
-    def _start_locked(self, images: list[tuple[str, str | None]]) -> None:
+    @staticmethod
+    def _job_summary(images: list[tuple[str, str | None]], *, background: bool) -> dict:
+        image_id = next((image_id for _, image_id in images if image_id), None)
+        return {
+            "kind": "rescan" if background else "live_event",
+            "image": image_id,
+            "frames": len(images),
+        }
+
+    def _start_locked(self, images: list[tuple[str, str | None]], *, background: bool) -> None:
+        self._active_job = self._job_summary(images, background=background)
         context = multiprocessing.get_context("spawn")
         self._process = context.Process(
             target=_predict_images,
@@ -252,6 +263,7 @@ class Predictor:
         exitcode = self._process.exitcode
         self._process.close()
         self._process = None
+        self._active_job = None
         if exitcode not in (0, None) and self.activity_log:
             self.activity_log.record(
                 "prediction_failed",
@@ -261,23 +273,34 @@ class Predictor:
             )
         next_job = self._next_queued_job_locked()
         if next_job:
-            self._start_locked(next_job)
+            images, background = next_job
+            self._start_locked(images, background=background)
 
-    def _next_queued_job_locked(self) -> list[tuple[str, str | None]] | None:
+    def _next_queued_job_locked(self) -> tuple[list[tuple[str, str | None]], bool] | None:
         if self._live_queue:
-            return self._live_queue.popleft()
-        return self._background_queue.popleft() if self._background_queue else None
+            return self._live_queue.popleft(), False
+        return (self._background_queue.popleft(), True) if self._background_queue else None
 
     def _queue_size_locked(self) -> int:
         return len(self._live_queue) + len(self._background_queue)
 
-    def status(self) -> dict[str, int | bool]:
+    def status(self) -> dict:
         """Return lightweight queue health for the monitor status endpoint."""
         with self._lock:
             return {
                 "running": self._process is not None and self._process.is_alive(),
                 "queued_bursts": self._queue_size_locked(),
                 "queue_limit": self._queue_limit,
+                "live_queued_bursts": len(self._live_queue),
+                "background_queued_bursts": len(self._background_queue),
+                "active_job": self._active_job,
+                "queued_jobs": [
+                    *(self._job_summary(images, background=False) for images in self._live_queue),
+                    *(
+                        self._job_summary(images, background=True)
+                        for images in self._background_queue
+                    ),
+                ],
             }
 
     def active_model_path(self) -> Path | None:
