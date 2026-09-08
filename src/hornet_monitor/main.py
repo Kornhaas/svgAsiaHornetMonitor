@@ -473,6 +473,15 @@ def main() -> None:
             "event_deleted", "Event deleted from gallery", details={"event": event_id}
         )
 
+    def delete_unreviewed_events() -> list[str]:
+        deleted = gallery.delete_unreviewed_events()
+        activity_log.record(
+            "unreviewed_events_deleted",
+            "Unreviewed events deleted from gallery",
+            details={"events": len(deleted)},
+        )
+        return deleted
+
     def update_camera(settings: dict) -> None:
         save_local_camera(args.config, settings)
         activity_log.record(
@@ -522,6 +531,7 @@ def main() -> None:
         gallery,
         save_annotation,
         delete_event,
+        delete_unreviewed_events,
         training_status,
         background,
         event_frame,

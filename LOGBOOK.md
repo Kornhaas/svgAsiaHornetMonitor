@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-08 - Bulk removal of unreviewed events
+
+- Gallery operators can explicitly delete all events with no saved annotation, including their image bursts. The server requires confirmation and preserves every reviewed event and its training data.
+
 ## 2026-09-08 - Explicit ROI saving
 
 - Drawing on the ROI settings page now creates only an unsaved draft. Image and trigger regions change the running monitor only after their corresponding Save button is pressed.

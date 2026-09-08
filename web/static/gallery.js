@@ -443,6 +443,23 @@ document.querySelector("#delete-event").onclick = async () => {
   if (response.ok) await load();
 };
 
+document.querySelector("#delete-unreviewed-events").onclick = async () => {
+  if (!confirm("Delete ALL unreviewed events and their image series? This cannot be undone.")) return;
+  const response = await fetch("/api/events/unreviewed", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ confirm: true }),
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    message.textContent = result.error || "Could not delete unreviewed events.";
+    return;
+  }
+  clearSelection();
+  await load();
+  message.textContent = `${result.deleted} unreviewed events deleted.`;
+};
+
 annotationLabel.onchange = () => { annotationSource = "manual"; };
 document.querySelector("#refresh-events").onclick = load;
 

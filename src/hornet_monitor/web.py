@@ -36,6 +36,7 @@ def create_app(
     gallery=None,
     save_annotation=None,
     delete_event=None,
+    delete_unreviewed_events=None,
     training_status=None,
     background=None,
     event_frame=None,
@@ -482,6 +483,19 @@ def create_app(
             return "", 204
         except (FileNotFoundError, ValueError):
             return jsonify(error="Event was not found."), 404
+
+    @app.delete("/api/events/unreviewed")
+    @require_login
+    def remove_unreviewed_events():
+        if delete_unreviewed_events is None:
+            return jsonify(error="Bulk event deletion is unavailable."), 503
+        if request.get_json(silent=True) != {"confirm": True}:
+            return jsonify(error="Explicit deletion confirmation is required."), 400
+        try:
+            deleted = delete_unreviewed_events()
+        except OSError:
+            return jsonify(error="Unreviewed event deletion failed."), 500
+        return jsonify(deleted=len(deleted))
 
     @app.get("/status")
     @require_login

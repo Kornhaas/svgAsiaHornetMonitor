@@ -446,6 +446,24 @@ def test_event_deletion_endpoint_forwards_the_event_id():
     assert deleted == ["2026-08-31/event"]
 
 
+def test_unreviewed_event_deletion_requires_explicit_confirmation():
+    deleted = []
+    client = create_app(
+        camera=None,
+        status=lambda: {},
+        delete_unreviewed_events=lambda: deleted.extend(["event-a", "event-b"]) or deleted,
+    ).test_client()
+
+    assert client.delete("/api/events/unreviewed").status_code == 400
+    response = client.delete("/api/events/unreviewed", json={"confirm": True})
+
+    assert response.status_code == 200
+    assert response.get_json() == {"deleted": 2}
+    assert deleted == ["event-a", "event-b"]
+    gallery_script = Path(client.application.static_folder) / "gallery.js"
+    assert "body: JSON.stringify({ confirm: true })" in gallery_script.read_text(encoding="utf-8")
+
+
 def test_language_selection_is_stored_in_the_browser_session():
     app = create_app(camera=None, status=lambda: {})
     client = app.test_client()

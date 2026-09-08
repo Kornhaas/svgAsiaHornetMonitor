@@ -266,6 +266,37 @@ class Gallery:
                 ]
                 self._write_annotations(remaining)
 
+    def delete_unreviewed_events(self) -> list[str]:
+        """Remove only event directories that have no saved annotation at all."""
+        with self._lock:
+            annotations = self._annotations()
+            reviewed_events = {
+                image.rpartition("/")[0]
+                for entry in annotations
+                if isinstance((image := entry.get("image")), str)
+            }
+            event_directories = sorted(
+                (image.parent for image in self.events_directory.glob("*/*/frame_000.jpg")),
+                reverse=True,
+            )
+            deleted = [
+                directory.relative_to(self.events_directory).as_posix()
+                for directory in event_directories
+                if directory.relative_to(self.events_directory).as_posix() not in reviewed_events
+            ]
+            for event_id in deleted:
+                shutil.rmtree(self.events_directory / event_id)
+            if deleted and self.annotations_file.exists():
+                prefixes = tuple(f"{event_id}/" for event_id in deleted)
+                self._write_annotations(
+                    [
+                        entry
+                        for entry in annotations
+                        if not str(entry.get("image", "")).startswith(prefixes)
+                    ]
+                )
+        return deleted
+
     def mark_unannotated_frames_empty(self, event_id: str) -> list[str]:
         """Mark only untouched frames in a reviewed event as empty."""
         event_directory = self._event_directory(event_id)

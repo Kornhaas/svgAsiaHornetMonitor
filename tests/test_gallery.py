@@ -126,6 +126,31 @@ def test_gallery_can_return_all_events_for_a_narrow_server_side_review_queue(tmp
     assert len(gallery.events(limit=None)) == 3
 
 
+def test_gallery_deletes_only_events_without_saved_annotations(tmp_path):
+    events = tmp_path / "events"
+    unreviewed = events / "2026-09-08" / "100000_000001" / "frame_000.jpg"
+    reviewed = events / "2026-09-08" / "100001_000001" / "frame_000.jpg"
+    unreviewed.parent.mkdir(parents=True)
+    reviewed.parent.mkdir(parents=True)
+    unreviewed.write_bytes(b"test")
+    reviewed.write_bytes(b"test")
+    gallery = Gallery(events, tmp_path / "annotations.jsonl")
+    gallery.annotate(
+        {
+            "image": "2026-09-08/100001_000001/frame_000.jpg",
+            "label": "empty",
+            "box": None,
+        }
+    )
+
+    deleted = gallery.delete_unreviewed_events()
+
+    assert deleted == ["2026-09-08/100000_000001"]
+    assert not unreviewed.parent.exists()
+    assert reviewed.parent.exists()
+    assert gallery.events(limit=None)[0]["id"] == "2026-09-08/100001_000001"
+
+
 def test_gallery_records_confirmed_model_suggestions_as_auditable_annotations(tmp_path):
     image = tmp_path / "events" / "2026-09-01" / "123000_000001" / "frame_000.jpg"
     image.parent.mkdir(parents=True)
