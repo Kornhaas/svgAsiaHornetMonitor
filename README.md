@@ -157,7 +157,7 @@ Edit [`config/config.yaml`](config/config.yaml) before deployment:
 
 - `camera.device`, `width`, `height`, and `fps` select the webcam mode.
 - `motion.roi` is a rectangle in camera pixels.
-- On **ROI settings**, select **Draw image ROI** (yellow) or **Draw trigger ROI** (blue), then draw the respective rectangle directly on the live image. It is saved automatically on release; the `X`, `Y`, `Width`, and `Height` fields remain available for exact adjustment. Changes take effect immediately and are saved only to ignored `config/local.yaml` on that device.
+- On **ROI settings**, select **Draw image ROI** (yellow) or **Draw trigger ROI** (blue), then draw the respective rectangle directly on the live image. Drawing updates only an on-page draft; use the matching save button to apply it. The `X`, `Y`, `Width`, and `Height` fields remain available for exact adjustment. Saved changes take effect immediately and are written only to ignored `config/local.yaml` on that device.
 - `motion.min_area` filters small changes such as sensor noise or light flicker.
 - `motion.cooldown_seconds` limits how often an event starts.
 - `events.burst_frames` and `burst_interval_seconds` control the saved JPEG series.

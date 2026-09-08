@@ -2,6 +2,10 @@
 
 This log records implementation milestones and decisions. Add a dated entry whenever behavior, deployment, or architecture changes in a way that matters to future work.
 
+## 2026-09-08 - Explicit ROI saving
+
+- Drawing on the ROI settings page now creates only an unsaved draft. Image and trigger regions change the running monitor only after their corresponding Save button is pressed.
+
 ## 2026-09-07 - Background job status
 
 - Added active and queued model bursts, re-evaluation enqueue progress, and training status to the protected System status page. The view polls status only and cannot submit work.

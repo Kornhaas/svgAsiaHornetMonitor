@@ -86,7 +86,7 @@ canvas.addEventListener("pointermove", (event) => {
   show(box, roi);
 });
 
-canvas.addEventListener("pointerup", async (event) => {
+canvas.addEventListener("pointerup", (event) => {
   if (!drawing) return;
   const form = mode === "outer" ? outerForm : triggerForm;
   const box = mode === "outer" ? outerBox : triggerBox;
@@ -103,7 +103,9 @@ canvas.addEventListener("pointerup", async (event) => {
     message.textContent = "Drag to draw a rectangle.";
     return;
   }
-  await save(form, mode === "outer" ? roi : { trigger: roi });
+  fill(form, roi);
+  show(box, roi);
+  message.textContent = "Draft updated. Save this region explicitly to apply it.";
 });
 
 outerButton.addEventListener("click", () => select("outer"));

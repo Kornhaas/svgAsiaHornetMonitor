@@ -284,6 +284,10 @@ def test_roi_settings_and_training_pages_are_available():
     roi_script = Path(app.static_folder) / "roi.js"
     assert "width: status.frame_width" in roi_script.read_text(encoding="utf-8")
     assert "[key, Number(value)]" in roi_script.read_text(encoding="utf-8")
+    assert "Draft updated. Save this region explicitly to apply it." in roi_script.read_text(
+        encoding="utf-8"
+    )
+    assert "await save(form, mode" not in roi_script.read_text(encoding="utf-8")
     gallery_script = Path(app.static_folder) / "gallery.js"
     assert 'items = [{ label: "empty", box: null }]' in gallery_script.read_text(encoding="utf-8")
     assert 'if (box && label !== "empty")' in gallery_script.read_text(encoding="utf-8")
