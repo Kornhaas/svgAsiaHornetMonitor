@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'win32'",
@@ -1836,10 +1836,9 @@ wheels = [
 
 [[package]]
 name = "ultralytics"
-version = "8.4.137"
+version = "8.4.193"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "filelock" },
     { name = "matplotlib" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -1855,35 +1854,35 @@ dependencies = [
     { name = "ultralytics-platform" },
     { name = "ultralytics-thop" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/79/a2/d2195be48022b1bfae5d73f4df7aeb0f0e45bdde2e603f91fa3060e7a1f9/ultralytics-8.4.137.tar.gz", hash = "sha256:6928c498878f6288e750d0e0acde32d46bad5afdea924391a995d41e296eb150", size = 1222678, upload-time = "2026-08-31T17:10:27.841Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/14/b366f14d25ec62ef9c669f4cac0ffac20db01ab24b29a478a9cfc65bb288/ultralytics-8.4.193.tar.gz", hash = "sha256:e1ceb060892b64d6a4db1d91736ce9338b7322a53ddaa572eaa8fc9580c30a2f", size = 1294841, upload-time = "2026-10-30T00:14:29.013Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/76/1901f69ecc05309d6ae8821b46b03ea5d88619a37d7f27bfa8b96985fa09/ultralytics-8.4.137-py3-none-any.whl", hash = "sha256:f2a4bd08cb01fb4dc45470ded3ee805ee86384ad45701d13131fbf4899fa73d1", size = 1439967, upload-time = "2026-08-31T17:10:23.781Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/9c/b322e1c4bfb3509ed3d0984dcfd528a327feac15e28bd323d6293de94c85/ultralytics-8.4.193-py3-none-any.whl", hash = "sha256:d0c447dcfc35008f9df316d257e0bdd3f36b6f995226ef9e19fc40afc840b6d0", size = 1435191, upload-time = "2026-10-30T00:14:24.643Z" },
 ]
 
 [[package]]
 name = "ultralytics-platform"
-version = "0.1.20"
+version = "0.1.102"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/e5/46a876497f89eba1b0deeeb38e85fa4a38e1a9cbf06c5584518aa8e29406/ultralytics_platform-0.1.20.tar.gz", hash = "sha256:de443fedb0200850709fb5cb17de8272123a33e5924719de82b5b480f832e5ee", size = 54875, upload-time = "2026-08-30T00:39:48.38Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/43/39ab437ac03d6a3343a0d58d20b7633a4c6ae551b5d670a76e0d629d1206/ultralytics_platform-0.1.102.tar.gz", hash = "sha256:df989a548370875fa163a3715ca2bf0f46fe2460769d0271ef4f98555bea3c86", size = 91466, upload-time = "2026-10-30T16:53:59.528Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/d1/2db53df8a2dd90c2c7a6d9abfa5251b57dbaa96d1758310eb3064a5025e0/ultralytics_platform-0.1.20-py3-none-any.whl", hash = "sha256:56b7b023c3a6114ceb53657abe4f4ab0107d2f1255ed68ce7969f14a64d9b86f", size = 66181, upload-time = "2026-08-30T00:39:47.116Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/8c/7561a597f291ecce0a919d6e0bb0878b61eea54334dd9db59ea94f1bcfb5/ultralytics_platform-0.1.102-py3-none-any.whl", hash = "sha256:6acfe3f9304a8fa47ce0aef85085e7d97a2d9b78f3fbccdb1df714eaa3b6769b", size = 100127, upload-time = "2026-10-30T16:53:57.944Z" },
 ]
 
 [[package]]
 name = "ultralytics-thop"
-version = "2.1.6"
+version = "2.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/20/d6b6aaa8ecf7dbdeaf0c05f73bdcd04cf8ce468d936bc48dbcd368e75baf/ultralytics_thop-2.1.6.tar.gz", hash = "sha256:0ec2df8ebd3db35795e1f80cdc8bce6734446dbe989bca1b0c89396353f0f08c", size = 36364, upload-time = "2026-07-30T22:31:28.143Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/ef/e693d1afc2451f6fb5eb46ff8b52e3e2226828fa9416f31c23dbe08a41cd/ultralytics_thop-2.2.4.tar.gz", hash = "sha256:bd0fd039425790fed84c161c60abb49c7b3407da9dae4bfd8c524eea6412f70a", size = 40185, upload-time = "2026-11-01T13:26:45.779Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/98/f1fa3d40d548c8a2a3eec33b7f856063bb6c7d51e16d5198b1f390b2c79d/ultralytics_thop-2.1.6-py3-none-any.whl", hash = "sha256:23f7b8ad124fa3432c1a7de9279102c4fdda699216032a7dff49f87ec3d1a3af", size = 30479, upload-time = "2026-07-30T22:31:26.874Z" },
+    { url = "https://files.pythonhosted.org/packages/43/e2/2a9d6f54393487ed3b44654fc9a73b86ae814751e230113b982b9c56a000/ultralytics_thop-2.2.4-py3-none-any.whl", hash = "sha256:a2202872c7d0b2a93c129cad692bfab36d76cc70eb3671cc8093195a8fd3f9d0", size = 32854, upload-time = "2026-11-01T13:26:44.59Z" },
 ]
 
 [[package]]
